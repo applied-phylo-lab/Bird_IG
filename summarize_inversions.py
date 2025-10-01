@@ -179,18 +179,23 @@ def summarize_table(df, minlen,bed_df):
 
 def shorten_name(filename):
     """
-    Return the substring between the 4th and 6th underscore (i.e. parts[4:6] joined by '_').
-    Example:
-      self_9-GCA_048174275.1_A.woodhouseii_AW_366498_pri_1.0_genomic.tsv
-      -> parts = [..., 'A.woodhouseii', 'AW', '366498', ...] -> returns 'AW_366498'
-    If the filename doesn't have enough underscores, return the filename without extension.
+    Extract the sample code between the species code and '_pri'.
+    Handles prefixes like 'self_' or '14-GCA_'.
+    Examples:
+      14-GCA_048181955.1_A.insularis_AI_1833_00687_pri_1.0_genomic.tsv
+        -> 'AI_1833_00687'
+      7-GCA_048174325.1_A.woodhouseii_AW_366494_pri_1.0_genomic.tsv
+        -> 'AW_366494'
+      GCA_048182105.1_A.insularis_AI_1603_79203_pri_1.0_genomic.bed
+        -> 'AI_1603_79203'
     """
     base = os.path.basename(filename)
-    noext = re.sub(r"\.tsv$", "", base, flags=re.IGNORECASE)
-    parts = noext.split("_")
-    if len(parts) >= 6:
-        # return the substring between 4th and 6th underscore -> parts[4] and parts[5]
-        return f"{parts[4]}_{parts[5]}"
+    noext = re.sub(r"\.(tsv|bed)$", "", base, flags=re.IGNORECASE)
+
+    # Capture the chunk between species code and _pri
+    m = re.search(r'_([A-Z]{2}_[0-9_]+)_pri', noext)
+    if m:
+        return m.group(1)  # returns e.g. "AI_1603_79203"
     else:
         return noext
 
