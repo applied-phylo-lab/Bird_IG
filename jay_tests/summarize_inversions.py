@@ -45,66 +45,6 @@ def deduplicate_inversions(inv_df):
     inv_df = inv_df.drop_duplicates(subset="pair_key").drop(columns="pair_key")
     return inv_df
 
-def check_gene_orientation(inv_df, bed_df):
-    """
-    Check coherence of gene effective orientation inside inversions.
-    
-    inv_df : DataFrame with columns start1, end1, strand1, start2, end2, strand2
-    bed_df : DataFrame with columns start, end, strand
-    
-    Returns
-    -------
-    dict with counts and fractions
-    """
-    
-    coherent_genes = 0
-    mixed_genes = 0
-
-    inv_df = deduplicate_inversions(inv_df)
-
-    for _, inv in inv_df.iterrows():
-        inv_start1, inv_end1 = inv["start1"], inv["end1"]
-        inv_start2, inv_end2 = inv["start2"], inv["end2"]
-        inv_strand1, inv_strand2 = inv["strand1"], inv["strand2"]
-
-        # genes inside first inversion interval
-        genes_in_inv1 = bed_df[(bed_df["start"] >= inv_start1) & (bed_df["end"] <= inv_end1)].copy()
-        genes_in_inv1["inv_strand"] = inv_strand1
-
-        # genes inside second inversion interval
-        genes_in_inv2 = bed_df[(bed_df["start"] >= inv_start2) & (bed_df["end"] <= inv_end2)].copy()
-        genes_in_inv2["inv_strand"] = inv_strand2
-
-
-        # combine genes from both sides of inversion and add column specifying which side
-        genes_in_inv = pd.concat([genes_in_inv1, genes_in_inv2])
-
-        if genes_in_inv.empty:
-            continue
-
-        effective_strands = []
-        for _, gene in genes_in_inv.iterrows():
-            g_strand = gene["strand"]
-            inv_strand = gene["inv_strand"]
-            # if inversion strand is opposite, flip gene orientation
-            # (since strand1 != strand2 always for inversions, pick one side, e.g. strand1)
-            if inv_strand == "+":
-                eff = "+" if g_strand == "+" else "-"
-            else:
-                eff = "-" if g_strand == "+" else "+"
-            effective_strands.append(eff)
-
-        coherent_genes += effective_strands.count("+")
-        mixed_genes += effective_strands.count("-")
-
-   
-    total_genes = coherent_genes + mixed_genes
-
-    return {
-        "coherent_genes": coherent_genes,
-        "mixed_genes": mixed_genes,
-        "frac_coherent_genes": coherent_genes / total_genes if total_genes > 0 else 0,
-    }
 
 
 def summarize_table(df, minlen,bed_df):
@@ -155,11 +95,6 @@ def summarize_table(df, minlen,bed_df):
                         genes_neg += 1
                     break  # gene counted once, move on
     
-    coherence_stats = check_gene_orientation(inv, bed_df) if total_genes > 0 else {
-        "coherent_genes": 0,
-        "mixed_genes": 0,
-        "frac_coherent_genes": 0,
-    }
 
     return {
         "minlen": minlen,
@@ -174,7 +109,6 @@ def summarize_table(df, minlen,bed_df):
         "genes_on_inv_pos": genes_pos,
         "genes_on_inv_neg": genes_neg,
         "frac_genes_on_inv": genes_on_inv / total_genes if total_genes > 0 else 0,
-        **coherence_stats
     }
 
 def shorten_name(filename):
