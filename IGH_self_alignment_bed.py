@@ -32,12 +32,13 @@ def process_row(row):
                                        'combined_genes_IGH.txt')
     output_dir = os.path.join(input_dir, order, species, haplotype)
     
+    
    
     # lastz self-alignment
     
     aligner = LastZPairwiseAligner()
     lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
-    if os.path.exists(fasta_path):
+    if os.path.exists(fasta_path) and not os.path.exists(lastz_output):
         aligner.AlignTwoFasta(fasta_path, fasta_path, lastz_output)
     else:
         print(f"FASTA not found: {fasta_path}")
@@ -55,6 +56,11 @@ def process_row(row):
     if locus_df.empty or igdetect_df.empty:
         print(f"Skipping {order}/{species}/{haplotype}/{contig} because no data found.")
         return
+    
+    bed_path = os.path.join(output_dir, 'IGH.bed')
+
+    if os.path.exists(bed_path):
+        return
 
     locus_start = locus_df['StartPos'].iloc[0]
 
@@ -67,7 +73,6 @@ def process_row(row):
         annot_df['Color'].append('0,0,0')
 
     annot_df = pd.DataFrame(annot_df)
-    bed_path = os.path.join(output_dir, 'IGH.bed')
     contig_name = contig
 
     with open(bed_path, 'w') as fh:
