@@ -2,9 +2,10 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(phytools)
-inversion_stats<-fread("/local/storage/kav67/birds/IGH_inversions.tsv")
-
-summary_table_IGH<-fread("/local/storage/kav67/birds/IGH_filtered_table.tsv")
+dir<-"/local/storage/kav67/birds/"
+inversion_stats<-fread(paste0(dir,"IGH_inversions.tsv"))
+species_data<-inversion_stats
+summary_table_IGH<-fread(paste0(dir,"IGH_table.tsv")) #IGH_filtered_table.tsv
 
 # Summarize by Order (average across samples per order)
 inversion_stats_long <- inversion_stats[inversion_stats$minlen==1000,] %>%
@@ -28,7 +29,7 @@ metric_labels <- c(
 # Plot
 ggplot(inversion_stats_long, aes(x = order, y = value, fill = order)) +
   geom_boxplot(outlier.shape = 21, alpha = 0.8) +
-  facet_wrap(~metric, scales = "free_y", labeller = as_labeller(metric_labels), ncol = 1) +
+  facet_wrap(.~metric, scales = "free_y", labeller = as_labeller(metric_labels), ncol = 3) +
   theme_bw() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -46,7 +47,8 @@ inversion_stats1000 <- merge(
   all.x = TRUE
 )
 
-species_stats <- inversion_stats1000 %>%
+species_stats <- inversion_stats1000[!is.na(inversion_stats1000$LatinName),] %>%
+  filter(!grepl("MiscBirds", LatinName))  %>%
   group_by(LatinName) %>%
   summarize(
     avg_inv_len = mean(avg_inv_len, na.rm = TRUE),
@@ -54,42 +56,39 @@ species_stats <- inversion_stats1000 %>%
     frac_genes_on_inv = mean(frac_genes_on_inv, na.rm = TRUE)
   )
 
-species_stats$LatinName<-gsub(" ","_",species_stats$LatinName)
+#species_stats$LatinName<-gsub(" ","_",species_stats$LatinName)
 
-tips_in_data <- intersect(vgp_tree$tip.label, species_stats$LatinName)
+tips_in_data <- intersect(VGP_tree$tip.label, species_stats$LatinName)
 
-bird_tree_pruned <- drop.tip(vgp_tree, setdiff(vgp_tree$tip.label, tips_in_data))
+tree_pruned <- drop.tip(VGP_tree, setdiff(VGP_tree$tip.label, tips_in_data))
 
 species_stats_pruned<-species_stats[species_stats$LatinName %in% tips_in_data,]
+species_data <- inversion_stats1000 %>%
+  filter(!grepl("MiscBirds", LatinName))
 
-
-p <- ggtree(bird_tree_pruned, layout = "rectangular")
-bird_tree_pruned_data <- as_tibble(bird_tree_pruned)
-bird_tree_pruned_data<-bird_tree_pruned_data %>%
+p <- ggtree(tree_pruned, layout = "rectangular")
+tree_pruned_data <- as_tibble(tree_pruned)
+tree_pruned_data<-tree_pruned_data %>%
   left_join(
-    species_data %>%
+      species_data%>%       
       select(LatinName, order),
       by = c("label"="LatinName")
   )
 
-order_nodes <- bird_tree_pruned_data %>%
+order_nodes <- tree_pruned_data %>%
   # Keep only tips with orders
   filter(!is.na(order) & !is.na(label)) %>%
   group_by(order) %>%
   summarize(
-    node = MRCA(bird_tree_pruned, label),   # MRCA() from ggtree
+    node = MRCA(tree_pruned, label),   # MRCA() from ggtree
     .groups = "drop"
   ) %>%
   rename(type = order)  # rename column to type
+order_nodes <- order_nodes[-9,]
 
-p<-ggtree(bird_tree_pruned) + 
-  geom_hilight(
-    data=order_nodes, 
-    aes(node=node, fill=type),
-    type = "roundrect",
-    inherit.aes = FALSE)
+p <- ggtree(tree_pruned)
 
-# IGH barplot
+# Add all barplots first
 p1 <- facet_plot(
   p, panel = "Average Inversion Length",
   data = species_stats_pruned,
@@ -97,6 +96,7 @@ p1 <- facet_plot(
   mapping = aes(x = avg_inv_len),
   stat = "identity"
 )
+
 p2 <- facet_plot(
   p1, panel = "Fractions of locus covered by Inversions",
   data = species_stats_pruned,
@@ -112,8 +112,14 @@ p3 <- facet_plot(
   mapping = aes(x = frac_genes_on_inv),
   stat = "identity"
 )
-p3
 
+# Now add highlights *after* all facets
+p3 + geom_hilight(
+  data = order_nodes, 
+  aes(node = node, fill = type),
+  type = "roundrect",
+  inherit.aes = FALSE
+)
 
 
 

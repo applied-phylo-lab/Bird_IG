@@ -54,7 +54,6 @@ def summarize_table(df, minlen,bed_df):
     df = df[(df["length1"] >= minlen) & (df["length2"] >= minlen)].copy()
 
     # total sequence length (first row, length1)
-   #df100 = df[df["id"] == "100%"]
     total_seq_length = df["length1"].max()
 
     # inversion flag

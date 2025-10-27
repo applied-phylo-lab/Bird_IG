@@ -7,13 +7,43 @@ library(purrr)
 library(ggtree)
 library(ggplot2)
 library(ggstance)
-
-summary_table<-fread("/local/storage/kav67/birds/summary_features.tsv")
+library(data.table)
+library(readr)
+dir<-"/local/storage/kav67/birds/"
+summary_table<-fread(paste0(dir,"summary_features.csv"))
 summary_table <- summary_table %>%
   mutate(AssemblyID = str_extract(Haplotype, "^[^_]+"))  # take text before first underscore
-#VGP_tree<-read.tree("/local/storage/kav67/roadies_v1.1.4.nwk")
+VGP_tree<-read.tree("/local/storage/kav67/roadies_v1.1.4.nwk")
 vgp_tree<-read.tree("/local/storage/kav67/VGP_figure/vgp_species_tree_08082025.nwk")
 VGP_data<-fread("/local/storage/kav67/VGP_phase1_copy062025.tsv")
+
+lookup <- VGP_data %>%
+  select(
+    GCA = `Accession # for main haplotype`,
+    GCF = `RefSeq annotation main haplotype`,
+    ScientificName = `Scientific Name`
+  ) %>%
+  pivot_longer(cols = c(GCA, GCF), names_to = "Type", values_to = "Assembly") %>%
+  filter(!is.na(Assembly)) %>%
+  select(Assembly, ScientificName)
+
+# Make sure IDs match exactly (trim spaces)
+lookup$Assembly <- str_trim(lookup$Assembly)
+VGP_tree$tip.label <- str_trim(VGP_tree$tip.label)
+
+# Rename tip labels based on lookup
+new_labels <- sapply(VGP_tree$tip.label, function(x) {
+  match_row <- lookup %>% filter(Assembly == x)
+  if (nrow(match_row) == 1) {
+    match_row$ScientificName
+  } else {
+    x  # keep original if no match
+  }
+})
+
+VGP_tree$tip.label <- new_labels
+
+
 
 summary_table <- summary_table %>%
   left_join(
@@ -101,10 +131,16 @@ summary_table_curated <- summary_filled %>%
   )
 
 
+#bird tree
 birds_vgp<-VGP_data[VGP_data$Lineage=="Birds",]
 drop_tips<-VGP_data[VGP_data$Lineage!="Birds",]$`English Name`
 bird_tree<-drop.tip(vgp_tree,drop_tips)
 plot(bird_tree)
+
+#other trees
+tips_to_keep <- intersect(VGP_tree$tip.label, summary_filled$LatinName)
+sub_tree <- drop.tip(VGP_tree, setdiff(VGP_tree$tip.label, tips_to_keep))
+plot(sub_tree)
 
 locus_counts <- summary_table_curated %>%
   group_by(LatinName, Locus) %>%
@@ -112,21 +148,21 @@ locus_counts <- summary_table_curated %>%
 locus_counts_wide <- locus_counts %>%
   pivot_wider(names_from = Locus, values_from = NumLoci, values_fill = 0) %>%
   rename(label = LatinName)
-locus_counts_wide$label<-gsub(" ","_",locus_counts_wide$label)
+#locus_counts_wide$label<-gsub(" ","_",locus_counts_wide$label)
 
 tips_in_data <- intersect(bird_tree$tip.label, locus_counts_wide$label)
+tips_in_data <- intersect(sub_tree$tip.label, locus_counts_wide$label)
 
 # 2. Drop tips without data
 bird_tree_pruned <- drop.tip(bird_tree, setdiff(bird_tree$tip.label, tips_in_data))
+sub_tree_pruned <- drop.tip(sub_tree, setdiff(sub_tree$tip.label, tips_in_data))
 
 # 3. Subset your data to only the ones still in the tree
 locus_counts_wide_sub <- locus_counts_wide[locus_counts_wide$label %in% tips_in_data, ]
 
-
-
 # base tree (horizontal)
 p <- ggtree(bird_tree_pruned, layout = "rectangular")
-
+p <- ggtree(sub_tree_pruned, layout = "rectangular")
 # IGH barplot
 p1 <- facet_plot(
   p, panel = "IGH",
@@ -147,4 +183,20 @@ p2 <- facet_plot(
 
 p2
 
+# get only max contig for IGH locus, remove if they have 0
+summary_table_IGH <- summary_table_curated %>%
+  filter(Locus == "IGH") %>%            # only IGH rows
+  group_by(LatinName) %>%               # group by species
+  slice_max(order_by = NumV, n = 1) %>% # keep row with highest NumV
+  ungroup()
 
+write_tsv(summary_table_IGH,paste0(dir,"IGH_filtered_table.tsv"))
+
+
+summary_table_IGH_all <- summary_filled %>%
+  filter(Locus == "IGH") %>%            # only IGH rows
+  group_by(Haplotype) %>%               # group by species
+  slice_max(order_by = NumV, n = 1) %>% # keep row with highest NumV
+  ungroup()
+
+write_tsv(summary_table_IGH_all,paste0(dir,"IGH_table.tsv"))

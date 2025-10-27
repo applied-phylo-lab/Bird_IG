@@ -51,6 +51,7 @@ def deduplicate_inversions(inv_df):
 
 def summarize_table(df, minlen, bed_df):
     """Compute summary statistics for one alignment table at given minlen."""
+
     df = df[(df["length1"] >= minlen) & (df["length2"] >= minlen)].copy()
 
     if df.empty:
@@ -96,6 +97,14 @@ def summarize_table(df, minlen, bed_df):
                     elif strand == "-":
                         genes_neg += 1
                     break
+    
+    # make per-inversion DF for minlen=1000
+    inv_df = pd.DataFrame()
+    if minlen == 1000 and not inv.empty:
+        inv_df = pd.DataFrame({
+            "length": inv["length1"],
+            "diagonal": (inv["start1"] == inv["start2"]) & (inv["end1"] == inv["end2"])
+        })
 
     return {
         "minlen": minlen,
@@ -110,7 +119,7 @@ def summarize_table(df, minlen, bed_df):
         "genes_on_inv_pos": genes_pos,
         "genes_on_inv_neg": genes_neg,
         "frac_genes_on_inv": genes_on_inv / total_genes if total_genes > 0 else 0,
-    }
+    }, inv_df 
 
 
 
@@ -139,17 +148,31 @@ def process_row(row):
     sample_name = f"{order}_{species}_{haplotype}"
     minlens = [1000, 2500, 5000, 7500, 10000, 12500, 15000]
     all_stats = []
-
+    inv_details_all = pd.DataFrame() 
+    
     for ml in minlens:
-        stats = summarize_table(df, ml, bed_df)
+        # try summarize_table, catch errors and print sample_name   
+        try: 
+            stats, inv_df = summarize_table(df, ml, bed_df)
+        except Exception as e:
+            print(f"Error processing {sample_name} at minlen {ml}: {e}")
+            continue
         stats["sample"] = sample_name
         stats["order"] = order
         stats["species"] = species
         stats["haplotype"] = haplotype
         all_stats.append(stats)
+    
+        if ml == 1000 and not inv_df.empty:
+            inv_df["sample"] = sample_name
+            inv_df["order"] = order
+            inv_df["species"] = species
+            inv_df["haplotype"] = haplotype
+            inv_details_all = pd.concat([inv_details_all, inv_df], ignore_index=True)
+
 
     print(f"Processed {sample_name}")
-    return all_stats
+    return all_stats,inv_details_all
 
 
 
@@ -158,6 +181,7 @@ def main():
     parser.add_argument('-i','--input_dir', required=True, help="Top-level input directory")
     parser.add_argument('-s','--summary', required=True, help="Path to summary_table_IGH.tsv")
     parser.add_argument('-o','--output', required=True, help="Output TSV file")
+    parser.add_argument('-d','--details', required=True, help="Output TSV file (per inversion)")
     parser.add_argument('-c','--cores', type=int, default=4, help="Number of parallel workers")
 
     args = parser.parse_args()
@@ -168,17 +192,34 @@ def main():
     # run in parallel
     with Pool(args.cores) as pool:
         results = pool.map(process_row, [row for _, row in df.iterrows()])
+    all_stats = []
+    all_inv_details = []
 
+    for stats, inv_details in results:
+        if stats:  # if non-empty list
+            all_stats.extend(stats)
+        if not inv_details.empty:
+            all_inv_details.append(inv_details)
     # flatten list of lists
-    all_stats = [item for sublist in results for item in sublist if sublist]
+    #all_stats = [item for sublist in results for item in sublist if sublist]
+    #all_inv_details = pd.concat([inv for _, inv in results if not inv.empty], ignore_index=True)
+   
+    if all_stats:
+        out_df = pd.DataFrame(all_stats)
+        out_df.to_csv(args.output, sep='\t', index=False)
+        print(f"Saved summary results to {args.output}")
+    else:
+        print("No summary results to save.")
 
-    if not all_stats:
-        print("No results to save.")
-        return
-
-    out_df = pd.DataFrame(all_stats)
-    out_df.to_csv(args.output, sep='\t', index=False)
-    print(f"Saved results to {args.output}")
+    if all_inv_details:
+        all_inv_details = pd.concat(all_inv_details, ignore_index=True)
+        all_inv_details = all_inv_details[
+            ["sample", "order", "species", "haplotype", "length", "diagonal"]
+        ]
+        all_inv_details.to_csv(args.details, sep='\t', index=False)
+        print(f"Saved inversion details to {args.details}")
+    else:
+        print("No inversion details to save.")
 
 
 if __name__ == "__main__":

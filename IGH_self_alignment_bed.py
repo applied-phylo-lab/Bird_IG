@@ -40,9 +40,10 @@ def process_row(row):
     lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
     if os.path.exists(fasta_path) and not os.path.exists(lastz_output):
         aligner.AlignTwoFasta(fasta_path, fasta_path, lastz_output)
-    else:
+    elif not os.path.exists(fasta_path):
         print(f"FASTA not found: {fasta_path}")
         return
+
     
     # create bed file
     # read gene table
