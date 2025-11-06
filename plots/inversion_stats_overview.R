@@ -3,13 +3,13 @@ library(dplyr)
 library(tidyr)
 library(phytools)
 library(tibble)
-dir<-"/local/storage/kav67/birds/"
-inversion_stats<-fread(paste0(dir,"IGH_inversions.tsv"))
+dir<-"/local/storage/kav67/Bird_data/"
+inversion_stats<-fread(paste0(dir,"IGH_inversions_all.tsv"))
 species_data<-inversion_stats
 summary_table_IGH<-fread(paste0(dir,"IGH_table.tsv")) #IGH_filtered_table.tsv
 
 # Summarize by Order (average across samples per order)
-inversion_stats_long <- inversion_stats[inversion_stats$minlen==1000,] %>%
+inversion_stats_long <- inversion_stats[inversion_stats$minlen==250,] %>%
   mutate(
     inv_cov_frac = inv_cov_len / total_seq_length
   ) %>%
@@ -39,7 +39,7 @@ ggplot(inversion_stats_long, aes(x = order, y = value, fill = order)) +
   ) +
   labs(x = "Order", y = "Value", title = "Inversion statistics across orders")
 
-inversion_stats1000<-inversion_stats[inversion_stats$minlen==1000,]
+inversion_stats1000<-inversion_stats[inversion_stats$minlen==250,]
 inversion_stats1000 <- merge(
   inversion_stats1000,
   summary_table_IGH[, c("Haplotype", "LatinName")],

@@ -2,9 +2,9 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(phytools)
-paralogs<-fread("/local/storage/kav67/birds/IGH_paralogs_all.tsv")
+paralogs<-fread("/local/storage/kav67/Bird_data/IGH_paralogs_all.tsv")
 
-summary_table_IGH<-fread("/local/storage/kav67/birds/IGH_table.tsv")
+summary_table_IGH<-fread("/local/storage/kav67/Bird_data/IGH_table.tsv")
 
 for( o in unique(paralogs$Order)){
   p<-ggplot(paralogs[paralogs$Order==o], aes(x=group_size))+
@@ -53,7 +53,7 @@ p2<-facet_plot(p+xlim_tree(9), panel = "Fraction of genes in paralog groups (>1)
 p2+theme_tree2()
 
 
-paralog_groups <- paralogs[paralogs$group_size>1,] %>%
+paralog_groups <- paralogs %>% #[paralogs$group_size>1,]
   distinct(Order, Species, Haplotype, sample, group_members, group_size)
 
 

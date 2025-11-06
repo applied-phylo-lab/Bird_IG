@@ -9,7 +9,7 @@ library(ggplot2)
 library(ggstance)
 library(data.table)
 library(readr)
-dir<-"/local/storage/kav67/birds/"
+dir<-"/local/storage/kav67/Bird_data/"
 dir<-"/local/storage/kav67/mammals/"
 summary_table<-fread(paste0(dir,"summary_features.csv"))
 summary_table <- summary_table %>%
@@ -132,13 +132,7 @@ summary_table_curated <- summary_filled %>%
   )
 
 
-#bird tree
-birds_vgp<-VGP_data[VGP_data$Lineage=="Birds",]
-drop_tips<-VGP_data[VGP_data$Lineage!="Birds",]$`English Name`
-bird_tree<-drop.tip(vgp_tree,drop_tips)
-plot(bird_tree)
-
-#other trees
+#sub tree
 tips_to_keep <- intersect(VGP_tree$tip.label, summary_filled$LatinName)
 sub_tree <- drop.tip(VGP_tree, setdiff(VGP_tree$tip.label, tips_to_keep))
 plot(sub_tree)
@@ -151,18 +145,15 @@ locus_counts_wide <- locus_counts %>%
   rename(label = LatinName)
 #locus_counts_wide$label<-gsub(" ","_",locus_counts_wide$label)
 
-tips_in_data <- intersect(bird_tree$tip.label, locus_counts_wide$label)
 tips_in_data <- intersect(sub_tree$tip.label, locus_counts_wide$label)
 
 # 2. Drop tips without data
-bird_tree_pruned <- drop.tip(bird_tree, setdiff(bird_tree$tip.label, tips_in_data))
 sub_tree_pruned <- drop.tip(sub_tree, setdiff(sub_tree$tip.label, tips_in_data))
 
 # 3. Subset your data to only the ones still in the tree
 locus_counts_wide_sub <- locus_counts_wide[locus_counts_wide$label %in% tips_in_data, ]
 
 # base tree (horizontal)
-p <- ggtree(bird_tree_pruned, layout = "rectangular")
 p <- ggtree(sub_tree_pruned, layout = "rectangular")
 # IGH barplot
 p1 <- facet_plot(
