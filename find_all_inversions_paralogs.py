@@ -32,7 +32,7 @@ class DSU:
         if rx == ry:
             return
         if self.rank[rx] < self.rank[ry]:
-            self.parent[rx] = ry
+            self.parent[rx] = ry 
         elif self.rank[rx] > self.rank[ry]:
             self.parent[ry] = rx
         else:
@@ -40,7 +40,7 @@ class DSU:
             self.rank[rx] += 1
 
 
-def get_diagonal_inversions(df, minlen=1000):
+def get_diagonal_inversions(df, minlen=250):
     """Return only diagonal inversions (palindromes)."""
     df["inversion"] = df["strand1"] != df["strand2"]
     inv = df[df["inversion"]].copy()
@@ -48,7 +48,7 @@ def get_diagonal_inversions(df, minlen=1000):
     return inv_diag[inv_diag["length1"] >= minlen]
 
 
-def get_non_diagonal_inversions(df, minlen=1000):
+def get_non_diagonal_inversions(df, minlen=250):
     """Return non-diagonal inversions (non-palindromic)."""
     df["inversion"] = df["strand1"] != df["strand2"]
     inv = df[df["inversion"]].copy()
@@ -176,8 +176,8 @@ def process_row(row):
 
     sample_name = f"{order}_{species}_{haplotype}"
 
-    inv_diag = get_diagonal_inversions(df, minlen=1000)
-    inv_non_diag = get_non_diagonal_inversions(df, minlen=1000)
+    inv_diag = get_diagonal_inversions(df, minlen=250)
+    inv_non_diag = get_non_diagonal_inversions(df, minlen=250)
 
     groups, group_members = find_sister_groups(bed_df, inv_diag, inv_non_diag)
 

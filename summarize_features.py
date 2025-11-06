@@ -4,7 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description="Summarize main feature stats.")
-    parser.add_argument("-i", "--indir",required=True, help="Input directory containing self*.tsv files")
+    parser.add_argument("-i", "--indir",required=True, help="Input directory")
     #parser.add_argument("-t", "--table", required=True, help="tsv file with VGP summary table")
     parser.add_argument("-o", "--out",default="summary.tsv", help="Output TSV file")
     args = parser.parse_args()

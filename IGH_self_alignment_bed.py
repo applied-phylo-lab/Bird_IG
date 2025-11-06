@@ -29,7 +29,7 @@ def process_row(row):
     summary_csv_path = os.path.join(input_dir, order, species, haplotype,
                                     'refined_ig_loci', 'summary.csv')
     combined_genes_path = os.path.join(input_dir, order, species, haplotype,
-                                       'combined_genes_IGH.txt')
+                                       'combined_genes_IGH_clean.txt')
     output_dir = os.path.join(input_dir, order, species, haplotype)
     
     

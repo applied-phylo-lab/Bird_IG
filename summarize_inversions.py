@@ -10,7 +10,7 @@ def read_tsv_with_header(path):
     with open(path) as f:
         header = f.readline().strip()
         if header.startswith("#"):
-            header = header[1:]  # remove leading #
+            header = header[1:]  # remosve leading #
         columns = header.split("\t")
     df = pd.read_csv(path, sep="\t", comment="#", names=columns, skiprows=1)
     return df
@@ -98,9 +98,9 @@ def summarize_table(df, minlen, bed_df):
                         genes_neg += 1
                     break
     
-    # make per-inversion DF for minlen=1000
+    # make per-inversion DF for minlen=250
     inv_df = pd.DataFrame()
-    if minlen == 1000 and not inv.empty:
+    if minlen == 250 and not inv.empty:
         inv_df = pd.DataFrame({
             "length": inv["length1"],
             "diagonal": (inv["start1"] == inv["start2"]) & (inv["end1"] == inv["end2"])
@@ -134,7 +134,7 @@ def process_row(row):
 
     if not os.path.exists(aln_path) or not os.path.exists(bed_path):
         print(f"Skipping {order}/{species}/{haplotype}: missing files")
-        return []
+        return [], pd.DataFrame()
 
     try:
         df = read_tsv_with_header(aln_path)
@@ -143,10 +143,10 @@ def process_row(row):
         bed_df.columns = ['contig', 'start', 'end', 'na1', 'na2', 'strand', 'na3', 'na4', 'color']
     except Exception as e:
         print(f"Error reading {order}/{species}/{haplotype}: {e}")
-        return []
+        return [], pd.DataFrame()
 
     sample_name = f"{order}_{species}_{haplotype}"
-    minlens = [1000, 2500, 5000, 7500, 10000, 12500, 15000]
+    minlens = [250, 1000, 2500, 5000, 7500, 10000, 12500, 15000]
     all_stats = []
     inv_details_all = pd.DataFrame() 
     
@@ -163,7 +163,7 @@ def process_row(row):
         stats["haplotype"] = haplotype
         all_stats.append(stats)
     
-        if ml == 1000 and not inv_df.empty:
+        if ml == 250 and not inv_df.empty:
             inv_df["sample"] = sample_name
             inv_df["order"] = order
             inv_df["species"] = species
@@ -194,7 +194,7 @@ def main():
         results = pool.map(process_row, [row for _, row in df.iterrows()])
     all_stats = []
     all_inv_details = []
-
+    print(results)
     for stats, inv_details in results:
         if stats:  # if non-empty list
             all_stats.extend(stats)
