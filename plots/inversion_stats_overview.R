@@ -2,6 +2,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(phytools)
+library(tibble)
 dir<-"/local/storage/kav67/birds/"
 inversion_stats<-fread(paste0(dir,"IGH_inversions.tsv"))
 species_data<-inversion_stats
@@ -119,14 +120,16 @@ p3 + geom_hilight(
   aes(node = node, fill = type),
   type = "roundrect",
   inherit.aes = FALSE
-)
+)+theme_tree2()
 
 
 
 species_data <- inversion_stats1000%>%
   filter(!grepl("MiscBirds", order))
-species_data$LatinName<-gsub(" ","_",species_data$LatinName)
+#species_data$LatinName<-gsub(" ","_",species_data$LatinName)
+species_data$LatinName<-gsub("_"," ",species_data$LatinName)
 # Drop tips from tree
+bird_tree_pruned<-sub_tree_pruned
 tree_filtered <- drop.tip(bird_tree_pruned,
                           setdiff(bird_tree_pruned$tip.label, species_data$LatinName))
 tips_in <- intersect(bird_tree_pruned$tip.label, species_data$LatinName)
@@ -175,27 +178,29 @@ plot_species_data <- species_data %>%
   mutate(inv_cov_frac = inv_cov_len / total_seq_length) %>% 
   rename(label = order)  
 
+
+order_tree<-ladderize(order_tree, right=FALSE)
 p <- ggtree(order_tree, layout = "rectangular") +
   geom_tiplab(size = 3, align = TRUE, linetype = NA, linesize = 0.5)
 
 
 # Add boxplots per order
 
-p2<-facet_plot(p+xlim_tree(9), panel = "avg_inv_len",
+p2<-facet_plot(p+xlim_tree(9), panel = "Average Inversion Length",
            data = plot_species_data,
            geom_boxplot,
            mapping = aes(x = avg_inv_len, group = label, fill = label))
 
-p3<-facet_plot(p2, panel = "num_inversions",
+p3<-facet_plot(p2, panel = "Inversion Count",
                data = plot_species_data,
                geom_boxplot,
                mapping = aes(x = num_inversions, group = label, fill = label))
-p4<-facet_plot(p3, panel = "frac_genes_on_inv",
+p4<-facet_plot(p3, panel = "Fraction of genes on inversions",
                data = plot_species_data,
                geom_boxplot,
                mapping = aes(x = frac_genes_on_inv, group = label, fill = label))
 
-p5<-facet_plot(p4, panel = "inv_cov_frac",
+p5<-facet_plot(p4, panel = "Fraction of locus covered by inversions",
                data = plot_species_data,
                geom_boxplot,
                mapping = aes(x = inv_cov_frac, group = label, fill = label))

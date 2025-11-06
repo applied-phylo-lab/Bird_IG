@@ -10,6 +10,7 @@ library(ggstance)
 library(data.table)
 library(readr)
 dir<-"/local/storage/kav67/birds/"
+dir<-"/local/storage/kav67/mammals/"
 summary_table<-fread(paste0(dir,"summary_features.csv"))
 summary_table <- summary_table %>%
   mutate(AssemblyID = str_extract(Haplotype, "^[^_]+"))  # take text before first underscore

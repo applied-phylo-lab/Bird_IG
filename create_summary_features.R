@@ -1,4 +1,4 @@
-dir <- "/local/storage/kav67/mammals"
+dir <- "/local/storage/kav67/Bird_data"
 
 files <- list.files(
   path = file.path(dir),
