@@ -194,7 +194,7 @@ def main():
         results = pool.map(process_row, [row for _, row in df.iterrows()])
     all_stats = []
     all_inv_details = []
-    print(results)
+   
     for stats, inv_details in results:
         if stats:  # if non-empty list
             all_stats.extend(stats)
