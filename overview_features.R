@@ -164,6 +164,9 @@ p1 <- facet_plot(
   stat = "identity"
 )
 
+
+
+
 # IGL barplot underneath
 p2 <- facet_plot(
   p1, panel = "IGL",

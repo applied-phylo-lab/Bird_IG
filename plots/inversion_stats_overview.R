@@ -183,7 +183,7 @@ order_tree<-ladderize(order_tree, right=FALSE)
 p <- ggtree(order_tree, layout = "rectangular") +
   geom_tiplab(size = 3, align = TRUE, linetype = NA, linesize = 0.5)
 
-
+write.tree(order_tree, file = "/local/storage/kav67/Bird_data/order_tree.tre")
 # Add boxplots per order
 
 p2<-facet_plot(p+xlim_tree(9), panel = "Average Inversion Length",
