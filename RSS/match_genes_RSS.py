@@ -23,9 +23,15 @@ def process_row(task):
     ) = task
 
     # Paths
+    contig_path = os.path.join(
+        input_dir, order, species, haplotype,
+        "refined_ig_loci",
+        "summary.csv"
+    )
+
     genes_path = os.path.join(
         input_dir, order, species, haplotype,
-        "combined_genes_IGH_clean.txt"
+        "combined_genes_IGL.txt" # "combined_genes_IGH_clean.txt"
     )
 
     rss_path = os.path.join(
@@ -33,6 +39,10 @@ def process_row(task):
         "RSS", "rss_V.csv"
     )
 
+    if not os.path.exists(contig_path):
+        print(f"[WARN] Missing genes file: {contig_path}")
+        return None
+    
     if not os.path.exists(genes_path):
         print(f"[WARN] Missing genes file: {genes_path}")
         return None
@@ -42,13 +52,15 @@ def process_row(task):
         return None
 
     # Load data
+    contigs = pd.read_csv(contig_path)
     genes = pd.read_csv(genes_path, sep="\t")
     rss = pd.read_csv(rss_path, sep="\t")
 
     # -----------------------------------------------------
     # 1. Select the contig with the most rows
     # -----------------------------------------------------
-    contig_counts = genes["Contig"].value_counts()
+    contigs=contigs[contigs["Locus"]=="IGL"]
+    contig_counts = contigs["Contig"].value_counts()
     if contig_counts.empty:
         return None
 
@@ -67,7 +79,6 @@ def process_row(task):
 
     # Build intervals quickly
     gene_positions = genes_major[["GeneType", "Contig", "Pos", "Strand"]]
-
     for _, rss_row in rss_major.iterrows():
         rss_pos = rss_row["7-mer index"]
 
@@ -76,13 +87,20 @@ def process_row(task):
         
 
         for _, g in genes_major.iterrows():
-            gene_pos = g["Pos"] + len(g["Sequence"])
+            try:
+                gene_pos = g["Pos"] + len(g["Sequence"])
+            except:
+                print(order, species, haplotype, major_contig, g)
+                continue
             strand = g["Strand"]
+            distance = 0
 
             if strand == "+" and gene_pos < rss_pos <= gene_pos + 100:
                 downstream = True
+                distance = rss_pos - gene_pos
             elif strand == "-" and gene_pos - 100 <= rss_pos < gene_pos:
                 downstream = True
+                distance = gene_pos - rss_pos
             else:
                 downstream = False
 
@@ -100,6 +118,7 @@ def process_row(task):
                     "RSS_7mer": rss_row["7-mer"],
                     "RSS_9mer": rss_row["9-mer"],
                     "RSS_strand": rss_row["strand"],
+                    "Distance": distance,
                 })
     # Count genes retained
     retained_rss_count = len(results)
