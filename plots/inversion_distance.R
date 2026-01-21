@@ -99,3 +99,16 @@ ggplot(df[df$Order!="Cranes",], aes(x = distance / 1000, y = `id%`)) +
     fill = "Count"
   )
 
+ggplot(df[df$Order!="Cranes",], aes(x = distance , y = `id%`)) +
+  geom_hex(bins = 50) +
+  scale_fill_viridis_c() +
+  theme_minimal() +
+  labs(
+    title = "Distance vs Identity density",
+    x = "Distance (bb)",
+    y = "Identity (%)",
+    fill = "Count"
+  )
+
+library(scales) 
+

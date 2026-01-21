@@ -12,6 +12,7 @@ library(readr)
 dir<-"/local/storage/kav67/Bird_data/"
 dir<-"/local/storage/kav67/mammals/"
 summary_table<-fread(paste0(dir,"summary_features.csv"))
+summary_table<-fread(paste0(dir,"/Songbirds/Woodhouse_Scrub_Jay/summary.csv"))
 summary_table <- summary_table %>%
   mutate(AssemblyID = str_extract(Haplotype, "^[^_]+"))  # take text before first underscore
 VGP_tree<-read.tree("/local/storage/kav67/roadies_v1.1.4.nwk")
@@ -124,6 +125,11 @@ if (length(unmatched_species) > 0) {
 } else {
   message("All rows have LatinName filled (either via AssemblyID or Species match).")
 }
+summary_filled[summary_filled$Species=="house_finches",]$LatinName<-"Haemorhous mexicanus"
+summary_filled[summary_filled$Species=="A.coerulescensAC",]$LatinName<-"Aphelocoma coerulescens"
+summary_filled[summary_filled$Species=="A.coerulescensAC",]$LatinName<-"Aphelocoma coerulescens"
+summary_filled[summary_filled$Species=="A.insularisAI",]$LatinName<-"Aphelocoma insularis"
+summary_filled[summary_filled$Species=="A.woodhouseiiAW",]$LatinName<-"Aphelocoma woodhouseii"
 
 summary_table_curated <- summary_filled %>%
   filter(
@@ -188,7 +194,7 @@ summary_table_IGH <- summary_table_curated %>%
 write_tsv(summary_table_IGH,paste0(dir,"IGH_filtered_table.tsv"))
 
 
-summary_table_IGH_all <- summary_filled %>%
+summary_table_IGH_all <- summary_table %>%#summary_filled %>%
   filter(Locus == "IGH") %>%            # only IGH rows
   group_by(Haplotype) %>%               # group by species
   slice_max(order_by = NumV, n = 1) %>% # keep row with highest NumV
