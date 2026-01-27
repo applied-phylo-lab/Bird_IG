@@ -16,57 +16,108 @@ import argparse
 from pathlib import Path
 from collections import defaultdict
 import json
+import itertools
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
-def load_species_mapping(csv_path):
-    """
-    Load the summary_features.csv and create a mapping of haplotypes to species.
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Detect inversions between birds of the same species using Mummer and Lastz alignments'
+    )
+    parser.add_argument(
+        '--summary-csv', '-s',
+        required=True,
+        help='Path to summary_features.csv file'
+    )
+    parser.add_argument(
+        '--mummer-dir', '-m',
+        required=True,
+        help='Directory containing Mummer alignment files'
+    )
+    parser.add_argument(
+        '--lastz-dir', '-l',
+        required=True,
+        help='Directory containing Lastz alignment files'
+    )
+    parser.add_argument(
+        '--output-dir', '-o',
+        default='./inversion_results',
+        help='Output directory for results (default: ./inversion_results)'
+    )
+    parser.add_argument(
+        '--min-length', '-L',
+        type=int,
+        default=1000,
+        help='Minimum inversion length in bp (default: 1000)'
+    )
+    parser.add_argument(
+        '--min-identity', '-i',
+        type=float,
+        default=80.0,
+        help='Minimum alignment identity percentage (default: 80.0)'
+    )
+    parser.add_argument("-c", "--cores", type=int, default=1,
+                        help="Number of parallel processes (default: 1)")
     
-    Returns:
-        dict: {species: [list of haplotypes]}
-    """
-    try:
-        df = pd.read_csv(csv_path)
-        
-        # Try to find species column (common names: Species, species, Species_name, etc.)
-        species_col = None
-        for col in df.columns:
-            if 'species' in col.lower():
-                species_col = col
-                break
-        
-        if species_col is None:
-            raise ValueError("Could not find species column in CSV. Available columns: " + ", ".join(df.columns))
-        
-        # Try to find haplotype/sample column
-        haplotype_col = None
-        for col in df.columns:
-            if any(term in col.lower() for term in ['haplotype']):
-                haplotype_col = col
-                break
-        
-        if haplotype_col is None:
-            # Use first column as fallback
-            haplotype_col = df.columns[0]
-        
-        # Group haplotypes by species
-        species_map = defaultdict(list)
-        for _, row in df.iterrows():
-            species = row[species_col]
-            haplotype = str(row[haplotype_col])
-            species_map[species].append(haplotype)
-        
-        print(f"Loaded {len(species_map)} species from {csv_path}")
-        for species, haplotypes in species_map.items():
-            print(f"  {species}: {len(haplotypes)} haplotypes")
-        
-        return dict(species_map)
+    return parser.parse_args()
+
+def process_pair(args_tuple,min_length=1000, min_identity=80.0):
+    (
+        args,
+        order,
+        species,
+        h1,
+        h2
+    ) = args_tuple
+
+    results = {
+        'mummer': defaultdict(list),
+        'lastz': defaultdict(list),
+        'comparison': defaultdict(dict)
+    }
+
+    # mummer alignments
+    mummer_prefix = os.path.join(
+        args.mummer_dir,
+        f"{species}_{h1['Haplotype']}_vs_{h2['Haplotype']}"
+    )
+
+    delta = mummer_prefix + ".delta"
+    filtered_delta = mummer_prefix + ".filtered.delta"
+    coords = mummer_prefix + ".coords"
+
+    if os.path.exists(delta):
+        # Process Mummer alignments
+        mummer_inversions = []
+        alignments = parse_mummer_delta(delta)
+        inversions = detect_inversions(alignments, min_length=min_length, min_identity=min_identity)
+        mummer_inversions.extend(inversions)
     
-    except Exception as e:
-        print(f"Error loading species mapping: {e}", file=sys.stderr)
-        raise
+    # lastz alignments
+    lastz_prefix = os.path.join(
+        args.lastz_dir,
+        f"{h1['Haplotype']}_{h2['Haplotype']}"
+    )
 
+    txt = lastz_prefix + ".txt"
+    lastz_inversions = []
+    alignments = parse_lastz_txt(txt)
+    inversions = detect_inversions(alignments, min_length=min_length, min_identity=min_identity)
+    lastz_inversions.extend(inversions)
+    pair_key = f"{h1['Haplotype']}_vs_{h2['Haplotype']}"
+    results['mummer'][species].extend(mummer_inversions)
+    results['lastz'][species].extend(lastz_inversions)
 
+    results['comparison'][species][pair_key] = {
+                    'mummer_count': len(mummer_inversions),
+                    'lastz_count': len(lastz_inversions),
+                    'mummer_inversions': mummer_inversions,
+                    'lastz_inversions': lastz_inversions
+                }
+
+    return results
+    
 def parse_mummer_coords(coords_file):
     """
     Parse Mummer .coords file to extract alignment information.
@@ -278,89 +329,6 @@ def parse_lastz_txt(txt_file):
         print(f"Error parsing Lastz txt file {txt_file}: {e}", file=sys.stderr)
         return []
 
-
-def parse_lastz_maf(maf_file):
-    """
-    Parse Lastz .maf file to extract alignment information.
-    
-    MAF format:
-    a score=...
-    s ref_name start length strand total_length sequence
-    s query_name start length strand total_length sequence
-    
-    Returns:
-        list: List of alignment dictionaries
-    """
-    alignments = []
-    
-    try:
-        with open(maf_file, 'r') as f:
-            current_block = {}
-            
-            for line in f:
-                line = line.strip()
-                
-                if line.startswith('a'):
-                    # Alignment header
-                    current_block = {}
-                
-                elif line.startswith('s'):
-                    # Sequence line
-                    parts = line.split()
-                    if len(parts) >= 7:
-                        name = parts[1]
-                        start = int(parts[2])
-                        length = int(parts[3])
-                        strand = parts[4]
-                        total_len = int(parts[5])
-                        
-                        if 'ref' not in current_block:
-                            current_block['ref'] = {
-                                'name': name,
-                                'start': start,
-                                'end': start + length,
-                                'strand': strand,
-                                'total_len': total_len
-                            }
-                        else:
-                            current_block['query'] = {
-                                'name': name,
-                                'start': start,
-                                'end': start + length,
-                                'strand': strand,
-                                'total_len': total_len
-                            }
-                            
-                            # Complete alignment block
-                            if 'ref' in current_block and 'query' in current_block:
-                                ref = current_block['ref']
-                                query = current_block['query']
-                                
-                                is_reverse = (ref['strand'] == '-' and query['strand'] == '+') or \
-                                            (ref['strand'] == '+' and query['strand'] == '-')
-                                
-                                alignments.append({
-                                    'ref_start': ref['start'],
-                                    'ref_end': ref['end'],
-                                    'query_start': query['start'],
-                                    'query_end': query['end'],
-                                    'ref_name': ref['name'],
-                                    'query_name': query['name'],
-                                    'is_reverse': is_reverse,
-                                    'ref_strand': ref['strand'],
-                                    'query_strand': query['strand'],
-                                    'ref_len': ref['total_len'],
-                                    'query_len': query['total_len']
-                                })
-                                current_block = {}
-        
-        return alignments
-    
-    except Exception as e:
-        print(f"Error parsing Lastz MAF file {maf_file}: {e}", file=sys.stderr)
-        return []
-
-
 def detect_inversions(alignments, min_length=1000, min_identity=80.0):
     """
     Detect inversions from alignment data.
@@ -412,263 +380,77 @@ def detect_inversions(alignments, min_length=1000, min_identity=80.0):
     return inversions
 
 
-def find_alignment_files(directory, extensions):
-    """
-    Find all alignment files with given extensions in directory.
-    
-    Returns:
-        dict: {file_path: (ref_name, query_name)}
-    """
-    files = {}
-    directory = Path(directory)
-    
-    if not directory.exists():
-        print(f"Warning: Directory {directory} does not exist", file=sys.stderr)
-        return files
-    
-    for ext in extensions:
-        for file_path in directory.rglob(f"*{ext}"):
-            # Try to extract ref and query names from filename
-            # Common patterns: ref_vs_query.ext, ref-query.ext, etc.
-            stem = file_path.stem
-            for sep in ['_vs_', '-vs-', '_', '-']:
-                if sep in stem:
-                    parts = stem.split(sep, 1)
-                    if len(parts) == 2:
-                        files[str(file_path)] = (parts[0], parts[1])
-                        break
-            else:
-                # If no separator found, use filename as both
-                files[str(file_path)] = (stem, stem)
-    
-    return files
 
-
-def process_species_inversions(species_map, mummer_dir, lastz_dir, output_dir, min_length=1000, min_identity=80.0):
+def compare_results(species, comparisons, output_dir):
     """
-    Process alignments for each species and detect inversions.
-    """
-    results = {
-        'mummer': defaultdict(list),
-        'lastz': defaultdict(list),
-        'comparison': defaultdict(dict)
-    }
-    
-    # Find Mummer alignment files
-    print("\nFinding Mummer alignment files...")
-    mummer_files = find_alignment_files(mummer_dir, ['.coords', '.delta'])
-    print(f"Found {len(mummer_files)} Mummer alignment files")
-    
-    # Find Lastz alignment files
-    print("\nFinding Lastz alignment files...")
-    lastz_files = find_alignment_files(lastz_dir, ['.txt', '.maf', '.lav'])
-    print(f"Found {len(lastz_files)} Lastz alignment files")
-    
-    # Process each species
-    for species, haplotypes in species_map.items():
-        print(f"\nProcessing species: {species}")
-        print(f"  Haplotypes: {', '.join(haplotypes)}")
-        
-        # Find pairwise comparisons within species
-        for i, haplo1 in enumerate(haplotypes):
-            for haplo2 in haplotypes[i+1:]:
-                print(f"  Comparing {haplo1} vs {haplo2}")
-                
-                # Process Mummer alignments
-                mummer_inversions = []
-                for file_path, (ref, query) in mummer_files.items():
-                    # Check if this file matches our haplotypes (flexible matching)
-                    # Try exact match first, then substring match
-                    ref_match = (haplo1 == ref or haplo2 == ref or haplo1 in ref or haplo2 in ref)
-                    query_match = (haplo1 == query or haplo2 == query or haplo1 in query or haplo2 in query)
-                    
-                    if ref_match and query_match and ref != query:
-                        print(f"    Processing Mummer file: {Path(file_path).name}")
-                        
-                        if file_path.endswith('.delta'):
-                            alignments = parse_mummer_delta(file_path)
-                        else:
-                            alignments = parse_mummer_coords(file_path)
-                        
-                        inversions = detect_inversions(alignments, min_length=min_length, min_identity=min_identity)
-                        mummer_inversions.extend(inversions)
-                
-                # Process Lastz alignments
-                lastz_inversions = []
-                for file_path, (ref, query) in lastz_files.items():
-                    # Check if this file matches our haplotypes (flexible matching)
-                    ref_match = (haplo1 == ref or haplo2 == ref or haplo1 in ref or haplo2 in ref)
-                    query_match = (haplo1 == query or haplo2 == query or haplo1 in query or haplo2 in query)
-                    
-                    if ref_match and query_match and ref != query:
-                        print(f"    Processing Lastz file: {Path(file_path).name}")
-                        
-                        if file_path.endswith('.txt'):
-                            alignments = parse_lastz_txt(file_path)
-                        elif file_path.endswith('.maf'):
-                            alignments = parse_lastz_maf(file_path)
-                        else:
-                            # For .lav files, would need different parser
-                            print(f"    Warning: .lav format not yet supported, skipping")
-                            continue
-                        
-                        inversions = detect_inversions(alignments, min_length=min_length, min_identity=min_identity)
-                        lastz_inversions.extend(inversions)
-                
-                # Store results
-                pair_key = f"{haplo1}_vs_{haplo2}"
-                results['mummer'][species].extend(mummer_inversions)
-                results['lastz'][species].extend(lastz_inversions)
-                
-                # Compare results
-                results['comparison'][species][pair_key] = {
-                    'mummer_count': len(mummer_inversions),
-                    'lastz_count': len(lastz_inversions),
-                    'mummer_inversions': mummer_inversions,
-                    'lastz_inversions': lastz_inversions
-                }
-                
-                print(f"    Found {len(mummer_inversions)} Mummer inversions, {len(lastz_inversions)} Lastz inversions")
-    
-    return results
-
-
-def compare_results(results, output_dir):
-    """
-    Compare Mummer and Lastz inversion results and generate summary.
+    Compare Mummer and Lastz inversion results for ONE species.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Create summary DataFrame
-    summary_data = []
-    
-    for species, comparisons in results['comparison'].items():
-        for pair_key, data in comparisons.items():
-            mummer_inv = data['mummer_inversions']
-            lastz_inv = data['lastz_inversions']
-            
-            # Calculate overlap (inversions detected by both methods)
-            # Check if inversions overlap in both reference and query coordinates
-            overlap_count = 0
-            matched_lastz = set()  # Track which lastz inversions have been matched
-            
-            for m_inv in mummer_inv:
-                for idx, l_inv in enumerate(lastz_inv):
-                    if idx in matched_lastz:
-                        continue
-                    
-                    # Check if inversions overlap in reference coordinates
-                    m_ref_range = (min(m_inv['ref_start'], m_inv['ref_end']), 
-                                  max(m_inv['ref_start'], m_inv['ref_end']))
-                    l_ref_range = (min(l_inv['ref_start'], l_inv['ref_end']), 
-                                  max(l_inv['ref_start'], l_inv['ref_end']))
-                    
-                    ref_overlap = (m_ref_range[0] <= l_ref_range[1] and 
-                                  m_ref_range[1] >= l_ref_range[0])
-                    
-                    # Also check query coordinates if available
-                    m_query_range = (min(m_inv.get('query_start', 0), m_inv.get('query_end', 0)), 
-                                    max(m_inv.get('query_start', 0), m_inv.get('query_end', 0)))
-                    l_query_range = (min(l_inv.get('query_start', 0), l_inv.get('query_end', 0)), 
-                                    max(l_inv.get('query_start', 0), l_inv.get('query_end', 0)))
-                    
-                    query_overlap = (m_query_range[0] <= l_query_range[1] and 
-                                    m_query_range[1] >= l_query_range[0])
-                    
-                    # Consider it an overlap if either ref or query coordinates overlap
-                    # (or both if both are available)
-                    if ref_overlap and (not m_query_range[0] or query_overlap):
-                        overlap_count += 1
-                        matched_lastz.add(idx)
-                        break
-            
-            summary_data.append({
-                'Species': species,
-                'Pair': pair_key,
-                'Mummer_Inversions': data['mummer_count'],
-                'Lastz_Inversions': data['lastz_count'],
-                'Overlap_Count': overlap_count,
-                'Mummer_Only': data['mummer_count'] - overlap_count,
-                'Lastz_Only': data['lastz_count'] - overlap_count
-            })
-    
-    summary_df = pd.DataFrame(summary_data)
-    summary_path = output_dir / 'inversion_summary.csv'
-    summary_df.to_csv(summary_path, index=False)
-    print(f"\nSummary saved to {summary_path}")
-    
-    # Save detailed results
-    detailed_path = output_dir / 'inversion_details.json'
-    # Convert to JSON-serializable format
-    json_results = {}
-    for species, comparisons in results['comparison'].items():
-        json_results[species] = {}
-        for pair_key, data in comparisons.items():
-            json_results[species][pair_key] = {
-                'mummer_count': data['mummer_count'],
-                'lastz_count': data['lastz_count'],
-                'mummer_inversions': data['mummer_inversions'],
-                'lastz_inversions': data['lastz_inversions']
-            }
-    
-    with open(detailed_path, 'w') as f:
-        json.dump(json_results, f, indent=2)
-    print(f"Detailed results saved to {detailed_path}")
-    
-    # Print summary statistics
-    print("\n" + "="*80)
-    print("SUMMARY STATISTICS")
-    print("="*80)
-    print(f"\nTotal species analyzed: {len(results['comparison'])}")
-    print(f"Total pairwise comparisons: {len(summary_data)}")
-    print(f"\nTotal Mummer inversions: {summary_df['Mummer_Inversions'].sum()}")
-    print(f"Total Lastz inversions: {summary_df['Lastz_Inversions'].sum()}")
-    print(f"Total overlapping inversions: {summary_df['Overlap_Count'].sum()}")
-    print(f"\nMummer-only inversions: {summary_df['Mummer_Only'].sum()}")
-    print(f"Lastz-only inversions: {summary_df['Lastz_Only'].sum()}")
-    
-    return summary_df
 
+    summary_data = []
+
+    for pair_key, data in comparisons.items():
+        mummer_inv = data['mummer_inversions']
+        lastz_inv = data['lastz_inversions']
+
+        overlap_count = 0
+        matched_lastz = set()
+
+        for m_inv in mummer_inv:
+            for idx, l_inv in enumerate(lastz_inv):
+                if idx in matched_lastz:
+                    continue
+
+                # Reference overlap
+                m_ref_range = (
+                    min(m_inv['ref_start'], m_inv['ref_end']),
+                    max(m_inv['ref_start'], m_inv['ref_end'])
+                )
+                l_ref_range = (
+                    min(l_inv['ref_start'], l_inv['ref_end']),
+                    max(l_inv['ref_start'], l_inv['ref_end'])
+                )
+
+                ref_overlap = (
+                    m_ref_range[0] <= l_ref_range[1] and
+                    m_ref_range[1] >= l_ref_range[0]
+                )
+
+                # Query overlap (optional)
+                m_query_range = (
+                    min(m_inv.get('query_start', 0), m_inv.get('query_end', 0)),
+                    max(m_inv.get('query_start', 0), m_inv.get('query_end', 0))
+                )
+                l_query_range = (
+                    min(l_inv.get('query_start', 0), l_inv.get('query_end', 0)),
+                    max(l_inv.get('query_start', 0), l_inv.get('query_end', 0))
+                )
+
+                query_overlap = (
+                    m_query_range[0] <= l_query_range[1] and
+                    m_query_range[1] >= l_query_range[0]
+                )
+
+                if ref_overlap and (not m_query_range[0] or query_overlap):
+                    overlap_count += 1
+                    matched_lastz.add(idx)
+                    break
+
+        summary_data.append({
+            'Species': species,
+            'Pair': pair_key,
+            'Mummer_Inversions': data['mummer_count'],
+            'Lastz_Inversions': data['lastz_count'],
+            'Overlap_Count': overlap_count,
+            'Mummer_Only': data['mummer_count'] - overlap_count,
+            'Lastz_Only': data['lastz_count'] - overlap_count
+        })
+
+    return pd.DataFrame(summary_data)
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Detect inversions between birds of the same species using Mummer and Lastz alignments'
-    )
-    parser.add_argument(
-        '--summary-csv', '-s',
-        required=True,
-        help='Path to summary_features.csv file'
-    )
-    parser.add_argument(
-        '--mummer-dir', '-m',
-        required=True,
-        help='Directory containing Mummer alignment files'
-    )
-    parser.add_argument(
-        '--lastz-dir', '-l',
-        required=True,
-        help='Directory containing Lastz alignment files'
-    )
-    parser.add_argument(
-        '--output-dir', '-o',
-        default='./inversion_results',
-        help='Output directory for results (default: ./inversion_results)'
-    )
-    parser.add_argument(
-        '--min-length', '-L',
-        type=int,
-        default=1000,
-        help='Minimum inversion length in bp (default: 1000)'
-    )
-    parser.add_argument(
-        '--min-identity', '-i',
-        type=float,
-        default=80.0,
-        help='Minimum alignment identity percentage (default: 80.0)'
-    )
-    
-    args = parser.parse_args()
+    args = parse_args()
     
     print("="*80)
     print("INVERSION DETECTION SCRIPT")
@@ -677,28 +459,49 @@ def main():
     print(f"Mummer directory: {args.mummer_dir}")
     print(f"Lastz directory: {args.lastz_dir}")
     print(f"Output directory: {args.output_dir}")
+    os.makedirs(args.output_dir, exist_ok=True)
     print(f"Minimum inversion length: {args.min_length} bp")
     print(f"Minimum identity: {args.min_identity}%")
     
     # Load species mapping
-    species_map = load_species_mapping(args.summary_csv)
+    df = pd.read_csv(args.summary_csv, sep="\t")
+
+    jobs = []
+    for order, order_df in df.groupby("Order"):
+        for species, sp_df in order_df.groupby("Species"):
+            haplotypes = sp_df.to_dict(orient="records")
+            for h1, h2 in itertools.combinations(haplotypes, 2):
+                jobs.append((args, order, species, h1, h2))
+
+    print(f"Total pairwise jobs: {len(jobs)}")
+    print(f"Using {args.cores} cores")
+
+    with ProcessPoolExecutor(max_workers=args.cores) as executor:
+        futures = [executor.submit(process_pair, job) for job in jobs]
+        total_results = []
+        # save results to tsv
+        for f in as_completed(futures):
+            results = f.result()
+            total_results.append(results)
     
-    # Process inversions
-    results = process_species_inversions(
-        species_map,
-        args.mummer_dir,
-        args.lastz_dir,
-        args.output_dir,
-        args.min_length,
-        args.min_identity
-    )
+
+    species_results = defaultdict(dict)
+
+    for res in total_results:
+        for species, comparisons in res["comparison"].items():
+            species_results[species].update(comparisons)
+
+    for species, comparisons in species_results.items():
+        # Apply your function
+        result_df = compare_results(species,comparisons, args.output_dir)
+
+        # Write species-specific TSV
+        out_tsv = os.path.join(args.output_dir, f"{species}_comparison.tsv")
+
+        result_df.to_csv(out_tsv, sep="\t", index=False)
     
-    # Compare and save results
-    summary_df = compare_results(results, args.output_dir)
-    
-    print("\n" + "="*80)
-    print("Analysis complete!")
-    print("="*80)
+
+    print("All jobs completed.")
 
 
 if __name__ == '__main__':
