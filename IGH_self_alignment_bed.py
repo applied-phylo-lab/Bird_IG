@@ -6,7 +6,7 @@ import argparse
 class LastZPairwiseAligner:
     def __init__(self, config=None):
         self.config = config
-        self.lastz_params = '--step=20 --notransition --format=general:name1,strand1,start1,end1,length1,text1,name2,strand2,start2+,end2+,length2,text2,id%'
+        self.lastz_params = '--step=20 --notransition --format=general:name1,strand1,start1,end1,length1,name2,strand2,start2+,end2+,length2,id%'
 
     def AlignTwoFasta(self, fasta1, fasta2, output_dir):
         lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
