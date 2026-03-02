@@ -5,17 +5,19 @@ Proposal can be found at: https://docs.google.com/document/d/1fQ5YY_o3Em4FCX1qUg
 ## Step-wise guide
 Input: Folder with Bird data, order-subfolder structure
 
-### create summary_features.csv & IGH_table.tsv
-``create_summary_features.R``
-``overview_features.R``
 
-### filter & clean gene files 
+### Step 1: create summary_features.csv & IGH_table.tsv
+``create_summary_features.R``
+``create_summary_tables_clean.R``
+``overview_features.R`` filter summary tables by which ones can be found in VGP tree & data overview
+
+### Step 2: filter & clean gene files 
 ``filter_genes.py``
 
-### self-align IGH locus & create bed file from clean gene files
+### Step 3: self-align IGH locus & create bed file from clean gene files
 ``IGH_self_alignment_bed.py``
 
-### summarize inverions
+### Step 4: summarize inverions
 ``summarize_inversions.py``
 
 ### find paralogs

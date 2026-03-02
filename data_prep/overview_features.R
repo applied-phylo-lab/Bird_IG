@@ -9,10 +9,11 @@ library(ggplot2)
 library(ggstance)
 library(data.table)
 library(readr)
-dir<-"/local/storage/kav67/Bird_data/"
-dir<-"/local/storage/kav67/mammals/"
-summary_table<-fread(paste0(dir,"summary_features.csv"))
-summary_table<-fread(paste0(dir,"/Songbirds/Woodhouse_Scrub_Jay/summary.csv"))
+dir<-"/local/storage/kav67/clean_birds/"
+#dir<-"/local/storage/kav67/mammals/"
+#summary_table<-fread(paste0(dir,"summary_features.csv"))
+summary_table<-fread(paste0(dir,"IGH_filtered_table.tsv"))
+#summary_table<-fread(paste0(dir,"/Songbirds/Woodhouse_Scrub_Jay/summary.csv"))
 summary_table <- summary_table %>%
   mutate(AssemblyID = str_extract(Haplotype, "^[^_]+"))  # take text before first underscore
 VGP_tree<-read.tree("/local/storage/kav67/roadies_v1.1.4.nwk")
@@ -134,7 +135,7 @@ summary_filled[summary_filled$Species=="A.woodhouseiiAW",]$LatinName<-"Aphelocom
 summary_table_curated <- summary_filled %>%
   filter(
     !is.na(LatinName),          # keep only rows with a valid LatinName
-    !str_detect(Haplotype, "_alt")  # remove alt haplotypes
+    !str_detect(Haplotype, "_alt")# remove alt haplotypes
   )
 
 
@@ -191,7 +192,7 @@ summary_table_IGH <- summary_table_curated %>%
   slice_max(order_by = NumV, n = 1) %>% # keep row with highest NumV
   ungroup()
 
-write_tsv(summary_table_IGH,paste0(dir,"IGH_filtered_table.tsv"))
+write_tsv(summary_table_IGH,paste0(dir,"IGH_VGP_table.tsv"))
 
 
 summary_table_IGH_all <- summary_table %>%#summary_filled %>%
@@ -201,3 +202,31 @@ summary_table_IGH_all <- summary_table %>%#summary_filled %>%
   ungroup()
 
 write_tsv(summary_table_IGH_all,paste0(dir,"IGH_table.tsv"))
+
+tree_pruned_data <- as_tibble(sub_tree_pruned)
+tree_pruned_data<-tree_pruned_data %>%
+  left_join(
+    summary_table_curated%>%       
+      select(LatinName, Order),
+    by = c("label"="LatinName")
+  )
+
+order_nodes <- tree_pruned_data %>%
+  # Keep only tips with orders
+  filter(!is.na(Order) & !is.na(label)) %>%
+  group_by(Order) %>%
+  summarize(
+    node = MRCA(sub_tree_pruned, label),   # MRCA() from ggtree
+    .groups = "drop"
+  ) %>%
+  rename(type = Order) 
+order_nodes <- order_nodes[-9,]
+order_nodes[order_nodes$type=="Suboscines",]$node<-27
+order_nodes <- order_nodes[c(3,7,8,9,11,12),]
+p+geom_tiplab(size=2, angle=90,hjust = 1)+ layout_dendrogram()+scale_y_reverse()+geom_hilight(
+  data = order_nodes, 
+  aes(node = node, fill = type),
+  type = "roundrect",
+  inherit.aes = FALSE
+)
+write.tree(sub_tree_pruned, file = paste0(dir,"vgp_birds.nwk"))

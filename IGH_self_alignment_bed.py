@@ -47,40 +47,46 @@ def process_row(row):
         return
 
     
-    # create bed file
-    # read gene table
-    # igdetect_df = pd.read_csv(combined_genes_path, sep='\t')
-    # igdetect_df = igdetect_df[igdetect_df['Contig'] == contig]
+    #create bed file
+    #read gene table
+    igdetect_df = pd.read_csv(combined_genes_path, sep='\t')
+    igdetect_df = igdetect_df[igdetect_df['Contig'] == contig]
 
-    # # read locus info
-    # locus_df = pd.read_csv(summary_csv_path)
-    # locus_df = locus_df[locus_df['Contig'] == contig]
+    # read locus info
+    locus_df = pd.read_csv(summary_csv_path)
+    locus_df = locus_df[locus_df['Contig'] == contig]
 
-    # if locus_df.empty or igdetect_df.empty:
-    #     print(f"Skipping {order}/{species}/{haplotype}/{contig} because no data found.")
-    #     return
+    if locus_df.empty or igdetect_df.empty:
+        print(f"Skipping {order}/{species}/{haplotype}/{contig} because no data found.")
+        return
     
-    # bed_path = os.path.join(output_dir, 'IGH.bed')
+    bed_path = os.path.join(output_dir, 'IGH.bed')
+    strand_bed_path = os.path.join(output_dir, 'IGH_strand.bed')
 
-    # if os.path.exists(bed_path):
-    #     return
+    if os.path.exists(bed_path):
+        return
 
-    # locus_start = locus_df['StartPos'].iloc[0]
+    locus_start = locus_df['StartPos'].iloc[0]
 
-    # annot_df = {'Start': [], 'End': [], 'Strand': [], 'Color': []}
-    # for i, gene_row in igdetect_df.iterrows():
-    #     gene_start_pos = gene_row['Pos'] - locus_start
-    #     annot_df['Start'].append(gene_start_pos)
-    #     annot_df['End'].append(gene_start_pos + len(gene_row['Sequence']))
-    #     annot_df['Strand'].append(gene_row['Strand'])
-    #     annot_df['Color'].append('0,0,0')
+    annot_df = {'Start': [], 'End': [], 'Strand': [], 'Color': []}
+    for i, gene_row in igdetect_df.iterrows():
+        gene_start_pos = gene_row['Pos'] - locus_start
+        annot_df['Start'].append(gene_start_pos)
+        annot_df['End'].append(gene_start_pos + len(gene_row['Sequence']))
+        annot_df['Strand'].append(gene_row['Strand'])
+        annot_df['Color'].append('0,0,0')
 
-    # annot_df = pd.DataFrame(annot_df)
-    # contig_name = contig
-
-    # with open(bed_path, 'w') as fh:
-    #     for i, row_bed in annot_df.iterrows():
-    #         fh.write(f"{contig_name}\t{row_bed['Start']}\t{row_bed['End']}\tNA\tNA\t{row_bed['Strand']}\tNA\tNA\t{row_bed['Color']}\n")
+    annot_df = pd.DataFrame(annot_df)
+    contig_name = contig
+    annot_df_strand = annot_df.copy()
+    # if strand is negative, color grey; if strand is positive, color black
+    annot_df_strand['Color'] = annot_df_strand['Strand'].apply(lambda x: '211,211,211' if x == '-' else '0,0,0')
+    with open(bed_path, 'w') as fh:
+        for i, row_bed in annot_df.iterrows():
+            fh.write(f"{contig_name}\t{row_bed['Start']}\t{row_bed['End']}\tNA\tNA\t{row_bed['Strand']}\tNA\tNA\t{row_bed['Color']}\n")
+    with open(strand_bed_path, 'w') as fh:
+        for i, row_bed in annot_df_strand.iterrows():
+            fh.write(f"{contig_name}\t{row_bed['Start']}\t{row_bed['End']}\tNA\tNA\t{row_bed['Strand']}\tNA\tNA\t{row_bed['Color']}\n")
     
     print(f"Processed {order}/{species}/{haplotype}/{contig}")
 

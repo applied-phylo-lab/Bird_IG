@@ -86,6 +86,10 @@ def summarize_table(df, minlen, bed_df):
     genes_on_inv = genes_pos = genes_neg = 0
     total_genes = len(bed_df) if bed_df is not None else 0
 
+    # distance between sequence and its inversion
+    df["distance"] = df["start2"] - df["end1"]
+    distances = df["distance"].tolist()
+    
     if bed_df is not None and not bed_df.empty:
         for _, gene in bed_df.iterrows():
             g_start, g_end, strand = gene["start"], gene["end"], gene["strand"]

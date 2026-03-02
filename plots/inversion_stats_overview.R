@@ -3,17 +3,17 @@ library(dplyr)
 library(tidyr)
 library(phytools)
 library(tibble)
-dir<-"/local/storage/kav67/Bird_data/"
-inversion_stats<-fread(paste0(dir,"IGH_inversions_all.tsv"))
+dir<-"/local/storage/kav67/clean_birds/"
+inversion_stats<-fread(paste0(dir,"inversion_stats.tsv"))#IGH_inversions_all.tsv
 species_data<-inversion_stats
-summary_table_IGH<-fread(paste0(dir,"IGH_table.tsv")) #IGH_filtered_table.tsv
+summary_table_IGH<-fread(paste0(dir,"IGH_VGP_table.tsv")) #IGH_filtered_table.tsv / IGH_table.tsv
 
 # Summarize by Order (average across samples per order)
 inversion_stats_long <- inversion_stats[inversion_stats$minlen==250,] %>%
   mutate(
     inv_cov_frac = inv_cov_len / total_seq_length
   ) %>%
-  select(order, avg_inv_len, inv_cov_frac, frac_genes_on_inv) %>%
+  select(order,species, avg_inv_len, inv_cov_frac, frac_genes_on_inv) %>%
   pivot_longer(
     cols = c(avg_inv_len, inv_cov_frac, frac_genes_on_inv),
     names_to = "metric",
@@ -53,6 +53,7 @@ species_stats <- inversion_stats1000[!is.na(inversion_stats1000$LatinName),] %>%
   group_by(LatinName) %>%
   summarize(
     avg_inv_len = mean(avg_inv_len, na.rm = TRUE),
+    avg_num_inversions = mean(num_inversions, na.rm = TRUE),
     inv_cov_frac = mean(inv_cov_len / total_seq_length, na.rm = TRUE),
     frac_genes_on_inv = mean(frac_genes_on_inv, na.rm = TRUE)
   )
@@ -86,7 +87,7 @@ order_nodes <- tree_pruned_data %>%
   ) %>%
   rename(type = order)  # rename column to type
 order_nodes <- order_nodes[-9,]
-
+order_nodes[order_nodes$type=="Suboscines",]$node<-27
 p <- ggtree(tree_pruned)
 
 # Add all barplots first
@@ -105,9 +106,15 @@ p2 <- facet_plot(
   mapping = aes(x = inv_cov_frac),
   stat = "identity"
 )
+p3<-facet_plot(
+  p2, panel = "Inversion Count",
+  data = species_stats_pruned,
+  geom_barh,
+  mapping = aes(x = avg_num_inversions),
+  stat = "identity")
 
-p3 <- facet_plot(
-  p2, panel = "Fractions of Genes lying on inversions",
+p4 <- facet_plot(
+  p3, panel = "Fractions of Genes lying on inversions",
   data = species_stats_pruned,
   geom = geom_barh,
   mapping = aes(x = frac_genes_on_inv),
@@ -115,7 +122,7 @@ p3 <- facet_plot(
 )
 
 # Now add highlights *after* all facets
-p3 + geom_hilight(
+p4 + geom_hilight(
   data = order_nodes, 
   aes(node = node, fill = type),
   type = "roundrect",
@@ -137,7 +144,7 @@ tips_in <- intersect(bird_tree_pruned$tip.label, species_data$LatinName)
 species_data<-species_data[species_data$LatinName %in% tips_in,]
 species_to_order <- species_data %>%
   distinct(LatinName, order) %>%
-  deframe()
+  tibble::deframe()
 
 tree_df <- as_tibble(tree_filtered)
 ntips <- Ntip(tree_filtered)
@@ -154,22 +161,32 @@ tree_df <- tree_df %>%
 # Collapse tips by order
 order_tree <- tree_filtered
 
-# Loop over orders to collapse monophyletic species
 orders <- unique(species_to_order)
+
 for (ord in orders) {
-  tips_ord <- names(species_to_order[species_to_order == ord])
-  if (length(tips_ord) > 1) {
-    # collapse tips into single tip
-    order_tree <- collapse.singles(order_tree) # placeholder, see below
-  }
-}
-for( ord in orders){
-  tips_ord <- names(species_to_order[species_to_order == ord])
-  mrca_node <- getMRCA(order_tree, tips_ord)
   
-  # Collapse MRCA node to a single tip (replace with order name)
-  order_tree <- bind.tip(order_tree, ord, where = mrca_node)
-  order_tree <- drop.tip(order_tree, tips_ord)
+  tips_ord <- names(species_to_order[species_to_order == ord])
+  
+  # CASE 1: Only one species in this order
+  if (length(tips_ord) == 1) {
+    
+    # Simply rename that tip to the order name
+    order_tree$tip.label[order_tree$tip.label == tips_ord] <- ord
+    
+  } 
+  
+  # CASE 2: More than one species → collapse clade
+  else if (length(tips_ord) > 1) {
+    
+    # Find MRCA
+    mrca_node <- getMRCA(order_tree, tips_ord)
+    
+    # Add new tip at MRCA node
+    order_tree <- bind.tip(order_tree, ord, where = mrca_node)
+    
+    # Remove original species tips
+    order_tree <- drop.tip(order_tree, tips_ord)
+  }
 }
 
 
@@ -179,11 +196,11 @@ plot_species_data <- species_data %>%
   rename(label = order)  
 
 
-order_tree<-ladderize(order_tree, right=FALSE)
+order_tree<-ladderize(order_tree, right=TRUE)
 p <- ggtree(order_tree, layout = "rectangular") +
   geom_tiplab(size = 3, align = TRUE, linetype = NA, linesize = 0.5)
 
-write.tree(order_tree, file = "/local/storage/kav67/Bird_data/order_tree.tre")
+#write.tree(order_tree, file = "/local/storage/kav67/Bird_data/order_tree.tre")
 # Add boxplots per order
 
 p2<-facet_plot(p+xlim_tree(9), panel = "Average Inversion Length",

@@ -1,4 +1,7 @@
-dir <- "/local/storage/kav67/within_species/"
+library(purrr)
+library(dplyr)
+library(readr)
+dir <- "/local/storage/kav67/clean_birds/"
 
 files <- list.files(
   path = file.path(dir),
