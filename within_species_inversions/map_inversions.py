@@ -13,7 +13,10 @@ MIN_INV_LEN = 500        # bp
 MIN_IDENTITY = 75.0       # percent
 MIN_RECIP_OVERLAP = 0.7   # for clustering
 REFERENCE_OVERRIDES = {
-    "house_finches": "bHaeMex1_pri"
+    "house_finches": "NY_1_hap1",
+    "A.coerulescensAC": "A.coerulescens_AC_1603_72872_pri",
+    "A.insularisAI": "A.insularis_AI_1363_74563_pri",
+    "A.woodhouseiiAW": "A.woodhouseii_AW_366499_pri",
 }
 # -----------------------------
 # LASTZ parser

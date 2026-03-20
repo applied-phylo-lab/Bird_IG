@@ -33,7 +33,6 @@ ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
   ) +
   labs(title = "Distribution of Identity Across Regions")
 
-
 df_long <- palindromes %>%
   pivot_longer(
     cols = c(WholeIdentity, MiddleIdentity15bp, RandomIdentity15bp),
@@ -46,18 +45,22 @@ df_long <- palindromes %>%
       levels = c("RandomIdentity15bp","MiddleIdentity15bp", "WholeIdentity")
     )
   )
-
+df_long <- df_long %>%
+  mutate(Region = recode(Region, 
+                         'RandomIdentity15bp' = 'Random 15bp', 
+                         'MiddleIdentity15bp' = 'Hairpin 15bp', 
+                         'WholeIdentity' = 'Whole Inversion'))
 
 
 ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
   geom_violin(trim = FALSE, alpha = 0.6) +
   geom_boxplot(width = 0.2, color = "black", alpha = 0.7) +
-  theme_bw(base_size = 25) +
+  theme_classic(base_size = 14) +
   scale_fill_manual(
     values = c(
-      "RandomIdentity15bp" = "#a6cee3",
-      "MiddleIdentity15bp" = "#1f78b4",
-      "WholeIdentity"      = "#999999"
+      "Random 15bp" = "#a6cee3",
+      "Hairpin 15bp" = "#1f78b4",
+      "Whole Inversion"      = "#999999"
     )
   ) +
   labs(title = "Distribution of Identity in across regions in Inversions")

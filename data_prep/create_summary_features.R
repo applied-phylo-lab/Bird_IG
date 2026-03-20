@@ -13,8 +13,12 @@ files <- list.files(
 
 
 df <- files %>%
-  set_names() %>%  # keep filenames as names
-  map_dfr(~ read_csv(.x) %>% mutate(File = .x), .id = NULL)
+  set_names() %>%
+  map_dfr(~ {
+    df_temp <- read_csv(.x)
+    if (nrow(df_temp) == 0) return(NULL)
+    df_temp %>% mutate(File = .x)
+  }, .id = NULL)
 
 # Extract Order, Species, and Haplotype from file path
 df <- df %>%
@@ -28,4 +32,4 @@ df <- df %>%
   select(-parts)%>%
   select(Order,Species,Haplotype,Locus,Contig,Length,NumV,NumProdV,FracProdV)
 
-write_csv(df,paste0(dir,"/summary_features.csv"))
+write_csv(df,paste0(dir,"/summary_features_old.csv"))

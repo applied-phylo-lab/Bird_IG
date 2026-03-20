@@ -79,6 +79,7 @@ def main(genome_file, k_min, k_max, top_n, outdir):
     for k in range(k_min, k_max + 1):
         print(f"Processing k={k}")
         counts = count_kmers(genome, k)
+        counts = Counter({kmer: count for kmer, count in counts.items() if count >= 2})
 
         for kmer, count in counts.items():
             abundance_out.write(f"{k}\t{kmer}\t{count}\n")

@@ -194,7 +194,7 @@ plot_species_data <- species_data %>%
   select(order, LatinName, num_inversions, avg_inv_len, inv_cov_len, total_seq_length, frac_genes_on_inv) %>%
   mutate(inv_cov_frac = inv_cov_len / total_seq_length) %>% 
   rename(label = order)  
-
+plot_species_data<-plot_species_data[plot_species_data$LatinName!="Gallinula chloropus",]
 
 order_tree<-ladderize(order_tree, right=TRUE)
 p <- ggtree(order_tree, layout = "rectangular") +
@@ -222,3 +222,60 @@ p5<-facet_plot(p4, panel = "Fraction of locus covered by inversions",
                geom_boxplot,
                mapping = aes(x = inv_cov_frac, group = label, fill = label))
 p5+theme_tree2()
+
+
+
+# prettier version
+base_tree <- ggtree(order_tree, layout = "rectangular") +
+  geom_tiplab(size = 2.8, align = TRUE, linetype = NA) +
+  theme_tree2()
+
+p2 <- facet_plot(
+  base_tree + xlim_tree(9),
+  panel = "Average Inversion Length",
+  data = plot_species_data,
+  geom_boxplot,
+  mapping = aes(x = avg_inv_len, group = label),
+  fill = "grey75",
+  width = 0.5,
+  size = 0.3
+)
+
+p3 <- facet_plot(
+  p2,
+  panel = "Inversion Count",
+  data = plot_species_data,
+  geom_boxplot,
+  mapping = aes(x = num_inversions, group = label),
+  fill = "grey75",
+  width = 0.5,
+  size = 0.3
+)
+
+p4 <- facet_plot(
+  p3,
+  panel = "Fraction genes on inversions",
+  data = plot_species_data,
+  geom_boxplot,
+  mapping = aes(x = frac_genes_on_inv, group = label),
+  fill = "grey75",
+  width = 0.5,
+  size = 0.3
+)
+
+p5 <- facet_plot(
+  p4,
+  panel = "Locus coverage by inversions",
+  data = plot_species_data,
+  geom_boxplot,
+  mapping = aes(x = inv_cov_frac, group = label),
+  fill = "grey75",
+  width = 0.5,
+  size = 0.3
+)
+
+p5
+
+
+
+

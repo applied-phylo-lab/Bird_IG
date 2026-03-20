@@ -2,11 +2,12 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(viridis)
-
+library(patchwork)
 # -----------------------------
 # Parameters
 # -----------------------------
 tsv <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversion_presence.tsv"
+tsv<-"/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversions_new_ref.tsv"
 #outdir <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversion_plots"
 dir.create(outdir, showWarnings = FALSE)
 
@@ -22,7 +23,7 @@ support_df <- df %>%
   summarise(
     n_haplotypes = n(),
     n_support = sum(Present),
-    support_frac = n_support / n_haplotypes,
+    support_frac = n_support / (n_haplotypes-1),
     inv_len = RefEnd - RefStart,
     .groups = "drop"
   )
@@ -116,7 +117,7 @@ support_df <- support_df %>%
     support_class = case_when(
       support_frac == 1 ~ "Fixed (100%)",
       support_frac >= 0.75 ~ "High (≥75%)",
-      support_frac >= 0.25 ~ "Intermediate",
+      support_frac >= 0.25 ~ "Intermediate (25-75%)",
       TRUE ~ "Rare (<25%)"
     )
   )
