@@ -85,9 +85,9 @@ plot_inversion_dotplot <- function(
   p
 }
 stats_filtered<-stats[stats$Frequency>0.5,]
-plot_ac<-plot_inversion_dotplot(stats,"A.coerulescensAC","Florida Scrub Jay",show_y_label = TRUE,show_x_label = TRUE)
-plot_ai<-plot_inversion_dotplot(stats,"A.insularisAI","Island Scrub Jay",show_x_label = TRUE)
-plot_aw<-plot_inversion_dotplot(stats,"A.woodhouseiiAW","Woodhouse Scrub Jay",show_y_label = TRUE,show_x_label = TRUE)
+plot_ac<-plot_inversion_dotplot(stats,"Florida_scrub_jay","Florida Scrub Jay",show_y_label = TRUE,show_x_label = TRUE)
+plot_ai<-plot_inversion_dotplot(stats,"Island_scrub_jay","Island Scrub Jay",show_x_label = TRUE)
+plot_aw<-plot_inversion_dotplot(stats,"Woodhouse_scrub_jay","Woodhouse Scrub Jay",show_y_label = TRUE,show_x_label = TRUE)
 plot_hf<-plot_inversion_dotplot(stats,"house_finches","House Finch",show_legend = TRUE,show_x_label = TRUE)
 
 (plot_ac+plot_ai)/(plot_aw+plot_hf)

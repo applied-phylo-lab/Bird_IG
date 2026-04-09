@@ -3,6 +3,20 @@ import pandas as pd
 import argparse
 import os
 
+def deduplicate_inversions(inv_df):
+    """Remove duplicate inversion pairs (A-B vs B-A)."""
+    # Make canonical keys by sorting coords
+    inv_df = inv_df.copy()
+    inv_df["pair_key"] = inv_df.apply(
+        lambda row: tuple(sorted([(row["start1"], row["end1"]),
+                                  (row["start2"], row["end2"])])),
+        axis=1
+    )
+    # Drop duplicates based on canonical pair
+    inv_df = inv_df.drop_duplicates(subset="pair_key").drop(columns="pair_key")
+    return inv_df
+
+
 def read_inversions(bed_path):
     """
     Reads the new combined_bed file (header or not) and returns a DataFrame.
@@ -28,7 +42,8 @@ def read_inversions(bed_path):
 
     # Filter out incomplete rows
     df = df.dropna(subset=["start1","end1","start2","end2"])
-    return df
+    df_dedup = deduplicate_inversions(df)
+    return df_dedup
 
 
 def compute_union_length(intervals):

@@ -4,6 +4,8 @@ library(readr)
 
 # === INPUT ===
 inversions <- read_tsv("/local/storage/kav67/clean_birds/Songbirds/House_Finch/bHaeMex1_pri/self_align_contigs/inversion_window_summary.tsv", show_col_types = FALSE)
+inversions <- read_tsv("/local/storage/kav67/clean_birds/Songbirds/House_Finch/bHaeMex1_pri/self_align_contigs/inversion_window_summary_deduplicated.tsv", show_col_types = FALSE)
+
 #california_scrub_jay
 # optional: order contigs by size or name
 inversions <- inversions %>%
@@ -31,8 +33,8 @@ inversions <- inversions %>%
 # === MANHATTAN PLOT ===
 ggplot(inversions, aes(x = global_center, y = num_inversions, color = color)) +
   geom_point(aes(size = color)) +
-  scale_size_manual(values = c("IGH" = 3, "other" = 1)) +
-  scale_color_manual(values = c("IGH" = "red", "other" = "black")) +
+  scale_size_manual(values = c("IGH" =1, "other" = 1)) +
+  scale_color_manual(values = c("IGH" = "black", "other" = "black")) +
   labs(
     x = "Genomic position",
     y = "Inversion count per window"
@@ -44,6 +46,6 @@ ggplot(inversions, aes(x = global_center, y = num_inversions, color = color)) +
     plot.background = element_blank(),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
-    axis.title = element_text(size = 16),
-    axis.text.y = element_text(size = 14)
+    axis.title = element_text(size = 14),
+    axis.text.y = element_text(size = 10)
   )

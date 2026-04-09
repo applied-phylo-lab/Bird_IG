@@ -38,48 +38,45 @@ def main():
     summary = pd.read_csv(args.summary, sep='\t')
     aligner = LastZPairwiseAligner()
 
-    # Group by Order
-    for order, subdf in summary.groupby('Order'):
+    # Group by Order AND Species
+    for order, order_df in summary.groupby('Order'):
         print(f"\n=== Processing Order: {order} ===")
 
-        # Create output directory
         output_dir = os.path.join(args.input_dir, order, 'pairwise_alignments')
         os.makedirs(output_dir, exist_ok=True)
 
-        # Build mapping from haplotype -> fasta path
-        fasta_paths = {}
-        for _, row in subdf.iterrows():
-            fasta_path = os.path.join(
-                args.input_dir, order, row['Species'], row['Haplotype'],
-                'refined_ig_loci', 'igloci_fasta',
-                f"IGH_{row['Contig']}_{row['NumV']}Vs.fasta"
-            )
-            if os.path.exists(fasta_path):
-                fasta_paths[row['Haplotype']] = fasta_path
-            else:
-                print(f"Missing fasta file for {row['Haplotype']}: {fasta_path}")
+        for species, species_df in order_df.groupby('Species'):
+            print(f"  --- Species: {species} ---")
 
-        haplotypes = sorted(fasta_paths.keys())
+            # Build mapping from key -> fasta path (within this species only)
+            fasta_paths = {}
+            for _, row in species_df.iterrows():
+                fasta_path = os.path.join(
+                    args.input_dir, order, row['Species'], row['Haplotype'],
+                    'refined_ig_loci', 'igloci_fasta',
+                    f"IGH_{row['Contig']}_{row['NumV']}Vs.fasta"
+                )
+                key = f"{row['Haplotype']}_{row['Contig']}"
+                if os.path.exists(fasta_path):
+                    fasta_paths[key] = fasta_path
+                else:
+                    print(f"  Missing fasta for {key}: {fasta_path}")
 
-        # Generate unique haplotype pairs (no self, no duplicates)
-        pairs = list(itertools.combinations(haplotypes, 2))
-        if not pairs:
-            print(f"No pairs found for order {order}")
-            continue
+            keys = sorted(fasta_paths.keys())
+            pairs = list(itertools.combinations_with_replacement(keys, 2))
+            if not pairs:
+                print(f"  No pairs for {species}")
+                continue
 
-        # Prepare alignment jobs
-        jobs = []
-        for h1, h2 in pairs:
-            fasta1 = fasta_paths[h1]
-            fasta2 = fasta_paths[h2]
-            output_file = os.path.join(output_dir, f"{h1}_{h2}.txt")
-            jobs.append((fasta1, fasta2, output_file))
+            jobs = []
+            for k1, k2 in pairs:
+                output_file = os.path.join(output_dir, f"{k1}_vs_{k2}.txt")
+                jobs.append((fasta_paths[k1], fasta_paths[k2], output_file))
 
-        # Run alignments in parallel
-        with mp.Pool(processes=args.cores) as pool:
-            pool.starmap(partial(run_pairwise_alignment, aligner), jobs)
+            with mp.Pool(processes=args.cores) as pool:
+                pool.starmap(partial(run_pairwise_alignment, aligner), jobs)
 
-        print(f"Finished Order: {order}")
+            print(f"  Finished {species}")
 
 
 if __name__ == "__main__":

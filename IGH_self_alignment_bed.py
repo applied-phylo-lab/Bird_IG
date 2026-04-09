@@ -8,9 +8,9 @@ class LastZPairwiseAligner:
         self.config = config
         self.lastz_params = '--step=20 --notransition --format=general:name1,strand1,start1,end1,length1,name2,strand2,start2+,end2+,length2,id%'
 
-    def AlignTwoFasta(self, fasta1, fasta2, output_dir):
-        lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
-        alignments = os.path.join(output_dir, 'alignments.axt')
+    def AlignTwoFasta(self, fasta1, fasta2, output_dir,lastz_output):
+        #lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
+        #alignments = os.path.join(output_dir, 'alignments.axt')
         os.system(f'lastz {fasta1} {fasta2} {self.lastz_params} --output={lastz_output}')
 
     def GetAlignedDF(self, output_fname):
@@ -39,9 +39,9 @@ def process_row(row):
     # lastz self-alignment
     
     aligner = LastZPairwiseAligner()
-    lastz_output = os.path.join(output_dir, 'IGH_self.tsv')
-    if os.path.exists(fasta_path): #and not os.path.exists(lastz_output):
-        aligner.AlignTwoFasta(fasta_path, fasta_path, output_dir)
+    lastz_output = os.path.join(output_dir, f'{contig}_IGH.tsv')
+    if os.path.exists(fasta_path) and not os.path.exists(lastz_output):
+        aligner.AlignTwoFasta(fasta_path, fasta_path, output_dir,lastz_output)
     elif not os.path.exists(fasta_path):
         print(f"FASTA not found: {fasta_path}")
         return
@@ -60,8 +60,8 @@ def process_row(row):
         print(f"Skipping {order}/{species}/{haplotype}/{contig} because no data found.")
         return
     
-    bed_path = os.path.join(output_dir, 'IGH.bed')
-    strand_bed_path = os.path.join(output_dir, 'IGH_strand.bed')
+    bed_path = os.path.join(output_dir, f'{contig}_IGH.bed')
+    strand_bed_path = os.path.join(output_dir, f'{contig}_IGH_strand.bed')
 
     if os.path.exists(bed_path):
         return
