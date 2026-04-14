@@ -36,6 +36,7 @@ fwrite(formatted, output_all)
 
 # Filter for IGH
 formatted_igh <- formatted[Locus == "IGH"]
+formatted_igh <- formatted_igh[NumV >2]
 
 # Write IGH-only CSV
 write_tsv(formatted_igh, output_igh)

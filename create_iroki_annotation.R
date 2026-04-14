@@ -1,7 +1,7 @@
 library(phylolm)
 library(ape)
 library(dplyr)
-vgp_bird_table<-fread("/local/storage/kav67/clean_birds/IGH_VGP_table.tsv")
+vgp_bird_table<-fread("/local/storage/kav67/clean_birds/results_03_26/IGH_VGP_table.tsv")
 
 vgp_bird_table<-merge(vgp_bird_table,species_stats_pruned, by = "LatinName",all=FALSE)
 

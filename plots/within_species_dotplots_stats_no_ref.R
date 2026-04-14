@@ -4,7 +4,7 @@ library(tidyverse)
 # Load data
 # ----------------------------
 
-stats <- read_tsv("/local/storage/kav67/within_species/Songbirds/inversions_shared_stats.tsv")
+stats <- read_tsv("/local/storage/kav67/within_species_updated/Songbirds/_dotplot.tsv")
 
 # Make frequency numeric just in case
 stats <- stats %>%
@@ -93,6 +93,7 @@ plot_hf<-plot_inversion_dotplot(stats,"house_finches","House Finch",show_legend 
 (plot_ac+plot_ai)/(plot_aw+plot_hf)
 (plot_ac+plot_ai+plot_aw+plot_hf)+
   plot_layout(ncol = 4)
+
 # ----------------------------
 # 2) LENGTH vs SHARING
 # ----------------------------

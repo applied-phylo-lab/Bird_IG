@@ -2,6 +2,7 @@ all_species_data<-fread("/local/storage/kav67/clean_birds/all_species_stats_prun
 all_species_data$bird<-FALSE
 all_species_data[all_species_data$VertClass=="birds",]$bird<-TRUE
 all_species_data<-all_species_data[all_species_data$IGH_AnnotationLevel<2,]
+all_species_data<-all_species_data[all_species_data$VertClass %in% c("reptiles","mammals","birds"),]
 
 ggplot(all_species_data, aes(x = IGH_TotalLength / 1e6)) +
   geom_histogram(bins = 100) +
@@ -12,10 +13,10 @@ ggplot(all_species_data, aes(x = IGH_TotalLength / 1e6)) +
   theme_classic()
 
 locus_l_comp_hist<-ggplot(all_species_data, aes(x = IGH_TotalLength / 1e6, fill = bird)) +
-  geom_histogram(bins = 40, alpha = 0.8, position = "identity") +
+  geom_histogram(bins = 40, alpha = 0.8, position = "stack") +
   scale_fill_manual(
     values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
-    labels = c("TRUE" = "Bird Species", "FALSE" = "Other Species"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
     name = NULL
   ) +
   scale_x_log10() +
@@ -57,13 +58,13 @@ locus_strand_comp<-ggplot(all_species_data, aes(x = IGH_MinDir, fill = bird)) +
 
 locus_strand_comp_hist<-ggplot(all_species_data, aes(x = IGH_MinDir, fill = bird)) +
   geom_histogram(
-    position = "identity",
+    position = "stack",
     alpha = 0.8,
     bins = 40
   ) +
   scale_fill_manual(
     values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
-    labels = c("TRUE" = "Bird Species", "FALSE" = "Other Species"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
     name = NULL
   ) +
   labs(
@@ -82,7 +83,7 @@ locus_l_comp_hist|locus_strand_comp_hist
 median(all_species_data[all_species_data$bird==TRUE,]$IGH_TotalLength)
 median(all_species_data[all_species_data$bird==FALSE,]$IGH_TotalLength)
 
-ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
+IGL_strand<-ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
   geom_histogram(
     position = "identity",
     alpha = 0.8,
@@ -90,7 +91,7 @@ ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
   ) +
   scale_fill_manual(
     values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
-    labels = c("TRUE" = "Bird Species", "FALSE" = "Other Species"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
     name = NULL
   ) +
   labs(
@@ -101,3 +102,25 @@ ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 10),
         legend.text = element_text(size = 10))
+
+
+
+IGL_length<-ggplot(all_species_data, aes(x = IGL_TotalLength / 1e6, fill = bird)) +
+  geom_histogram(bins = 40, alpha = 0.8, position = "identity") +
+  scale_fill_manual(
+    values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
+    name = NULL
+  ) +
+  scale_x_log10() +
+  labs(
+    x = "Locus length (Mbp, log scale)",
+    y = "Count"
+  ) +
+  theme_classic()+
+  theme(axis.title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        legend.position = "none")
+
+
+IGL_length+IGL_strand
