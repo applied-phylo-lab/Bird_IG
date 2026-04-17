@@ -132,9 +132,10 @@ def process_row(row):
     order = row['Order']
     species = row['Species']
     haplotype = row['Haplotype']
+    contig = row['Contig']
 
-    aln_path = os.path.join(input_dir, order, species, haplotype, 'IGH_self.tsv')
-    bed_path = os.path.join(input_dir, order, species, haplotype, 'IGH.bed')
+    aln_path = os.path.join(input_dir, order, species, haplotype, f'{contig}_IGH.tsv')
+    bed_path = os.path.join(input_dir, order, species, haplotype, f'{contig}_IGH.bed')
 
     if not os.path.exists(aln_path) or not os.path.exists(bed_path):
         print(f"Skipping {order}/{species}/{haplotype}: missing files")

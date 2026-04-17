@@ -24,7 +24,7 @@ def run_patchwork(tsv_file, input_dir, config_name, output_prefix, dry_run):
             "--show-annot",
             "--lower",
             "--lwidth", "2",
-            "--min-len", "1500",
+            "--min-len", "15000",
             "--cmap", "viridis",
             "--min-pi", "75"
         ]
