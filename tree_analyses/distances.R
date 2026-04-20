@@ -31,6 +31,7 @@ for (i in seq_len(nrow(meta))) {
   haplotype <- row$Haplotype
   species   <- row$Species
   order     <- row$Order
+  contig <- row$Contig
   
   tree_file <- file.path(INPUT_DIR, order, species, haplotype,
                          "tree", paste0(haplotype, "_tree.treefile"))
@@ -50,8 +51,23 @@ for (i in seq_len(nrow(meta))) {
   
   if (is.null(tree)) next
   
-  # ---- GET GENETIC DISTANCES ----
-  dist_mat <- cophenetic.phylo(tree)
+  # ---- FILTER BY CONTIG ----
+  contig <- row$Contig
+  
+  # keep only genes that contain the contig string
+  keep_genes <- tree$tip.label[str_detect(tree$tip.label, fixed(contig))]
+  
+  # skip if too few genes remain
+  if (length(keep_genes) < 2) {
+    message("Skipping (not enough genes on contig): ", tree_file)
+    next
+  }
+  
+  # prune tree to selected genes
+  tree_sub <- keep.tip(tree, keep_genes)
+  
+  # ---- GENETIC DISTANCES ----
+  dist_mat <- cophenetic.phylo(tree_sub)
   
   genes <- rownames(dist_mat)
   
@@ -63,17 +79,16 @@ for (i in seq_len(nrow(meta))) {
     message("No valid positions: ", tree_file)
     next
   }
-  
+ 
   # ---- BUILD PAIRWISE TABLE ----
   df <- as.data.frame(as.table(dist_mat)) %>%
-    rename(Gene1 = Var1,
+    dplyr::rename(Gene1 = Var1,
            Gene2 = Var2,
            genetic_dist = Freq) %>%
-    filter(Gene1 != Gene2) %>% 
+    filter(Gene1 != Gene2) %>%   # avoids duplicates + self comparisons
     mutate(
       pos1 = extract_pos(Gene1, haplotype),
       pos2 = extract_pos(Gene2, haplotype),
-      physical_dist = abs(pos1 - pos2),
       physical_dist = abs(pos1 - pos2),
       Order = order,
       Species = species,
@@ -82,7 +97,7 @@ for (i in seq_len(nrow(meta))) {
     select(Order, Species, Haplotype,
            Gene1, Gene2,
            physical_dist, genetic_dist)
-  
+
   all_results[[length(all_results) + 1]] <- df
 }
 

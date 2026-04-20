@@ -26,7 +26,8 @@ def run_patchwork(tsv_file, input_dir, config_name, output_prefix, dry_run):
             "--lwidth", "2",
             "--min-len", "15000",
             "--cmap", "viridis",
-            "--min-pi", "75"
+            "--min-pi", "75",
+            "--transparent"
         ]
 
         print(f"\nRunning for {order} / {species}")
