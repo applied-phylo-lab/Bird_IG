@@ -57,26 +57,24 @@ ggplot(order_dist, aes(x = Order, y = 1, fill = mean_dist)) +
         axis.ticks = element_blank())
 
 
+filtered_meta<-meta %>% filter(Order != "Cranes")
 
-
-ggplot(meta, aes(x = physical_dist, y = genetic_dist)) +
-  geom_point(alpha = 0.2, size = 0.5) +
+ggplot(filtered_meta, aes(x = physical_dist, y = genetic_dist)) +
+  geom_point(alpha = 0.15, size = 0.4) +
   theme_classic() +
   labs(x = "Physical distance", y = "Genetic distance")
 
+ggplot(filtered_meta, aes(x = physical_dist, y = genetic_dist, color=Order)) +
+  geom_point(alpha = 0.15, size = 0.4) +
+  theme_classic() +
+  labs(x = "Physical distance", y = "Genetic distance")
+
+
+
 ggplot(meta, aes(x = physical_dist, y = genetic_dist)) +
   geom_point(alpha = 0.15, size = 0.4) +
-  geom_smooth(method = "loess", color = "red") +
-  theme_classic()
-
-
-
-ggplot(meta, aes(x = physical_dist, y = genetic_dist)) +
-  geom_point(alpha = 0.15, size = 0.4) +
-  geom_smooth(method = "loess", color = "red") +
   facet_wrap(~Order) +
   theme_classic()
-
 
 ggplot(meta, aes(x = physical_dist, y = genetic_dist)) +
   geom_point(alpha = 0.15, size = 0.4) +
