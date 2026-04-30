@@ -6,10 +6,10 @@ library(ape)
 library(phylolm)
 
 
-summary<-fread("/local/storage/kav67/clean_birds/IGH_VGP_table.tsv")
-inversions<-fread("/local/storage/kav67/clean_birds/inversion_stats.tsv")
+summary<-fread("/local/storage/kav67/clean_birds/results_03_26/IGH_VGP_table.tsv")
+inversions<-fread("/local/storage/kav67/clean_birds/results_03_26/inversion_stats.tsv")
 inversions<-inversions[inversions$minlen==1000,]
-
+bird_tree_pruned<-read.tree("/local/storage/kav67/clean_birds/vgp_birds.nwk")
 
 colnames(inversions)[16]<-"Haplotype"
 summary<-left_join(summary,inversions, by="Haplotype")
@@ -31,7 +31,7 @@ trait_df <- summary %>%
 #filter(LatinName != "Gallinula chloropus") %>%   # remove outlier
 #    Species = first(Species),
 # Match order to tree
-trait_df <- trait_df[match(tree_species, trait_df$LatinName), ]
+trait_df <- trait_df[match(tree_species, gsub(" ","_",trait_df$LatinName)), ]
 
 # Remove species with missing values
 keep <- !(is.na(trait_df$NumV) | is.na(trait_df$num_inversions))
@@ -72,7 +72,7 @@ cat("\nLambda:", lambda_estimate,
 
 # Named vectors for contMap
 NumV_values <- setNames(trait_df$NumV, tree_plot$tip.label)
-inv_values  <- setNames(trait_df$num_inversions_diag, tree_plot$tip.label)
+inv_values  <- setNames(trait_df$num_inversions, tree_plot$tip.label)
 
 # Clean species names for labels
 species_labels <- gsub("_", " ", trait_df$Species)

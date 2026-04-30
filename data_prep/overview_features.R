@@ -52,7 +52,7 @@ summary_table <- summary_table %>%
   left_join(
     VGP_data %>%
       select(`Assembly ID`, `Scientific Name`) %>%
-      rename(AssemblyID = `Assembly ID`, LatinName = `Scientific Name`),
+      dplyr::rename(AssemblyID = `Assembly ID`, LatinName = `Scientific Name`),
     by = "AssemblyID"
   )
 
@@ -89,7 +89,7 @@ vgp_species_map <- VGP_data %>%
   # if the same SpeciesNorm appears multiple times with different ScientificName rows,
   # keep the first—adjust as needed for your data.
   group_by(SpeciesNorm) %>%
-  slice(1) %>%
+  dplyr::slice(1) %>%
   ungroup()
 
 # ---- First: try matching by AssemblyID (extracted from Haplotype before first underscore) ----
@@ -126,11 +126,11 @@ if (length(unmatched_species) > 0) {
 } else {
   message("All rows have LatinName filled (either via AssemblyID or Species match).")
 }
-summary_filled[summary_filled$Species=="house_finches",]$LatinName<-"Haemorhous mexicanus"
-summary_filled[summary_filled$Species=="A.coerulescensAC",]$LatinName<-"Aphelocoma coerulescens"
-summary_filled[summary_filled$Species=="A.coerulescensAC",]$LatinName<-"Aphelocoma coerulescens"
-summary_filled[summary_filled$Species=="A.insularisAI",]$LatinName<-"Aphelocoma insularis"
-summary_filled[summary_filled$Species=="A.woodhouseiiAW",]$LatinName<-"Aphelocoma woodhouseii"
+#summary_filled[summary_filled$Species=="house_finches",]$LatinName<-"Haemorhous mexicanus"
+summary_filled[summary_filled$Species=="Florida_scrub_jay",]$LatinName<-"Aphelocoma coerulescens"
+summary_filled[summary_filled$Species=="Yucatan_jay",]$LatinName<-"Cyanocorax yucatanicus"
+summary_filled[summary_filled$Species=="Island_scrub_jay",]$LatinName<-"Aphelocoma insularis"
+summary_filled[summary_filled$Species=="Woodhouse_scrub_jay",]$LatinName<-"Aphelocoma woodhouseii"
 
 summary_table_curated <- summary_filled %>%
   filter(
@@ -149,7 +149,7 @@ locus_counts <- summary_table_curated %>%
   summarise(NumLoci = n(), .groups = "drop")
 locus_counts_wide <- locus_counts %>%
   pivot_wider(names_from = Locus, values_from = NumLoci, values_fill = 0) %>%
-  rename(label = LatinName)
+  dplyr::rename(label = LatinName)
 #locus_counts_wide$label<-gsub(" ","_",locus_counts_wide$label)
 
 tips_in_data <- intersect(sub_tree$tip.label, locus_counts_wide$label)
@@ -194,6 +194,10 @@ summary_table_IGH <- summary_table_curated %>%
 
 write_tsv(summary_table_IGH,paste0(dir,"IGH_VGP_table.tsv"))
 
+summary_table_all <- summary_table_curated %>%
+  group_by(Locus,Haplotype) %>%               # group by species
+  slice_max(order_by = NumV, n = 1) %>% # keep row with highest NumV
+  ungroup()
 
 summary_table_IGH_all <- summary_table %>%#summary_filled %>%
   filter(Locus == "IGH") %>%            # only IGH rows
@@ -219,7 +223,7 @@ order_nodes <- tree_pruned_data %>%
     node = MRCA(sub_tree_pruned, label),   # MRCA() from ggtree
     .groups = "drop"
   ) %>%
-  rename(type = Order) 
+  dplyr::rename(type = Order) 
 order_nodes <- order_nodes[-9,]
 order_nodes[order_nodes$type=="Suboscines",]$node<-27
 order_nodes <- order_nodes[c(3,7,8,9,11,12),]

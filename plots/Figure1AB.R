@@ -124,3 +124,44 @@ IGL_length<-ggplot(all_species_data, aes(x = IGL_TotalLength / 1e6, fill = bird)
 
 
 IGL_length+IGL_strand
+
+bird_only<-all_species_data[all_species_data$VertClass=="birds",]
+
+plot_data <- bird_only %>%
+  select(IGH_MinDir, IGL_MinDir) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Locus",
+               values_to = "MinDir")
+
+# Plot
+ggplot(plot_data, aes(x = MinDir, fill = Locus)) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30,color = "black",linewidth = 0.25) +
+  scale_fill_manual(values = c("IGH_MinDir" = "#87b4dc",
+                               "IGL_MinDir" = "#638E6E"),
+                    labels = c("IGH", "IGL")) +
+  labs(x = "Fraction of genes located on the same strand", y = "Count", fill = "Locus") +
+  theme_classic()+
+  theme(axis.title = element_text(size = 14),
+                       axis.text = element_text(size = 10),
+                       legend.position = "none")
+
+
+plot_data <- bird_only %>%
+  mutate(IGH_ContigLength = (IGH_TotalLength / IGH_LocusFraction) ,
+         IGL_ContigLength = (IGL_TotalLength / IGL_LocusFraction) ) %>%
+  select(IGH_ContigLength, IGL_ContigLength) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Locus",
+               values_to = "ContigLength") %>%
+  filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
+
+# Plot
+ggplot(plot_data, aes(x = ContigLength, fill = Locus)) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 40) +
+  scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x)))+
+  scale_fill_manual(values = c("IGH_ContigLength" = "#87b4dc",
+                               "IGL_ContigLength" = "#638E6E"),
+                    labels = c("IGH", "IGL")) +
+  labs(x = "Contig Length (bp)", y = "Count", fill = "Locus") +
+  theme_classic()
+

@@ -172,7 +172,7 @@ plot_inversion_dotplot_mirrored <- function(df, species_name, title,
 # -------------------------------------------------------------------
 # Build a named list of plots, one per species
 # -------------------------------------------------------------------
-dot_filtered<-dot#[dot$MeanLength>5000,]
+dot_filtered<-dot[dot$MeanLength>15000,]
 
 plot_ac<-plot_inversion_dotplot_mirrored(dot_filtered,"Florida_scrub_jay","Florida Scrub Jay",show_y_label = TRUE,show_x_label = TRUE)
 plot_ai<-plot_inversion_dotplot_mirrored(dot_filtered,"Island_scrub_jay","Island Scrub Jay",show_x_label = TRUE)
