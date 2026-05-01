@@ -3,6 +3,11 @@
 Pipeline script: for each row in a summary TSV, runs createFastaFromCSV.py,
 aligns with clustalo, and builds a phylogenetic tree with iqtree2.
 Rows are processed in parallel using multiprocessing.Pool.
+
+Supports both IGH and IGL loci. When the TSV contains a 'Locus' column,
+the appropriate gene file (combined_genes_IGH_clean.txt or
+combined_genes_IGL_clean.txt) and output prefix are chosen automatically.
+Use --locus to restrict processing to a single locus.
 """
 
 import argparse
@@ -33,30 +38,36 @@ def process_row(row):
     order     = row['Order']
     species   = row['Species']
     haplotype = row['Haplotype']
+    locus     = row.get('Locus', 'IGH')
 
-    label = f"{species}/{haplotype}"
+    label = f"{species}/{haplotype}/{locus}"
 
+    gene_file = f"combined_genes_{locus}_clean.txt"
     combined_genes_path = os.path.join(
-        input_dir, order, species, haplotype,
-        'combined_genes_IGH_clean.txt'
+        input_dir, order, species, haplotype, gene_file
     )
 
     output_dir  = os.path.join(input_dir, order, species, haplotype, "tree")
     os.makedirs(output_dir, exist_ok=True)
 
-    prefix      = haplotype
+    prefix      = f"IGL_{haplotype}" if locus == "IGL" else haplotype
     fasta_out   = os.path.join(output_dir, f"{prefix}.fasta")
     aligned_out = os.path.join(output_dir, f"{prefix}_aligned.fasta")
 
     print(f"\n[{label}] Starting pipeline", flush=True)
-    print(f"[{label}]   Input CSV : {combined_genes_path}", flush=True)
+    print(f"[{label}]   Gene file : {combined_genes_path}", flush=True)
     print(f"[{label}]   Output dir: {output_dir}", flush=True)
+    print(f"[{label}]   Prefix    : {prefix}", flush=True)
 
     if not os.path.isfile(combined_genes_path):
         print(f"[{label}][WARNING] Input file not found, skipping: {combined_genes_path}",
               file=sys.stderr, flush=True)
         return
-
+    # if aligned_out and iqtree_prefix.treefile already exist, we can skip the whole pipeline
+    iqtree_prefix = os.path.join(output_dir, f"{prefix}_tree")
+    if os.path.isfile(aligned_out) and os.path.isfile(f"{iqtree_prefix}.treefile"):
+        print(f"[{label}] Aligned FASTA and IQ-TREE output already exist, skipping pipeline.", flush=True)
+        return
     try:
         # ------------------------------------------------------------------ #
         # Step 1 – createFastaFromCSV.py

@@ -11,8 +11,8 @@ library(data.table)
 library(readr)
 dir<-"/local/storage/kav67/clean_birds/"
 #dir<-"/local/storage/kav67/mammals/"
-#summary_table<-fread(paste0(dir,"summary_features.csv"))
-summary_table<-fread(paste0(dir,"IGH_filtered_table.tsv"))
+summary_table<-fread(paste0(dir,"summary_features.csv"))
+#summary_table<-fread(paste0(dir,"IGH_filtered_table.tsv"))
 #summary_table<-fread(paste0(dir,"/Songbirds/Woodhouse_Scrub_Jay/summary.csv"))
 summary_table <- summary_table %>%
   mutate(AssemblyID = str_extract(Haplotype, "^[^_]+"))  # take text before first underscore
@@ -135,7 +135,7 @@ summary_filled[summary_filled$Species=="Woodhouse_scrub_jay",]$LatinName<-"Aphel
 summary_table_curated <- summary_filled %>%
   filter(
     !is.na(LatinName),          # keep only rows with a valid LatinName
-    !str_detect(Haplotype, "_alt")# remove alt haplotypes
+    #!str_detect(Haplotype, "_alt")# remove alt haplotypes
   )
 
 

@@ -5,6 +5,8 @@ rss <- rss %>%
     Heptamer = if_else(is.na(Heptamer), "NO_HEPTAMER", Heptamer)
   )
 
+#rss<-rss%>% filter(!grepl("Songbirds", Source))
+
 top_heptamers <- rss %>%
   filter(Heptamer != "NO_HEPTAMER",
          `Passes Filtering` ==TRUE) %>%

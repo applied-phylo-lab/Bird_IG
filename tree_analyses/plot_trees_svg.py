@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-For each row in the summary table, build a tip-color mapping from gene_list.csv
-and call plot_tree.R to render a ladderized rectangular SVG tree.
+Plot IGH and IGL phylogenetic trees as colored SVGs.
+
+- IGH: skip if SVG already exists
+- IGL: always run
+- gene_list.csv is filtered by Locus
 """
 
 import argparse
@@ -25,14 +28,17 @@ UNMATCHED_COLOR = "#999999"
 
 
 def strand_to_tree(strand):
-    """FASTA headers replace '+' with '_'."""
     return "_" if strand == "+" else strand
 
 
-def build_color_lookup(gene_list_df, order, species, haplotype):
+def build_color_lookup(gene_list_df, order, species, haplotype, locus,prefix):
     source = f"{order}/{species}/{haplotype}"
-    sub = gene_list_df[gene_list_df["Source"] == source]
 
+    sub = gene_list_df[
+        (gene_list_df["Source"] == source) &
+        (gene_list_df["Locus"] == locus)
+    ]
+    #print(sub)
     lookup = {}
     for _, row in sub.iterrows():
         gene_type = str(row["GeneType"])
@@ -45,9 +51,10 @@ def build_color_lookup(gene_list_df, order, species, haplotype):
         has_hept = heptamer not in ("", "nan", "None")
 
         tip_name = (
-            f"{haplotype}.{row['Pos']}.{row['Contig']}"
+            f"{prefix}{haplotype}.{row['Pos']}.{row['Contig']}"
             f".{gene_type}.{row['Productive']}.{strand}"
         )
+
         lookup[tip_name] = COLOR_MAP[(productive, has_hept)]
 
     return lookup
@@ -55,24 +62,38 @@ def build_color_lookup(gene_list_df, order, species, haplotype):
 
 def process_row(args):
     row, gene_list_df = args
+
     input_dir = row["InputDir"]
     order     = row["Order"]
     species   = row["Species"]
     haplotype = row["Haplotype"]
-    label     = f"{species}/{haplotype}"
+    locus     = row["Locus"]
+
+    label = f"{species}/{haplotype}/{locus}"
 
     output_dir = os.path.join(input_dir, order, species, haplotype, "tree")
-    treefile   = os.path.join(output_dir, f"{haplotype}_tree.treefile")
 
-    if not os.path.isfile(treefile):
-        print(f"[{label}][WARNING] Tree file not found, skipping: {treefile}",
-              file=sys.stderr, flush=True)
+    # --- File naming depending on locus ---
+    prefix = "IGL_" if locus == "IGL" else ""
+
+    treefile   = os.path.join(output_dir, f"{prefix}{haplotype}_tree.treefile")
+    output_svg = os.path.join(output_dir, f"{prefix}{haplotype}_tree.svg")
+
+    # --- Skip if already exists ---
+    if locus=="IGH" and os.path.isfile(output_svg):
+        #print(f"[{label}] SVG exists, skipping.", flush=True)
         return
 
-    color_lookup = build_color_lookup(gene_list_df, order, species, haplotype)
-    output_svg   = os.path.join(output_dir, f"{haplotype}_tree.svg")
+    if not os.path.isfile(treefile):
+        #print(f"[{label}][WARNING] Tree file not found, skipping: {treefile}",
+        #      file=sys.stderr, flush=True)
+        return
 
-    # Write color mapping to a temp TSV for R to consume
+    color_lookup = build_color_lookup(
+        gene_list_df, order, species, haplotype, locus,prefix
+    )
+
+    # Write temp color mapping
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".tsv", delete=False, prefix=f"{haplotype}_colors_"
     ) as fh:
@@ -99,11 +120,11 @@ def process_row(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Plot IGH phylogenetic trees as colored SVGs"
+        description="Plot IGH + IGL phylogenetic trees"
     )
-    parser.add_argument("-i", "--input_dir", required=True, help="Top-level input directory")
-    parser.add_argument("-s", "--summary",   required=True, help="Path to summary_table_IGH.tsv")
-    parser.add_argument("-c", "--cores",     type=int, default=4, help="Number of parallel processes")
+    parser.add_argument("-i", "--input_dir", required=True)
+    parser.add_argument("-s", "--summary",   required=True)
+    parser.add_argument("-c", "--cores",     type=int, default=4)
 
     args = parser.parse_args()
 
@@ -119,7 +140,7 @@ def main():
 
     tasks = [(row, gene_list_df) for _, row in df.iterrows()]
 
-    print(f"Processing {len(df)} trees with {args.cores} parallel workers...\n")
+    print(f"Processing {len(tasks)} trees with {args.cores} workers...\n")
 
     with Pool(args.cores) as pool:
         pool.map(process_row, tasks)

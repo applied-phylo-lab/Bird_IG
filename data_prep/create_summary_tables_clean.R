@@ -8,6 +8,7 @@ input_csv  <- paste0(dir,"ig_contig_list.csv")
 
 output_all <- paste0(dir,"summary_features.csv")
 output_igh <- paste0(dir,"IGH_filtered_table.tsv")
+output_all_tsv <- paste0(dir,"filtered_table.tsv")
 # ====================
 
 # Read data
@@ -25,8 +26,8 @@ dt[, c("Order", "Species", "Haplotype") := tstrsplit(Source, "/", fixed=TRUE)]
 #dt[, Contig := str_extract(`[Contig Name, Number of Genes]`, "'([^']+)'")]
 #dt[, Contig := gsub("'", "", Contig)]
 
-dt[, NumV := as.integer(str_extract(`[Contig Name, Number of Genes]`, "\\d+(?=\\])"))]
-dt[, NumV := `Number of Genes (no filtering)`]
+#dt[, NumV := as.integer(str_extract(`[Contig, Number of Genes]`, "\\d+(?=\\])"))]
+dt[, NumV := `Number of Genes (before filtering)`]
 
 # Select final columns
 formatted <- dt[, .(Order, Species, Haplotype, Locus, Contig,NumV)]
@@ -40,6 +41,7 @@ formatted_igh <- formatted_igh[NumV >2]
 
 # Write IGH-only CSV
 write_tsv(formatted_igh, output_igh)
+write_tsv(formatted, output_all_tsv)
 
 cat("Done.\n")
 cat("Wrote:\n")

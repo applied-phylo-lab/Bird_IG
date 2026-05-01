@@ -134,8 +134,8 @@ plot_data <- bird_only %>%
                values_to = "MinDir")
 
 # Plot
-ggplot(plot_data, aes(x = MinDir, fill = Locus)) +
-  geom_histogram(alpha = 0.7, position = "identity", bins = 30,color = "black",linewidth = 0.25) +
+mind_dir_p<-ggplot(plot_data, aes(x = MinDir, fill = Locus)) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
   scale_fill_manual(values = c("IGH_MinDir" = "#87b4dc",
                                "IGL_MinDir" = "#638E6E"),
                     labels = c("IGH", "IGL")) +
@@ -156,12 +156,18 @@ plot_data <- bird_only %>%
   filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
 
 # Plot
-ggplot(plot_data, aes(x = ContigLength, fill = Locus)) +
+contig_length_p<-ggplot(plot_data, aes(x = ContigLength, fill = Locus)) +
   geom_histogram(alpha = 0.7, position = "identity", bins = 40) +
   scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x)))+
   scale_fill_manual(values = c("IGH_ContigLength" = "#87b4dc",
                                "IGL_ContigLength" = "#638E6E"),
                     labels = c("IGH", "IGL")) +
   labs(x = "Contig Length (bp)", y = "Count", fill = "Locus") +
-  theme_classic()
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    strip.text      = element_text(face = "bold"),
+    axis.title      = element_text(size = 14),
+    axis.text       = element_text(size = 10)
+  )
 

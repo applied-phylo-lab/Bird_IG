@@ -413,7 +413,12 @@ make_simple_combined <- function(counts_in_tree, bird_tree, tree_species,
 }
 
 p_combined_simple      <- make_simple_combined(counts_in_tree, bird_tree, tree_species,
-                                               "n_rss",        "Genes with RSS")
+                                               "n_rss",        "Genes with RSS")+theme(
+                                                 legend.position = "none",
+                                                 strip.text      = element_text(face = "bold"),
+                                                 axis.title      = element_text(size = 14),
+                                                 axis.text       = element_text(size = 10)
+                                               )
 p_combined_productive  <- make_simple_combined(counts_in_tree, bird_tree, tree_species,
                                                "n_productive", "Productive genes")
 p_combined_prod_rss    <- make_simple_combined(counts_in_tree, bird_tree, tree_species,
@@ -436,10 +441,25 @@ p_combined_prod_rss_birds <- p_combined_prod_rss +
              color = highlighted_prod_rss$sp_color, size = 3, fontface = "italic",
              inherit.aes = FALSE)
 
+highlighted_prod_rss_both <- counts_in_tree %>%
+  filter(LatinName %in% c("Gallus gallus", "Aythya fuligula")) %>%
+  mutate(sp_color = species_colors[LatinName])
+
+p_combined_prod_rss_birds_both <- p_combined_prod_rss +
+  geom_point(data = highlighted_prod_rss_both,
+             aes(x = n_total, y = n_prod_rss),
+             color = highlighted_prod_rss_both$sp_color, shape = 18, size = 4,
+             inherit.aes = FALSE) +
+  ggrepel::geom_text_repel(data = highlighted_prod_rss_both,
+             aes(x = n_total, y = n_prod_rss, label = LatinName),
+             color = highlighted_prod_rss_both$sp_color, size = 3, fontface = "italic",
+             inherit.aes = FALSE)
+
 p_combined_simple
 p_combined_productive
 p_combined_prod_rss
 p_combined_prod_rss_birds
+p_combined_prod_rss_birds_both
 
 # ── Strand consistency of RSS genes ───────────────────────────────────────────
 # Per haplotype × locus: which strand carries more RSS genes ("main strand")?
@@ -731,117 +751,372 @@ p_bias <- ggplot(perm_results, aes(x = prop, fill = Locus)) +
 
 print(p_bias)
 
-# ── MinDir vs RSS gene count (not significant, commented out) ─────────────────
-# library(data.table)
-#
-# mindir_raw <- fread(file.path(input_dir, "all_species_stats_pruned_12052025.csv"))
-# mindir_raw <- mindir_raw[mindir_raw$IGH_AnnotationLevel < 2, ]
-# mindir_raw <- mindir_raw[mindir_raw$VertClass == "birds", ]
-#
-# # Build latin_tree key and join proper LatinName + Order from vgp_table
-# mindir_raw$latin_tree <- tolower(gsub(" ", "_", mindir_raw$LatinName))
-#
-# vgp_order_map <- vgp_table %>%
-#   select(LatinName, Order) %>%
-#   distinct() %>%
-#   mutate(latin_tree = tolower(gsub(" ", "_", LatinName)))
-#
-# mindir_birds <- merge(
-#   as.data.frame(mindir_raw) %>% select(-LatinName),
-#   vgp_order_map %>% select(latin_tree, LatinName, Order),
-#   by = "latin_tree", all.x = TRUE
-# )
-#
-# # Pivot IGH_MinDir and IGL_MinDir to long format
-# mindir_long <- mindir_birds %>%
-#   select(LatinName, latin_tree, IGH_MinDir, IGL_MinDir) %>%
-#   pivot_longer(
-#     cols      = c(IGH_MinDir, IGL_MinDir),
-#     names_to  = "Locus",
-#     values_to = "MinDir"
-#   ) %>%
-#   mutate(Locus = sub("_MinDir", "", Locus))
-#
-# # Join with counts_in_tree (already pruned to species in tree)
-# mindir_joined <- counts_in_tree %>%
-#   left_join(mindir_long, by = c("LatinName", "Locus")) %>%
-#   filter(!is.na(MinDir))
-#
-# # ── Phylolm per locus: n_rss ~ MinDir ──────────────────────────────────────
-#
-# run_mindir_fit <- function(locus) {
-#   sub <- filter(mindir_joined, Locus == locus)
-#   sub$latin_tree <- gsub(" ", "_", sub$LatinName)
-#   idx <- match(tree_species, sub$latin_tree)
-#   trait_df <- as.data.frame(sub[idx, ])
-#   keep <- !is.na(trait_df$n_rss) & !is.na(trait_df$MinDir)
-#   trait_df <- trait_df[keep, ]
-#   tree_p <- drop.tip(bird_tree, bird_tree$tip.label[!keep])
-#   rownames(trait_df) <- tree_p$tip.label
-#   if (nrow(trait_df) < 5) return(NULL)
-#   model <- phylolm(n_rss ~ MinDir, data = trait_df, phy = tree_p, model = "lambda")
-#   list(
-#     locus     = locus,
-#     intercept = coef(model)[1],
-#     slope     = coef(model)[2],
-#     label     = make_phylolm_label(model),
-#     data      = trait_df
-#   )
-# }
-#
-# mindir_fits <- lapply(c("IGH", "IGL"), run_mindir_fit)
-# names(mindir_fits) <- c("IGH", "IGL")
-#
-# # Build annotation positions
-# x_range_mindir <- range(mindir_joined$MinDir, na.rm = TRUE)
-# x_max_mindir   <- x_range_mindir[2]
-#
-# p_mindir <- ggplot(mindir_joined, aes(x = MinDir, y = n_rss, color = Locus)) +
-#   geom_point(size = 2, alpha = 0.7) +
-#   scale_color_manual(values = locus_colors)
-#
-# for (fit in mindir_fits) {
-#   if (is.null(fit)) next
-#   x_seq  <- seq(x_range_mindir[1], x_max_mindir, length.out = 100)
-#   y_line <- fit$intercept + fit$slope * x_seq
-#   p_mindir <- p_mindir +
-#     geom_line(
-#       data        = data.frame(MinDir = x_seq, n_rss = y_line,
-#                                Locus = fit$locus),
-#       aes(x = MinDir, y = n_rss, color = Locus),
-#       linetype = "dashed", linewidth = 0.6, inherit.aes = FALSE
-#     )
-#   # Annotation top-left for IGL, line-end for IGH
-#   if (fit$locus == "IGL") {
-#     p_mindir <- p_mindir +
-#       annotate("text",
-#                x = x_range_mindir[1], y = Inf,
-#                label  = paste0("IGL:\n", fit$label),
-#                color  = locus_colors["IGL"],
-#                hjust  = -0.05, vjust = 1.3,
-#                size   = 3.2, family = "mono")
-#   } else {
-#     y_at_end <- fit$intercept + fit$slope * x_max_mindir
-#     p_mindir <- p_mindir +
-#       annotate("text",
-#                x = x_max_mindir-0.1, y = y_at_end,
-#                label  = paste0("IGH:\n", fit$label),
-#                color  = locus_colors["IGH"],
-#                hjust  = -0.05, vjust = 0.5,
-#                size   = 3.2, family = "mono")
-#   }
-# }
-#
-# p_mindir <- p_mindir +
-#   labs(
-#     x = "MinDir (# genes in minority direction)",
-#     y = "# genes with RSS"
-#   ) +
-#   theme_classic(base_size = 12) +
-#   theme(
-#     legend.position = "none",
-#     axis.title      = element_text(size = 12),
-#     axis.text       = element_text(size = 10)
-#   )
-#
-# print(p_mindir)
+# ── IGL RSS gene positions: single vs multiple productive RSS haplotypes ───────
+
+make_prod_rss_pos_plot <- function(locus) {
+  bins <- seq(0, 0.5, by = 0.025)
+
+  pos_data <- df %>%
+    filter(Locus == locus) %>%
+    mutate(productive = tolower(trimws(as.character(Productive))) %in% c("true", "1", "yes")) %>%
+    group_by(LatinName, Haplotype) %>%
+    mutate(
+      rel_pos    = rank(Pos, ties.method = "first") / n(),
+      n_prod_rss = sum(has_rss & productive)
+    ) %>%
+    filter(has_rss) %>%
+    mutate(
+      folded_pos = pmin(rel_pos, 1 - rel_pos),
+      group      = ifelse(n_prod_rss > 1, "Multiple productive RSS", "Single productive RSS")
+    ) %>%
+    ungroup() %>%
+    filter(folded_pos >= 0, folded_pos <= 0.5) %>%
+    mutate(bin = cut(folded_pos, breaks = bins, include.lowest = TRUE, right = FALSE)) %>%
+    group_by(group, bin) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(group) %>%
+    mutate(pct = count / sum(count) * 100) %>%
+    ungroup() %>%
+    mutate(bin_mid = bins[as.integer(bin)] + 0.0125,
+           group   = factor(group, levels = c("Multiple productive RSS", "Single productive RSS")))
+
+  group_colors <- c("Multiple productive RSS" = "#4E79A7", "Single productive RSS" = "#F28E2B")
+
+  ggplot(pos_data, aes(x = bin_mid, y = pct, fill = group, color = group)) +
+    geom_col(alpha = 0.5, position = "identity", width = 0.023) +
+    scale_x_continuous(limits = c(0, 0.5),
+                       breaks = seq(0, 0.5, 0.1),
+                       labels = function(x) paste0(round(x * 100), "%")) +
+    scale_fill_manual(values  = group_colors, name = NULL) +
+    scale_color_manual(values = group_colors, name = NULL) +
+    labs(
+      title = locus,
+      x     = "Folded relative position  (0% = at end, 50% = in middle)",
+      y     = "% of genes in category"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold"),
+      axis.title      = element_text(size = 12),
+      axis.text       = element_text(size = 10),
+      legend.position = "top"
+    )
+}
+
+p_igl_prod_rss_pos <- make_prod_rss_pos_plot("IGL")
+p_igh_prod_rss_pos <- make_prod_rss_pos_plot("IGH")
+
+print(p_igl_prod_rss_pos)
+print(p_igh_prod_rss_pos)
+
+# Old-style density versions (geom_histogram + after_stat(density), binwidth 0.05)
+make_prod_rss_pos_density <- function(locus) {
+  group_colors <- c("Multiple productive RSS" = "#4E79A7", "Single productive RSS" = "#F28E2B")
+
+  pos_data <- df %>%
+    filter(Locus == locus) %>%
+    mutate(productive = tolower(trimws(as.character(Productive))) %in% c("true", "1", "yes")) %>%
+    group_by(LatinName, Haplotype) %>%
+    mutate(
+      rel_pos    = rank(Pos, ties.method = "first") / n(),
+      n_prod_rss = sum(has_rss & productive)
+    ) %>%
+    filter(has_rss) %>%
+    mutate(
+      folded_pos = pmin(rel_pos, 1 - rel_pos),
+      group      = ifelse(n_prod_rss > 1, "Multiple productive RSS", "Single productive RSS")
+    ) %>%
+    ungroup()
+
+  ggplot(pos_data, aes(x = folded_pos, fill = group, color = group)) +
+    geom_histogram(aes(y = after_stat(density)),
+                   binwidth = 0.025, alpha = 0.5, position = "identity") +
+    scale_x_continuous(limits = c(0, 0.5),
+                       breaks = seq(0, 0.5, 0.1),
+                       labels = function(x) paste0(round(x * 100), "%")) +
+    scale_fill_manual(values  = group_colors, name = NULL) +
+    scale_color_manual(values = group_colors, name = NULL) +
+    labs(
+      title = locus,
+      x     = "Folded relative position  (0% = at end, 50% = in middle)",
+      y     = "Density"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold"),
+      axis.title      = element_text(size = 12),
+      axis.text       = element_text(size = 10),
+      legend.position = "top"
+    )
+}
+
+p_igl_prod_rss_pos_density <- make_prod_rss_pos_density("IGL")
+p_igh_prod_rss_pos_density <- make_prod_rss_pos_density("IGH")
+
+print(p_igl_prod_rss_pos_density)
+print(p_igh_prod_rss_pos_density)
+
+# Unfolded version (0–100% relative position)
+make_prod_rss_pos_unfolded <- function(locus,x_label=TRUE) {
+  
+  locus_color<-if(locus=="IGH"){"#87b4dc"}else{"#638E6E"}
+  group_colors <- c("Multiple productive RSS" = "lightgrey", "Single productive RSS" = locus_color)
+
+  pos_data <- df %>%
+    filter(Locus == locus) %>%
+    mutate(productive = tolower(trimws(as.character(Productive))) %in% c("true", "1", "yes")) %>%
+    group_by(LatinName, Haplotype) %>%
+    mutate(
+      rel_pos    = rank(Pos, ties.method = "first") / n(),
+      n_prod_rss = sum(has_rss & productive)
+    ) %>%
+    filter(has_rss) %>%
+    mutate(group = ifelse(n_prod_rss > 1, "Multiple productive RSS", "Single productive RSS")) %>%
+    ungroup()
+
+  ggplot(pos_data, aes(x = rel_pos, fill = group, color = group)) +
+    geom_histogram(aes(y = after_stat(density)),
+                   binwidth = 0.05, alpha = 0.5, position = "identity") +
+    scale_x_continuous(limits = c(0, 1),
+                       breaks = seq(0, 1, 0.2),
+                       labels = function(x) paste0(round(x * 100), "%")) +
+    scale_fill_manual(values  = group_colors, name = NULL) +
+    scale_color_manual(values = group_colors, name = NULL) +
+    labs(
+      x     = if(x_label){"Relative position  (0% = start, 100% = end)"}else{""},
+      y     = "Density"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold"),
+      axis.title      = element_text(size = 12),
+      axis.text       = element_text(size = 10),
+      legend.position = "none"
+    )
+}
+
+p_igl_prod_rss_pos_unfolded <- make_prod_rss_pos_unfolded("IGL")
+p_igh_prod_rss_pos_unfolded <- make_prod_rss_pos_unfolded("IGH",FALSE)
+
+print(p_igl_prod_rss_pos_unfolded)
+print(p_igh_prod_rss_pos_unfolded)
+
+# Unfolded + percentage y-axis
+make_prod_rss_pos_unfolded_pct <- function(locus) {
+  bins         <- seq(0, 1, by = 0.05)
+  group_colors <- c("Multiple productive RSS" = "#4E79A7", "Single productive RSS" = "#F28E2B")
+
+  pos_data <- df %>%
+    filter(Locus == locus) %>%
+    mutate(productive = tolower(trimws(as.character(Productive))) %in% c("true", "1", "yes")) %>%
+    group_by(LatinName, Haplotype) %>%
+    mutate(
+      rel_pos    = rank(Pos, ties.method = "first") / n(),
+      n_prod_rss = sum(has_rss & productive)
+    ) %>%
+    filter(has_rss) %>%
+    mutate(group = ifelse(n_prod_rss > 1, "Multiple productive RSS", "Single productive RSS")) %>%
+    ungroup() %>%
+    mutate(bin = cut(rel_pos, breaks = bins, include.lowest = TRUE, right = FALSE)) %>%
+    group_by(group, bin) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(group) %>%
+    mutate(pct = count / sum(count) * 100) %>%
+    ungroup() %>%
+    mutate(bin_mid = bins[as.integer(bin)] + 0.025,
+           group   = factor(group, levels = c("Multiple productive RSS", "Single productive RSS")))
+
+  ggplot(pos_data, aes(x = bin_mid, y = pct, fill = group, color = group)) +
+    geom_col(alpha = 0.5, position = "identity", width = 0.05) +
+    scale_x_continuous(limits = c(0, 1),
+                       breaks = seq(0, 1, 0.2),
+                       labels = function(x) paste0(round(x * 100), "%")) +
+    scale_fill_manual(values  = group_colors, name = NULL) +
+    scale_color_manual(values = group_colors, name = NULL) +
+    labs(
+      title = locus,
+      x     = "Relative position  (0% = start, 100% = end)",
+      y     = "% of genes in category"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold"),
+      axis.title      = element_text(size = 12),
+      axis.text       = element_text(size = 10),
+      legend.position = "top"
+    )
+}
+
+p_igl_prod_rss_pos_unfolded_pct <- make_prod_rss_pos_unfolded_pct("IGL")
+p_igh_prod_rss_pos_unfolded_pct <- make_prod_rss_pos_unfolded_pct("IGH")
+
+print(p_igl_prod_rss_pos_unfolded_pct)
+print(p_igh_prod_rss_pos_unfolded_pct)
+
+
+
+# ── MinDir vs gene counts (IGH + IGL pooled) ─────────────────────────────────
+# Note: lm used instead of phylolm because pooling both loci gives two rows per
+# species, which cannot be matched to a single-tip-per-species tree.
+library(data.table)
+
+mindir_raw <- fread(file.path(input_dir, "all_species_stats_pruned_12052025.csv"))
+mindir_raw <- mindir_raw[mindir_raw$IGH_AnnotationLevel < 2, ]
+mindir_raw <- mindir_raw[mindir_raw$VertClass == "birds", ]
+
+mindir_raw$latin_tree <- tolower(gsub(" ", "_", mindir_raw$LatinName))
+
+vgp_order_map <- vgp_table %>%
+  select(LatinName, Order) %>%
+  distinct() %>%
+  mutate(latin_tree = tolower(gsub(" ", "_", LatinName)))
+
+mindir_birds <- merge(
+  as.data.frame(mindir_raw) %>% select(-LatinName),
+  vgp_order_map %>% select(latin_tree, LatinName, Order),
+  by = "latin_tree", all.x = TRUE
+)
+
+# Pivot IGH_MinDir and IGL_MinDir to long format
+mindir_long <- mindir_birds %>%
+  select(LatinName, latin_tree, IGH_MinDir, IGL_MinDir) %>%
+  pivot_longer(
+    cols      = c(IGH_MinDir, IGL_MinDir),
+    names_to  = "Locus",
+    values_to = "MinDir"
+  ) %>%
+  mutate(Locus = sub("_MinDir", "", Locus))
+
+# Join with counts_in_tree on LatinName × Locus
+mindir_pooled <- counts_in_tree %>%
+  left_join(mindir_long, by = c("LatinName", "Locus")) %>%
+  filter(!is.na(MinDir))
+
+make_lm_label <- function(model) {
+  s     <- summary(model)
+  slope <- coef(model)[2]
+  p_val <- s$coefficients[2, "Pr(>|t|)"]
+  r2    <- s$r.squared
+  stars <- ifelse(p_val < 0.001, "***",
+           ifelse(p_val < 0.01,  "**",
+           ifelse(p_val < 0.05,  "*", "ns")))
+  sprintf("β  = %-8s\nR² = %-8.3f",
+          paste0(round(slope, 3), stars), r2)
+}
+
+make_mindir_pooled_plot <- function(y_var, y_label) {
+  dat <- mindir_pooled %>% filter(!is.na(.data[[y_var]]))
+  mod <- lm(as.formula(paste(y_var, "~ MinDir")), data = dat)
+  x_rng <- range(dat$MinDir, na.rm = TRUE)
+  ggplot(dat, aes(x = MinDir, y = .data[[y_var]], color = Locus)) +
+    geom_point(size = 2, alpha = 0.7) +
+    geom_abline(intercept = coef(mod)[1], slope = coef(mod)[2],
+                linetype = "dashed", linewidth = 0.6, color = "black") +
+    annotate("text",
+             x = x_rng[1], y = Inf,
+             label  = make_lm_label(mod),
+             hjust  = -0.05, vjust = 1.3,
+             size   = 3.2, family = "mono") +
+    scale_color_manual(values = locus_colors) +
+    labs(x = "MinDir (# genes in minority direction)", y = y_label) +
+    theme_classic(base_size = 12) +
+    theme(axis.title = element_text(size = 12),
+          axis.text  = element_text(size = 10))
+}
+
+p_mindir_rss   <- make_mindir_pooled_plot("n_rss",   "# genes with RSS")
+p_mindir_total <- make_mindir_pooled_plot("n_total", "# total genes")
+
+print(p_mindir_rss)
+print(p_mindir_total)
+
+# ── n_total vs n_rss / n_prod_rss colored by MinDir ──────────────────────────
+
+mindir_counts <- counts_in_tree %>%
+  left_join(mindir_long, by = c("LatinName", "Locus")) %>%
+  filter(!is.na(MinDir))
+
+p_mindir_color_rss <- ggplot(mindir_counts,
+                             aes(x = n_total, y = n_rss, color = MinDir)) +
+  geom_point(size = 2, alpha = 0.8) +
+  scale_color_viridis_c(name = "MinDir", option = "C") +
+  labs(x = "Total genes (mean per species)",
+       y = "Genes with RSS (mean per species)") +
+  theme_classic(base_size = 12) +
+  theme(axis.title  = element_text(size = 12),
+        axis.text   = element_text(size = 10),
+        strip.text  = element_text(face = "bold"))
+
+p_mindir_color_prod_rss <- ggplot(mindir_counts,
+                                  aes(x = n_total, y = n_prod_rss, color = MinDir)) +
+  geom_point(size = 2, alpha = 0.8) +
+  scale_color_viridis_c(name = "MinDir", option = "C") +
+  labs(x = "Total genes (mean per species)",
+       y = "Productive genes with RSS (mean per species)") +
+  theme_classic(base_size = 12) +
+  theme(axis.title  = element_text(size = 12),
+        axis.text   = element_text(size = 10),
+        strip.text  = element_text(face = "bold"))
+
+print(p_mindir_color_rss)
+print(p_mindir_color_prod_rss)
+
+# ── Terminal gap analysis: isolated genes at locus ends ───────────────────────
+# For each haplotype (≥4 genes), compute gaps between consecutive genes sorted
+# by position. Normalize each gap by the haplotype's median gap. Compare the
+# distribution of first, last, and internal normalized gaps to see if terminal
+# genes tend to be physically separated from the main cluster.
+
+gap_df <- df %>%
+  group_by(LatinName, Haplotype, Locus) %>%
+  arrange(Pos, .by_group = TRUE) %>%
+  filter(n() >= 4) %>%
+  mutate(
+    gene_rank  = row_number(),
+    n_genes    = n(),
+    gap        = Pos - lag(Pos)
+  ) %>%
+  filter(!is.na(gap)) %>%
+  mutate(
+    gap_type   = case_when(
+      gene_rank == 1         ~ "First",
+      gene_rank == 2         ~ "First",
+      gene_rank == n_genes   ~ "Last",
+      gene_rank == n_genes-1   ~ "Last",
+      TRUE                   ~ "Internal"
+    ),
+    norm_gap   = gap / median(gap)
+  ) %>%
+  ungroup() %>%
+  mutate(gap_type = factor(gap_type, levels = c("First", "Internal", "Last")))
+
+# Plot 1: distribution of normalised gaps by type, faceted by locus
+p_terminal_gaps <- ggplot(gap_df, aes(x = gap_type, y = norm_gap, fill = Locus)) +
+  geom_violin(alpha = 0.6, trim = TRUE, scale = "width") +
+  geom_boxplot(width = 0.15, outlier.size = 0.5, alpha = 0.8,
+               position = position_dodge(0)) +
+  facet_wrap(~ Locus) +
+  scale_fill_manual(values = locus_colors) +
+  scale_y_log10() +
+  labs(
+    x = "Gap position",
+    y = "Normalised gap size (log scale, relative to haplotype median)"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text      = element_text(face = "bold"),
+    axis.title      = element_text(size = 12),
+    axis.text       = element_text(size = 10)
+  )
+
+
+
+print(p_terminal_gaps)
+
+
+final_figure<-(contig_length_p+mind_dir_p)/(p_combined_simple+(p_igh_prod_rss_pos_unfolded/p_igl_prod_rss_pos_unfolded))
+final_figure
+(contig_length_p+mind_dir_p)
+(p_combined_simple+(p_igh_prod_rss_pos_unfolded/p_igl_prod_rss_pos_unfolded))
+
