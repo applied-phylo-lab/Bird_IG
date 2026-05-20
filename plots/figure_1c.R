@@ -1,4 +1,4 @@
-annotation_iroki<-fread("/local/storage/kav67/clean_birds/annotation_iroki_strand.tsv")
+annotation_iroki<-fread("/local/storage/kav67/clean_birds/results_03_26/annotation_iroki_strand.tsv")
 
 colnames(annotation_iroki)<-c("name","locus_length","V_number","strand","inversion_length","inversion_number","fraction_inversions","bar1_color"  ,"bar2_color" , "bar3_color",  "bar4_color" , "bar5_color"  ,"bar6_color" )
 annotation_iroki$locus_length<-annotation_iroki$locus_length*-1
@@ -88,3 +88,7 @@ p_scatter <- ggplot(annotation_iroki,
 p_locus |p_strand|p_inv_len | p_frac_inv|p_phylo
 p_locus |p_strand
 p_inv_len | p_frac_inv|p_phylo
+
+
+mean(annotation_iroki$fraction_inversions)
+mean(annotation_iroki$inversion_length)

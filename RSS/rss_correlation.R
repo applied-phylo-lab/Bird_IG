@@ -14,8 +14,7 @@ suppressPackageStartupMessages({
 input_dir <- "/local/storage/kav67/clean_birds/"
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-
-gene_list_path <- file.path(input_dir, "gene_list.csv")
+gene_list_path <- file.path(input_dir, "gene_list-igl_h2_n6.csv")
 if (!file.exists(gene_list_path)) stop("gene_list.csv not found: ", gene_list_path)
 
 df <- read.csv(gene_list_path, stringsAsFactors = FALSE, check.names = FALSE)
@@ -394,13 +393,13 @@ make_simple_combined <- function(counts_in_tree, bird_tree, tree_species,
     if (fit$locus == "IGL") {
       ax <- -Inf; ay <- Inf; ah <- -0.05; av <- 1.3
     } else {
-      ax <- x_max- 200; ay <- fit$intercept + fit$slope * x_max; ah <- -0.05; av <- 0.5
+      ax <- x_max- 300; ay <- fit$intercept + fit$slope * x_max; ah <- -0.05; av <- 0.5
     }
     p <- p +
       geom_abline(intercept = fit$intercept, slope = fit$slope,
                   color = color, linetype = "dashed", linewidth = 0.6) +
       annotate("text", x = ax, y = ay, label = label,
-               hjust = ah, vjust = av, size = 3.2, color = color, family = "mono")
+               hjust = ah, vjust = av, size = 3.2, color = "black", fontface = "bold",family = "mono")
   }
 
   p +
@@ -889,7 +888,7 @@ make_prod_rss_pos_unfolded <- function(locus,x_label=TRUE) {
     theme_classic(base_size = 12) +
     theme(
       plot.title      = element_text(face = "bold"),
-      axis.title      = element_text(size = 12),
+      axis.title      = element_text(size = 14),
       axis.text       = element_text(size = 10),
       legend.position = "none"
     )
@@ -960,10 +959,10 @@ print(p_igh_prod_rss_pos_unfolded_pct)
 # species, which cannot be matched to a single-tip-per-species tree.
 library(data.table)
 
-mindir_raw <- fread(file.path(input_dir, "all_species_stats_pruned_12052025.csv"))
-mindir_raw <- mindir_raw[mindir_raw$IGH_AnnotationLevel < 2, ]
-mindir_raw <- mindir_raw[mindir_raw$VertClass == "birds", ]
-
+#mindir_raw <- fread(file.path(input_dir, "all_species_stats_pruned_12052025.csv"))
+#mindir_raw <- mindir_raw[mindir_raw$IGH_AnnotationLevel < 2, ]
+#mindir_raw <- mindir_raw[mindir_raw$VertClass == "birds", ]
+mindir_raw <-bird_only
 mindir_raw$latin_tree <- tolower(gsub(" ", "_", mindir_raw$LatinName))
 
 vgp_order_map <- vgp_table %>%

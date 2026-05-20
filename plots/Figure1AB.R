@@ -80,8 +80,8 @@ locus_strand_comp_hist<-ggplot(all_species_data, aes(x = IGH_MinDir, fill = bird
 locus_l_comp|locus_strand_comp
 locus_l_comp_hist|locus_strand_comp_hist
 
-median(all_species_data[all_species_data$bird==TRUE,]$IGH_TotalLength)
-median(all_species_data[all_species_data$bird==FALSE,]$IGH_TotalLength)
+mean(all_species_data[all_species_data$bird==TRUE,]$IGH_TotalLength)
+mean(all_species_data[all_species_data$bird==FALSE,]$IGH_TotalLength)
 
 IGL_strand<-ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
   geom_histogram(
@@ -170,4 +170,42 @@ contig_length_p<-ggplot(plot_data, aes(x = ContigLength, fill = Locus)) +
     axis.title      = element_text(size = 14),
     axis.text       = element_text(size = 10)
   )
+
+igh_contig_all <- all_species_data %>%
+  mutate(ContigLength = IGH_TotalLength / IGH_LocusFraction) %>%
+  filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
+
+igh_contig_length_p <- ggplot(igh_contig_all, aes(x = ContigLength, fill = bird)) +
+  geom_histogram(alpha = 0.8, position = "stack", bins = 40) +
+  scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  scale_fill_manual(
+    values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
+    name = NULL
+  ) +
+  labs(x = "IGH Contig Length (bp, log scale)", y = "Count") +
+  theme_classic() +
+  theme(axis.title = element_text(size = 14),
+        axis.text  = element_text(size = 10),
+        legend.text = element_text(size = 10))
+
+igl_contig_all <- all_species_data %>%
+  mutate(ContigLength = IGL_TotalLength / IGL_LocusFraction) %>%
+  filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
+
+igl_contig_length_p <- ggplot(igl_contig_all, aes(x = ContigLength, fill = bird)) +
+  geom_histogram(alpha = 0.8, position = "stack", bins = 40) +
+  scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  scale_fill_manual(
+    values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
+    labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
+    name = NULL
+  ) +
+  labs(x = "IGL Contig Length (bp, log scale)", y = "Count") +
+  theme_classic() +
+  theme(axis.title = element_text(size = 14),
+        axis.text  = element_text(size = 10),
+        legend.text = element_text(size = 10))
+
+igh_contig_length_p | igl_contig_length_p
 
