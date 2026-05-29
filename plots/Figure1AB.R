@@ -176,7 +176,7 @@ igh_contig_all <- all_species_data %>%
   filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
 
 igh_contig_length_p <- ggplot(igh_contig_all, aes(x = ContigLength, fill = bird)) +
-  geom_histogram(alpha = 0.8, position = "stack", bins = 40) +
+  geom_histogram(alpha = 0.7, position = "stack", bins = 40) +
   scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
   scale_fill_manual(
     values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
@@ -187,14 +187,14 @@ igh_contig_length_p <- ggplot(igh_contig_all, aes(x = ContigLength, fill = bird)
   theme_classic() +
   theme(axis.title = element_text(size = 14),
         axis.text  = element_text(size = 10),
-        legend.text = element_text(size = 10))
+        legend.position = "none")
 
 igl_contig_all <- all_species_data %>%
   mutate(ContigLength = IGL_TotalLength / IGL_LocusFraction) %>%
   filter(!is.infinite(ContigLength), !is.nan(ContigLength), ContigLength > 0)
 
 igl_contig_length_p <- ggplot(igl_contig_all, aes(x = ContigLength, fill = bird)) +
-  geom_histogram(alpha = 0.8, position = "stack", bins = 40) +
+  geom_histogram(alpha = 0.7, position = "stack", bins = 40) +
   scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
   scale_fill_manual(
     values = c("TRUE" = "#87b4dc", "FALSE" = "grey"),
@@ -208,4 +208,9 @@ igl_contig_length_p <- ggplot(igl_contig_all, aes(x = ContigLength, fill = bird)
         legend.text = element_text(size = 10))
 
 igh_contig_length_p | igl_contig_length_p
+mean(igh_contig_all[igh_contig_all$bird==TRUE,]$ContigLength)
+mean(igh_contig_all[igh_contig_all$bird==FALSE,]$ContigLength)
+
+mean(igl_contig_all[igl_contig_all$bird==FALSE,]$ContigLength)
+mean(igl_contig_all[igl_contig_all$bird==TRUE,]$ContigLength)
 
