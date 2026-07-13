@@ -79,8 +79,13 @@ def summarize_table(df, minlen, bed_df):
     avg_inv_len = np.mean(inv_lengths) if inv_lengths else 0
     sd_len = pd.Series(inv_lengths).std(ddof=1) if inv_lengths else 0
 
-    intervals = [(row["start1"], row["end1"]) for _, row in inv_diag.iterrows()]
-    inv_cov_len, merged_intervals = merge_intervals(intervals)
+    # Diagonal inversions only → used for inv_cov_len
+    diag_intervals = [(row["start1"], row["end1"]) for _, row in inv_diag.iterrows()]
+    inv_cov_len, _ = merge_intervals(diag_intervals)
+
+    # All inversions → used for gene overlap
+    all_inv_intervals = [(row["start1"], row["end1"]) for _, row in inv.iterrows()]
+    _, merged_all_intervals = merge_intervals(all_inv_intervals)
 
     # gene overlap
     genes_on_inv = genes_pos = genes_neg = 0
@@ -89,11 +94,11 @@ def summarize_table(df, minlen, bed_df):
     # distance between sequence and its inversion
     df["distance"] = df["start2"] - df["end1"]
     distances = df["distance"].tolist()
-    
+
     if bed_df is not None and not bed_df.empty:
         for _, gene in bed_df.iterrows():
             g_start, g_end, strand = gene["start"], gene["end"], gene["strand"]
-            for s, e in merged_intervals:
+            for s, e in merged_all_intervals:
                 if not (g_end < s or g_start > e):
                     genes_on_inv += 1
                     if strand == "+":
@@ -151,33 +156,28 @@ def process_row(row):
         return [], pd.DataFrame()
 
     sample_name = f"{order}_{species}_{haplotype}"
-    minlens = [250, 1000, 2500, 5000, 7500, 10000, 12500, 15000]
-    all_stats = []
-    inv_details_all = pd.DataFrame() 
-    
-    for ml in minlens:
-        # try summarize_table, catch errors and print sample_name   
-        try: 
-            stats, inv_df = summarize_table(df, ml, bed_df)
-        except Exception as e:
-            print(f"Error processing {sample_name} at minlen {ml}: {e}")
-            continue
-        stats["sample"] = sample_name
-        stats["order"] = order
-        stats["species"] = species
-        stats["haplotype"] = haplotype
-        all_stats.append(stats)
-    
-        if ml == 250 and not inv_df.empty:
-            inv_df["sample"] = sample_name
-            inv_df["order"] = order
-            inv_df["species"] = species
-            inv_df["haplotype"] = haplotype
-            inv_details_all = pd.concat([inv_details_all, inv_df], ignore_index=True)
 
+    try:
+        stats, inv_df = summarize_table(df, 250, bed_df)
+    except Exception as e:
+        print(f"Error processing {sample_name}: {e}")
+        return [], pd.DataFrame()
+
+    stats["sample"] = sample_name
+    stats["order"] = order
+    stats["species"] = species
+    stats["haplotype"] = haplotype
+
+    inv_details_all = pd.DataFrame()
+    if not inv_df.empty:
+        inv_df["sample"] = sample_name
+        inv_df["order"] = order
+        inv_df["species"] = species
+        inv_df["haplotype"] = haplotype
+        inv_details_all = inv_df
 
     print(f"Processed {sample_name}")
-    return all_stats,inv_details_all
+    return [stats], inv_details_all
 
 
 

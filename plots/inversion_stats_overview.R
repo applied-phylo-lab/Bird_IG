@@ -13,9 +13,9 @@ inversion_stats_long <- inversion_stats[inversion_stats$minlen==250,] %>%
   mutate(
     inv_cov_frac = inv_cov_len / total_seq_length
   ) %>%
-  select(order,species, avg_inv_len, inv_cov_frac, frac_genes_on_inv) %>%
+  select(order,species, avg_inv_len, inv_cov_frac, frac_genes_on_inv,total_seq_length) %>%
   pivot_longer(
-    cols = c(avg_inv_len, inv_cov_frac, frac_genes_on_inv),
+    cols = c(avg_inv_len, inv_cov_frac, frac_genes_on_inv,total_seq_length),
     names_to = "metric",
     values_to = "value"
   )
@@ -55,7 +55,8 @@ species_stats <- inversion_stats1000[!is.na(inversion_stats1000$LatinName),] %>%
     avg_inv_len = mean(avg_inv_len, na.rm = TRUE),
     avg_num_inversions = mean(num_inversions, na.rm = TRUE),
     inv_cov_frac = mean(inv_cov_len / total_seq_length, na.rm = TRUE),
-    frac_genes_on_inv = mean(frac_genes_on_inv, na.rm = TRUE)
+    frac_genes_on_inv = mean(frac_genes_on_inv, na.rm = TRUE),
+    total_seq_length = mean(total_seq_length, na.rm = TRUE)
   )
 
 #species_stats$LatinName<-gsub(" ","_",species_stats$LatinName)
@@ -85,7 +86,7 @@ order_nodes <- tree_pruned_data %>%
     node = MRCA(tree_pruned, label),   # MRCA() from ggtree
     .groups = "drop"
   ) %>%
-  rename(type = order)  # rename column to type
+  dplyr::rename(type = order)  # rename column to type
 order_nodes <- order_nodes[-9,]
 order_nodes[order_nodes$type=="Suboscines",]$node<-27
 p <- ggtree(tree_pruned)
@@ -193,7 +194,7 @@ for (ord in orders) {
 plot_species_data <- species_data %>%
   select(order, LatinName, num_inversions, avg_inv_len, inv_cov_len, total_seq_length, frac_genes_on_inv) %>%
   mutate(inv_cov_frac = inv_cov_len / total_seq_length) %>% 
-  rename(label = order)  
+  dplyr::rename(label = order)  
 plot_species_data<-plot_species_data[plot_species_data$LatinName!="Gallinula chloropus",]
 
 order_tree<-ladderize(order_tree, right=TRUE)

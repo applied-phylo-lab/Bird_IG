@@ -1,11 +1,11 @@
 library(phylolm)
 library(ape)
 library(dplyr)
-vgp_bird_table<-fread("/local/storage/kav67/clean_birds/results_03_26/IGH_VGP_table.tsv")
+vgp_bird_table<-fread("/local/storage/kav67/clean_birds/IGH_VGP_table.tsv")
 
 vgp_bird_table<-merge(vgp_bird_table,species_stats_pruned, by = "LatinName",all=FALSE)
 
-
+vgp_bird_table$Length<-vgp_bird_table$total_seq_length
 ggplot(vgp_bird_table, aes(x=avg_num_inversions,y=NumV))+
   geom_point()+
   theme_classic()
@@ -64,7 +64,7 @@ ggplot(data_use, aes(x = log_NumV, y = log_inv)) +
   )
 
 species_stats_pruned
-df<-fread("/local/storage/kav67/clean_birds/summary_features_old.csv")
+df<-fread("/local/storage/kav67/clean_birds/summary_features.csv")
 df <- df %>%
   group_by(Species, Locus) %>%
   filter(if (n() > 1) str_detect(Haplotype, "pri") else TRUE) %>%
@@ -81,7 +81,7 @@ vgp_bird_table <- vgp_bird_table %>%
   ungroup()
 
 vgp_bird_table <- vgp_bird_table %>%
-  left_join(df %>% select(Species, Order, Haplotype, Locus, Contig, NumV, Length),
+  left_join(df %>% select(Species, Order, Haplotype, Locus, Contig, NumV),
             by = c("Species", "Order", "Haplotype", "Locus", "Contig", "NumV"))
 
 vgp_bird_table[vgp_bird_table$Contig=="JAJHSZ010000035.1",]$Length<-545918
