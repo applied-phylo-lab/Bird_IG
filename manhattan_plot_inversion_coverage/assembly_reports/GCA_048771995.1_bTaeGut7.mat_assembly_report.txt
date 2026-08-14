@@ -1,0 +1,77 @@
+# Assembly name:  bTaeGut7.mat
+# Organism name:  Taeniopygia guttata (zebra finch)
+# Isolate:  bTaeGut7
+# Sex:  female
+# Taxid:          59729
+# BioSample:      SAMN47142318
+# BioProject:     PRJNA1229770
+# Submitter:      Vertebrate Genomes Project
+# Date:           2025-03-21
+# Assembly type:  haploid (maternal haplotype of diploid)
+# Release type:   major
+# Assembly level: Chromosome
+# Genome representation: full
+# WGS project:    JBMDLN01
+# Assembly method: dorado correct ONT reads v. 0.7.3; hybrid verkko assembler v. 2.2.1; HiFiasm + manual curation v. 0.24.0; mitoHiFi assembler v. 3 + galaxy0
+# Expected final version: No
+# Genome coverage: 433.93x
+# Sequencing technology: PacBio Sequel IIe HiFi; Oxford Nanopore PromethION; Arima Hi-C v2; Illumina NovaSeq
+# RefSeq category: Reference Genome
+# GenBank assembly accession: GCA_048771995.1
+# RefSeq assembly accession: GCF_048771995.1
+# RefSeq assembly and GenBank assemblies identical: no
+# Linked assembly: GCA_048772025.1 (paternal haplotype of diploid)
+#
+## Assembly-Units:
+## GenBank Unit Accession	RefSeq Unit Accession	Assembly-Unit name
+## GCA_048772255.1	GCF_048772255.1	Primary Assembly
+## GCA_048772265.1		non-nuclear
+#
+# Ordered by chromosome/plasmid; the chromosomes/plasmids are followed by
+# unlocalized scaffolds.
+# Unplaced scaffolds are listed at the end.
+# RefSeq is equal or derived from GenBank object.
+#
+# Sequence-Name	Sequence-Role	Assigned-Molecule	Assigned-Molecule-Location/Type	GenBank-Accn	Relationship	RefSeq-Accn	Assembly-Unit	Sequence-Length	UCSC-style-name
+chr1_mat	assembled-molecule	1	Chromosome	CM109788.1	=	NC_133024.1	Primary Assembly	115909749	na
+chr1A_mat	assembled-molecule	1A	Chromosome	CM109789.1	=	NC_133025.1	Primary Assembly	72089520	na
+chr2_mat	assembled-molecule	2	Chromosome	CM109790.1	=	NC_133026.1	Primary Assembly	152518735	na
+chr3_mat	assembled-molecule	3	Chromosome	CM109791.1	=	NC_133027.1	Primary Assembly	115612305	na
+chr4_mat	assembled-molecule	4	Chromosome	CM109792.1	=	NC_133028.1	Primary Assembly	73776267	na
+chr4A_mat	assembled-molecule	4A	Chromosome	CM109793.1	=	NC_133029.1	Primary Assembly	19545315	na
+chr5_mat	assembled-molecule	5	Chromosome	CM109794.1	=	NC_133030.1	Primary Assembly	65033001	na
+chr6_mat	assembled-molecule	6	Chromosome	CM109795.1	=	NC_133031.1	Primary Assembly	36968704	na
+chr7_mat	assembled-molecule	7	Chromosome	CM109796.1	=	NC_133032.1	Primary Assembly	39422672	na
+chr8_mat	assembled-molecule	8	Chromosome	CM109797.1	=	NC_133033.1	Primary Assembly	32653262	na
+chr9_mat	assembled-molecule	9	Chromosome	CM109798.1	=	NC_133034.1	Primary Assembly	26132161	na
+chr10_mat	assembled-molecule	10	Chromosome	CM109799.1	=	NC_133035.1	Primary Assembly	20920522	na
+chr11_mat	assembled-molecule	11	Chromosome	CM109800.1	=	NC_133036.1	Primary Assembly	21676805	na
+chr12_mat	assembled-molecule	12	Chromosome	CM109801.1	=	NC_133037.1	Primary Assembly	20824288	na
+chr13_mat	assembled-molecule	13	Chromosome	CM109802.1	=	NC_133038.1	Primary Assembly	18440361	na
+chr14_mat	assembled-molecule	14	Chromosome	CM109803.1	=	NC_133039.1	Primary Assembly	16411571	na
+chr15_mat	assembled-molecule	15	Chromosome	CM109804.1	=	NC_133040.1	Primary Assembly	13831355	na
+chr16_mat	assembled-molecule	16	Chromosome	CM109805.1	=	NC_133041.1	Primary Assembly	5740876	na
+chr17_mat	assembled-molecule	17	Chromosome	CM109806.1	=	NC_133042.1	Primary Assembly	11378085	na
+chr18_mat	assembled-molecule	18	Chromosome	CM109807.1	=	NC_133043.1	Primary Assembly	11233222	na
+chr19_mat	assembled-molecule	19	Chromosome	CM109808.1	=	NC_133044.1	Primary Assembly	11169410	na
+chr20_mat	assembled-molecule	20	Chromosome	CM109809.1	=	NC_133045.1	Primary Assembly	15459785	na
+chr21_mat	assembled-molecule	21	Chromosome	CM109810.1	=	NC_133046.1	Primary Assembly	8001925	na
+chr22_mat	assembled-molecule	22	Chromosome	CM109811.1	=	NC_133047.1	Primary Assembly	5052704	na
+chr23_mat	assembled-molecule	23	Chromosome	CM109812.1	=	NC_133048.1	Primary Assembly	6987744	na
+chr24_mat	assembled-molecule	24	Chromosome	CM109813.1	=	NC_133049.1	Primary Assembly	7809384	na
+chr25_mat	assembled-molecule	25	Chromosome	CM109814.1	=	NC_133050.1	Primary Assembly	8199455	na
+chr26_mat	assembled-molecule	26	Chromosome	CM109815.1	=	NC_133051.1	Primary Assembly	6902691	na
+chr27_mat	assembled-molecule	27	Chromosome	CM109816.1	=	NC_133052.1	Primary Assembly	5843241	na
+chr28_mat	assembled-molecule	28	Chromosome	CM109817.1	=	NC_133053.1	Primary Assembly	6367150	na
+chr29_mat	assembled-molecule	29	Chromosome	CM109820.1	=	NC_133054.1	Primary Assembly	5689316	na
+chr30_mat	assembled-molecule	30	Chromosome	CM109821.1	=	NC_133055.1	Primary Assembly	10075530	na
+chr31_mat	assembled-molecule	31	Chromosome	CM109822.1	=	NC_133056.1	Primary Assembly	5620948	na
+chr32_mat	assembled-molecule	32	Chromosome	CM109823.1	=	NC_133057.1	Primary Assembly	5583650	na
+chr33_mat	assembled-molecule	33	Chromosome	CM109824.1	=	NC_133058.1	Primary Assembly	4246341	na
+chr34_mat	assembled-molecule	34	Chromosome	CM109825.1	=	NC_133059.1	Primary Assembly	4456870	na
+chr35_mat	assembled-molecule	35	Chromosome	CM109826.1	=	NC_133060.1	Primary Assembly	4884911	na
+chr36_mat	assembled-molecule	36	Chromosome	CM109827.1	=	NC_133061.1	Primary Assembly	4818805	na
+chr37_mat	assembled-molecule	37	Chromosome	CM109828.1	=	NC_133062.1	Primary Assembly	7863776	na
+chrZ_pat	assembled-molecule	Z	Chromosome	CM109818.1	=	NC_133063.1	Primary Assembly	82218670	na
+chrW_mat	assembled-molecule	W	Chromosome	CM109819.1	=	NC_133064.1	Primary Assembly	33777440	na
+bTaeGut7_mt	assembled-molecule	MT	Mitochondrion	CM109829.1	<>	na	non-nuclear	16855	na

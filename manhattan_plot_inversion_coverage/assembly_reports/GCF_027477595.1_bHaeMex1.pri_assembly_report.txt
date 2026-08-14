@@ -1,0 +1,219 @@
+# Assembly name:  bHaeMex1.pri
+# Organism name:  Haemorhous mexicanus (house finch)
+# Isolate:  bHaeMex1
+# Sex:  female
+# Taxid:          30427
+# BioSample:      SAMN28453576
+# BioProject:     PRJNA839499
+# Submitter:      Vertebrate Genomes Project
+# Date:           2022-12-29
+# Assembly type:  haploid (principal pseudohaplotype of diploid)
+# Release type:   major
+# Assembly level: Chromosome
+# Genome representation: full
+# WGS project:    JAPYKC01
+# Assembly method: HiFiasm v. 0.15.4 + galaxy; purge_dups v. 1.2.5 + galaxy3; Bionano Solve v. 3.6.1 + galaxy2; Salsa v. 2.3 + galaxy0
+# Expected final version: No
+# Genome coverage: 36.85x
+# Sequencing technology: PacBio Sequel II HiFi; Bionano Genomics DLS; Arima Hi-C v2
+# RefSeq category: Reference Genome
+# GenBank assembly accession: GCA_027477595.1
+# RefSeq assembly accession: GCF_027477595.1
+# RefSeq assembly and GenBank assemblies identical: no
+# Linked assembly: GCA_027406555.1 (alternate pseudohaplotype of diploid)
+#
+## Assembly-Units:
+## GenBank Unit Accession	RefSeq Unit Accession	Assembly-Unit name
+## GCA_027477605.1	GCF_027477605.1	Primary Assembly
+## 	GCF_031612595.1	non-nuclear
+#
+# Ordered by chromosome/plasmid; the chromosomes/plasmids are followed by
+# unlocalized scaffolds.
+# Unplaced scaffolds are listed at the end.
+# RefSeq is equal or derived from GenBank object.
+#
+# Sequence-Name	Sequence-Role	Assigned-Molecule	Assigned-Molecule-Location/Type	GenBank-Accn	Relationship	RefSeq-Accn	Assembly-Unit	Sequence-Length	UCSC-style-name
+SUPER_1	assembled-molecule	1	Chromosome	CM050224.1	=	NC_082341.1	Primary Assembly	159305015	na
+SUPER_2	assembled-molecule	2	Chromosome	CM050225.1	=	NC_082342.1	Primary Assembly	122820385	na
+SUPER_3	assembled-molecule	3	Chromosome	CM050226.1	=	NC_082343.1	Primary Assembly	118570436	na
+SUPER_4	assembled-molecule	4	Chromosome	CM050227.1	=	NC_082344.1	Primary Assembly	78191299	na
+SUPER_5	assembled-molecule	5	Chromosome	CM050228.1	=	NC_082345.1	Primary Assembly	77212160	na
+SUPER_6	assembled-molecule	6	Chromosome	CM050229.1	=	NC_082346.1	Primary Assembly	66865462	na
+SUPER_7	assembled-molecule	7	Chromosome	CM050230.1	=	NC_082347.1	Primary Assembly	42994098	na
+SUPER_8	assembled-molecule	8	Chromosome	CM050231.1	=	NC_082348.1	Primary Assembly	31663447	na
+SUPER_9	assembled-molecule	9	Chromosome	CM050232.1	=	NC_082349.1	Primary Assembly	31627783	na
+SUPER_10	assembled-molecule	10	Chromosome	CM050233.1	=	NC_082350.1	Primary Assembly	26782592	na
+SUPER_11	assembled-molecule	11	Chromosome	CM050234.1	=	NC_082351.1	Primary Assembly	24390514	na
+SUPER_12	assembled-molecule	12	Chromosome	CM050235.1	=	NC_082352.1	Primary Assembly	22991849	na
+SUPER_13	assembled-molecule	13	Chromosome	CM050236.1	=	NC_082353.1	Primary Assembly	22531087	na
+SUPER_14	assembled-molecule	14	Chromosome	CM050237.1	=	NC_082354.1	Primary Assembly	20964063	na
+SUPER_15	assembled-molecule	15	Chromosome	CM050238.1	=	NC_082355.1	Primary Assembly	18320441	na
+SUPER_16	assembled-molecule	16	Chromosome	CM050239.1	=	NC_082356.1	Primary Assembly	17439200	na
+SUPER_17	assembled-molecule	17	Chromosome	CM050240.1	=	NC_082357.1	Primary Assembly	16812747	na
+SUPER_18	assembled-molecule	18	Chromosome	CM050241.1	=	NC_082358.1	Primary Assembly	15922158	na
+SUPER_19	assembled-molecule	19	Chromosome	CM050242.1	=	NC_082359.1	Primary Assembly	14260284	na
+SUPER_20	assembled-molecule	20	Chromosome	CM050243.1	=	NC_082360.1	Primary Assembly	13168035	na
+SUPER_21	assembled-molecule	21	Chromosome	CM050244.1	=	NC_082361.1	Primary Assembly	11671694	na
+SUPER_22	assembled-molecule	22	Chromosome	CM050245.1	=	NC_082362.1	Primary Assembly	11661466	na
+SUPER_23	assembled-molecule	23	Chromosome	CM050246.1	=	NC_082363.1	Primary Assembly	8355889	na
+SUPER_24	assembled-molecule	24	Chromosome	CM050247.1	=	NC_082364.1	Primary Assembly	7938749	na
+SUPER_25	assembled-molecule	25	Chromosome	CM050248.1	=	NC_082365.1	Primary Assembly	7043784	na
+SUPER_26	assembled-molecule	26	Chromosome	CM050249.1	=	NC_082366.1	Primary Assembly	6997002	na
+SUPER_27	assembled-molecule	27	Chromosome	CM050250.1	=	NC_082367.1	Primary Assembly	6949113	na
+SUPER_28	assembled-molecule	28	Chromosome	CM050251.1	=	NC_082368.1	Primary Assembly	6497947	na
+SUPER_29	assembled-molecule	29	Chromosome	CM050252.1	=	NC_082369.1	Primary Assembly	6273062	na
+SUPER_30	assembled-molecule	30	Chromosome	CM050253.1	=	NC_082370.1	Primary Assembly	5329703	na
+SUPER_31	assembled-molecule	31	Chromosome	CM050254.1	=	NC_082371.1	Primary Assembly	4544395	na
+SUPER_32	assembled-molecule	32	Chromosome	CM050255.1	=	NC_082372.1	Primary Assembly	3311729	na
+SUPER_33	assembled-molecule	33	Chromosome	CM050256.1	=	NC_082373.1	Primary Assembly	2792069	na
+SUPER_34	assembled-molecule	34	Chromosome	CM050257.1	=	NC_082374.1	Primary Assembly	2156869	na
+SUPER_35	assembled-molecule	35	Chromosome	CM050258.1	=	NC_082375.1	Primary Assembly	1131694	na
+SUPER_36	assembled-molecule	36	Chromosome	CM050259.1	=	NC_082376.1	Primary Assembly	1285798	na
+SUPER_37	assembled-molecule	37	Chromosome	CM050260.1	=	NC_082377.1	Primary Assembly	1251644	na
+SUPER_38	assembled-molecule	38	Chromosome	CM050261.1	=	NC_082378.1	Primary Assembly	777691	na
+SUPER_39	assembled-molecule	39	Chromosome	CM050262.1	=	NC_082379.1	Primary Assembly	616516	na
+SUPER_W	assembled-molecule	W	Chromosome	CM050263.1	=	NC_082380.1	Primary Assembly	9455355	na
+SUPER_Z	assembled-molecule	Z	Chromosome	CM050264.1	=	NC_082381.1	Primary Assembly	89315722	na
+SUPER_3_unloc_1	unlocalized-scaffold	3	Chromosome	JAPYKC010000006.1	=	NW_026775975.1	Primary Assembly	2621444	na
+SUPER_3_unloc_2	unlocalized-scaffold	3	Chromosome	JAPYKC010000007.1	=	NW_026775976.1	Primary Assembly	210879	na
+SUPER_3_unloc_3	unlocalized-scaffold	3	Chromosome	JAPYKC010000008.1	=	NW_026775977.1	Primary Assembly	210329	na
+scaffold_122_ctg1	unlocalized-scaffold	3	Chromosome	JAPYKC010000060.1	=	NW_026775978.1	Primary Assembly	149632	na
+scaffold_136_ctg1	unlocalized-scaffold	3	Chromosome	JAPYKC010000067.1	=	NW_026775979.1	Primary Assembly	107640	na
+scaffold_155_ctg1	unlocalized-scaffold	5	Chromosome	JAPYKC010000073.1	=	NW_026775980.1	Primary Assembly	75495	na
+scaffold_193_ctg1	unlocalized-scaffold	29	Chromosome	JAPYKC010000091.1	=	NW_026775981.1	Primary Assembly	51073	na
+SUPER_32_unloc_1	unlocalized-scaffold	32	Chromosome	JAPYKC010000038.1	=	NW_026775982.1	Primary Assembly	280964	na
+SUPER_32_unloc_2	unlocalized-scaffold	32	Chromosome	JAPYKC010000039.1	=	NW_026775983.1	Primary Assembly	247436	na
+SUPER_32_unloc_3	unlocalized-scaffold	32	Chromosome	JAPYKC010000040.1	=	NW_026775984.1	Primary Assembly	132985	na
+SUPER_32_unloc_4	unlocalized-scaffold	32	Chromosome	JAPYKC010000041.1	=	NW_026775985.1	Primary Assembly	74319	na
+SUPER_32_unloc_5	unlocalized-scaffold	32	Chromosome	JAPYKC010000042.1	=	NW_026775986.1	Primary Assembly	63299	na
+SUPER_35_unloc_1	unlocalized-scaffold	35	Chromosome	JAPYKC010000046.1	=	NW_026775987.1	Primary Assembly	248520	na
+SUPER_35_unloc_2	unlocalized-scaffold	35	Chromosome	JAPYKC010000047.1	=	NW_026775988.1	Primary Assembly	123366	na
+SUPER_35_unloc_3	unlocalized-scaffold	35	Chromosome	JAPYKC010000048.1	=	NW_026775989.1	Primary Assembly	97923	na
+SUPER_35_unloc_4	unlocalized-scaffold	35	Chromosome	JAPYKC010000049.1	=	NW_026775990.1	Primary Assembly	87142	na
+SUPER_35_unloc_5	unlocalized-scaffold	35	Chromosome	JAPYKC010000050.1	=	NW_026775991.1	Primary Assembly	77003	na
+SUPER_35_unloc_6	unlocalized-scaffold	35	Chromosome	JAPYKC010000051.1	=	NW_026775992.1	Primary Assembly	72089	na
+SUPER_36_unloc_1	unlocalized-scaffold	36	Chromosome	JAPYKC010000053.1	=	NW_026775993.1	Primary Assembly	74463	na
+SUPER_39_unloc_1	unlocalized-scaffold	39	Chromosome	JAPYKC010000057.1	=	NW_026775994.1	Primary Assembly	49281	na
+SUPER_39_unloc_2	unlocalized-scaffold	39	Chromosome	JAPYKC010000058.1	=	NW_026775995.1	Primary Assembly	45925	na
+scaffold_94	unplaced-scaffold	na	na	JAPYKC010000059.1	=	NW_026776116.1	Primary Assembly	310186	na
+scaffold_124_ctg1	unplaced-scaffold	na	na	JAPYKC010000061.1	=	NW_026775996.1	Primary Assembly	143205	na
+scaffold_156_ctg1	unplaced-scaffold	na	na	JAPYKC010000062.1	=	NW_026776004.1	Primary Assembly	75703	na
+scaffold_146_ctg1	unplaced-scaffold	na	na	JAPYKC010000063.1	=	NW_026775997.1	Primary Assembly	79732	na
+scaffold_151_ctg1	unplaced-scaffold	na	na	JAPYKC010000064.1	=	NW_026776002.1	Primary Assembly	78100	na
+scaffold_163_ctg1	unplaced-scaffold	na	na	JAPYKC010000065.1	=	NW_026776006.1	Primary Assembly	73328	na
+scaffold_158_ctg1	unplaced-scaffold	na	na	JAPYKC010000066.1	=	NW_026776005.1	Primary Assembly	75296	na
+scaffold_147_ctg1	unplaced-scaffold	na	na	JAPYKC010000068.1	=	NW_026775998.1	Primary Assembly	79634	na
+scaffold_148_ctg1	unplaced-scaffold	na	na	JAPYKC010000069.1	=	NW_026775999.1	Primary Assembly	78809	na
+scaffold_149_ctg1	unplaced-scaffold	na	na	JAPYKC010000070.1	=	NW_026776000.1	Primary Assembly	79231	na
+scaffold_150_ctg1	unplaced-scaffold	na	na	JAPYKC010000071.1	=	NW_026776001.1	Primary Assembly	78375	na
+scaffold_152_ctg1	unplaced-scaffold	na	na	JAPYKC010000072.1	=	NW_026776003.1	Primary Assembly	77911	na
+scaffold_164_ctg1	unplaced-scaffold	na	na	JAPYKC010000074.1	=	NW_026776007.1	Primary Assembly	73734	na
+scaffold_170_ctg1	unplaced-scaffold	na	na	JAPYKC010000075.1	=	NW_026776008.1	Primary Assembly	70973	na
+scaffold_172_ctg1	unplaced-scaffold	na	na	JAPYKC010000076.1	=	NW_026776009.1	Primary Assembly	67676	na
+scaffold_176_ctg1	unplaced-scaffold	na	na	JAPYKC010000077.1	=	NW_026776010.1	Primary Assembly	65932	na
+scaffold_177_ctg1	unplaced-scaffold	na	na	JAPYKC010000078.1	=	NW_026776011.1	Primary Assembly	65020	na
+scaffold_178_ctg1	unplaced-scaffold	na	na	JAPYKC010000079.1	=	NW_026776012.1	Primary Assembly	65339	na
+scaffold_180_ctg1	unplaced-scaffold	na	na	JAPYKC010000080.1	=	NW_026776013.1	Primary Assembly	63331	na
+scaffold_182_ctg1	unplaced-scaffold	na	na	JAPYKC010000081.1	=	NW_026776014.1	Primary Assembly	62420	na
+scaffold_183_ctg1	unplaced-scaffold	na	na	JAPYKC010000082.1	=	NW_026776015.1	Primary Assembly	61129	na
+scaffold_184_ctg1	unplaced-scaffold	na	na	JAPYKC010000083.1	=	NW_026776016.1	Primary Assembly	59546	na
+scaffold_185_ctg1	unplaced-scaffold	na	na	JAPYKC010000084.1	=	NW_026776017.1	Primary Assembly	59244	na
+scaffold_187_ctg1	unplaced-scaffold	na	na	JAPYKC010000085.1	=	NW_026776018.1	Primary Assembly	58045	na
+scaffold_188_ctg1	unplaced-scaffold	na	na	JAPYKC010000086.1	=	NW_026776019.1	Primary Assembly	54554	na
+scaffold_189_ctg1	unplaced-scaffold	na	na	JAPYKC010000087.1	=	NW_026776020.1	Primary Assembly	54426	na
+scaffold_190_ctg1	unplaced-scaffold	na	na	JAPYKC010000088.1	=	NW_026776021.1	Primary Assembly	53661	na
+scaffold_191_ctg1	unplaced-scaffold	na	na	JAPYKC010000089.1	=	NW_026776022.1	Primary Assembly	53828	na
+scaffold_192_ctg1	unplaced-scaffold	na	na	JAPYKC010000090.1	=	NW_026776023.1	Primary Assembly	52866	na
+scaffold_194_ctg1	unplaced-scaffold	na	na	JAPYKC010000092.1	=	NW_026776024.1	Primary Assembly	50771	na
+scaffold_195_ctg1	unplaced-scaffold	na	na	JAPYKC010000093.1	=	NW_026776025.1	Primary Assembly	50150	na
+scaffold_197_ctg1	unplaced-scaffold	na	na	JAPYKC010000094.1	=	NW_026776026.1	Primary Assembly	49150	na
+scaffold_199_ctg1	unplaced-scaffold	na	na	JAPYKC010000095.1	=	NW_026776027.1	Primary Assembly	45565	na
+scaffold_201_ctg1	unplaced-scaffold	na	na	JAPYKC010000096.1	=	NW_026776028.1	Primary Assembly	44618	na
+scaffold_202_ctg1	unplaced-scaffold	na	na	JAPYKC010000097.1	=	NW_026776029.1	Primary Assembly	43813	na
+scaffold_203_ctg1	unplaced-scaffold	na	na	JAPYKC010000098.1	=	NW_026776030.1	Primary Assembly	43330	na
+scaffold_204_ctg1	unplaced-scaffold	na	na	JAPYKC010000099.1	=	NW_026776031.1	Primary Assembly	42289	na
+scaffold_205_ctg1	unplaced-scaffold	na	na	JAPYKC010000100.1	=	NW_026776032.1	Primary Assembly	40986	na
+scaffold_206_ctg1	unplaced-scaffold	na	na	JAPYKC010000101.1	=	NW_026776033.1	Primary Assembly	40695	na
+scaffold_207_ctg1	unplaced-scaffold	na	na	JAPYKC010000102.1	=	NW_026776034.1	Primary Assembly	40279	na
+scaffold_208_ctg1	unplaced-scaffold	na	na	JAPYKC010000103.1	=	NW_026776035.1	Primary Assembly	40125	na
+scaffold_209_ctg1	unplaced-scaffold	na	na	JAPYKC010000104.1	=	NW_026776036.1	Primary Assembly	39719	na
+scaffold_210_ctg1	unplaced-scaffold	na	na	JAPYKC010000105.1	=	NW_026776037.1	Primary Assembly	39265	na
+scaffold_211_ctg1	unplaced-scaffold	na	na	JAPYKC010000106.1	=	NW_026776038.1	Primary Assembly	39008	na
+scaffold_212_ctg1	unplaced-scaffold	na	na	JAPYKC010000107.1	=	NW_026776039.1	Primary Assembly	38763	na
+scaffold_213_ctg1	unplaced-scaffold	na	na	JAPYKC010000108.1	=	NW_026776040.1	Primary Assembly	37870	na
+scaffold_214_ctg1	unplaced-scaffold	na	na	JAPYKC010000109.1	=	NW_026776041.1	Primary Assembly	37777	na
+scaffold_215_ctg1	unplaced-scaffold	na	na	JAPYKC010000110.1	=	NW_026776042.1	Primary Assembly	37634	na
+scaffold_216_ctg1	unplaced-scaffold	na	na	JAPYKC010000111.1	=	NW_026776043.1	Primary Assembly	37509	na
+scaffold_217_ctg1	unplaced-scaffold	na	na	JAPYKC010000112.1	=	NW_026776044.1	Primary Assembly	35627	na
+scaffold_218_ctg1	unplaced-scaffold	na	na	JAPYKC010000113.1	=	NW_026776045.1	Primary Assembly	34128	na
+scaffold_219_ctg1	unplaced-scaffold	na	na	JAPYKC010000114.1	=	NW_026776046.1	Primary Assembly	33938	na
+scaffold_220_ctg1	unplaced-scaffold	na	na	JAPYKC010000115.1	=	NW_026776047.1	Primary Assembly	33918	na
+scaffold_221_ctg1	unplaced-scaffold	na	na	JAPYKC010000116.1	=	NW_026776048.1	Primary Assembly	33087	na
+scaffold_222_ctg1	unplaced-scaffold	na	na	JAPYKC010000117.1	=	NW_026776049.1	Primary Assembly	32739	na
+scaffold_223_ctg1	unplaced-scaffold	na	na	JAPYKC010000118.1	=	NW_026776050.1	Primary Assembly	32431	na
+scaffold_224_ctg1	unplaced-scaffold	na	na	JAPYKC010000119.1	=	NW_026776051.1	Primary Assembly	32351	na
+scaffold_225_ctg1	unplaced-scaffold	na	na	JAPYKC010000120.1	=	NW_026776052.1	Primary Assembly	31709	na
+scaffold_226_ctg1	unplaced-scaffold	na	na	JAPYKC010000121.1	=	NW_026776053.1	Primary Assembly	31466	na
+scaffold_227_ctg1	unplaced-scaffold	na	na	JAPYKC010000122.1	=	NW_026776054.1	Primary Assembly	31081	na
+scaffold_228_ctg1	unplaced-scaffold	na	na	JAPYKC010000123.1	=	NW_026776055.1	Primary Assembly	31034	na
+scaffold_229_ctg1	unplaced-scaffold	na	na	JAPYKC010000124.1	=	NW_026776056.1	Primary Assembly	30633	na
+scaffold_230_ctg1	unplaced-scaffold	na	na	JAPYKC010000125.1	=	NW_026776057.1	Primary Assembly	30568	na
+scaffold_231_ctg1	unplaced-scaffold	na	na	JAPYKC010000126.1	=	NW_026776058.1	Primary Assembly	30385	na
+scaffold_232_ctg1	unplaced-scaffold	na	na	JAPYKC010000127.1	=	NW_026776059.1	Primary Assembly	29661	na
+scaffold_233_ctg1	unplaced-scaffold	na	na	JAPYKC010000128.1	=	NW_026776060.1	Primary Assembly	29596	na
+scaffold_234_ctg1	unplaced-scaffold	na	na	JAPYKC010000129.1	=	NW_026776061.1	Primary Assembly	28839	na
+scaffold_235_ctg1	unplaced-scaffold	na	na	JAPYKC010000130.1	=	NW_026776062.1	Primary Assembly	28725	na
+scaffold_236_ctg1	unplaced-scaffold	na	na	JAPYKC010000131.1	=	NW_026776063.1	Primary Assembly	28712	na
+scaffold_237_ctg1	unplaced-scaffold	na	na	JAPYKC010000132.1	=	NW_026776064.1	Primary Assembly	28614	na
+scaffold_238_ctg1	unplaced-scaffold	na	na	JAPYKC010000133.1	=	NW_026776065.1	Primary Assembly	28327	na
+scaffold_239_ctg1	unplaced-scaffold	na	na	JAPYKC010000134.1	=	NW_026776066.1	Primary Assembly	28274	na
+scaffold_240_ctg1	unplaced-scaffold	na	na	JAPYKC010000135.1	=	NW_026776067.1	Primary Assembly	28142	na
+scaffold_241_ctg1	unplaced-scaffold	na	na	JAPYKC010000136.1	=	NW_026776068.1	Primary Assembly	27959	na
+scaffold_242_ctg1	unplaced-scaffold	na	na	JAPYKC010000137.1	=	NW_026776069.1	Primary Assembly	27754	na
+scaffold_243_ctg1	unplaced-scaffold	na	na	JAPYKC010000138.1	=	NW_026776070.1	Primary Assembly	27524	na
+scaffold_244_ctg1	unplaced-scaffold	na	na	JAPYKC010000139.1	=	NW_026776071.1	Primary Assembly	27476	na
+scaffold_245_ctg1	unplaced-scaffold	na	na	JAPYKC010000140.1	=	NW_026776072.1	Primary Assembly	27386	na
+scaffold_246_ctg1	unplaced-scaffold	na	na	JAPYKC010000141.1	=	NW_026776073.1	Primary Assembly	26944	na
+scaffold_247_ctg1	unplaced-scaffold	na	na	JAPYKC010000142.1	=	NW_026776074.1	Primary Assembly	26851	na
+scaffold_248_ctg1	unplaced-scaffold	na	na	JAPYKC010000143.1	=	NW_026776075.1	Primary Assembly	26437	na
+scaffold_249_ctg1	unplaced-scaffold	na	na	JAPYKC010000144.1	=	NW_026776076.1	Primary Assembly	26148	na
+scaffold_250_ctg1	unplaced-scaffold	na	na	JAPYKC010000145.1	=	NW_026776077.1	Primary Assembly	26001	na
+scaffold_251_ctg1	unplaced-scaffold	na	na	JAPYKC010000146.1	=	NW_026776078.1	Primary Assembly	25892	na
+scaffold_252_ctg1	unplaced-scaffold	na	na	JAPYKC010000147.1	=	NW_026776079.1	Primary Assembly	25312	na
+scaffold_253_ctg1	unplaced-scaffold	na	na	JAPYKC010000148.1	=	NW_026776080.1	Primary Assembly	25268	na
+scaffold_254_ctg1	unplaced-scaffold	na	na	JAPYKC010000149.1	=	NW_026776081.1	Primary Assembly	24889	na
+scaffold_255_ctg1	unplaced-scaffold	na	na	JAPYKC010000150.1	=	NW_026776082.1	Primary Assembly	24742	na
+scaffold_256_ctg1	unplaced-scaffold	na	na	JAPYKC010000151.1	=	NW_026776083.1	Primary Assembly	24589	na
+scaffold_257_ctg1	unplaced-scaffold	na	na	JAPYKC010000152.1	=	NW_026776084.1	Primary Assembly	24368	na
+scaffold_258_ctg1	unplaced-scaffold	na	na	JAPYKC010000153.1	=	NW_026776085.1	Primary Assembly	24259	na
+scaffold_259_ctg1	unplaced-scaffold	na	na	JAPYKC010000154.1	=	NW_026776086.1	Primary Assembly	23981	na
+scaffold_260_ctg1	unplaced-scaffold	na	na	JAPYKC010000155.1	=	NW_026776087.1	Primary Assembly	23962	na
+scaffold_261_ctg1	unplaced-scaffold	na	na	JAPYKC010000156.1	=	NW_026776088.1	Primary Assembly	23749	na
+scaffold_262_ctg1	unplaced-scaffold	na	na	JAPYKC010000157.1	=	NW_026776089.1	Primary Assembly	23689	na
+scaffold_263_ctg1	unplaced-scaffold	na	na	JAPYKC010000158.1	=	NW_026776090.1	Primary Assembly	23562	na
+scaffold_264_ctg1	unplaced-scaffold	na	na	JAPYKC010000159.1	=	NW_026776091.1	Primary Assembly	23227	na
+scaffold_265_ctg1	unplaced-scaffold	na	na	JAPYKC010000160.1	=	NW_026776092.1	Primary Assembly	22616	na
+scaffold_266_ctg1	unplaced-scaffold	na	na	JAPYKC010000161.1	=	NW_026776093.1	Primary Assembly	21847	na
+scaffold_267_ctg1	unplaced-scaffold	na	na	JAPYKC010000162.1	=	NW_026776094.1	Primary Assembly	21587	na
+scaffold_268_ctg1	unplaced-scaffold	na	na	JAPYKC010000163.1	=	NW_026776095.1	Primary Assembly	21435	na
+scaffold_269_ctg1	unplaced-scaffold	na	na	JAPYKC010000164.1	=	NW_026776096.1	Primary Assembly	21170	na
+scaffold_270_ctg1	unplaced-scaffold	na	na	JAPYKC010000165.1	=	NW_026776097.1	Primary Assembly	21087	na
+scaffold_271_ctg1	unplaced-scaffold	na	na	JAPYKC010000166.1	=	NW_026776098.1	Primary Assembly	20682	na
+scaffold_272_ctg1	unplaced-scaffold	na	na	JAPYKC010000167.1	=	NW_026776099.1	Primary Assembly	20371	na
+scaffold_273_ctg1	unplaced-scaffold	na	na	JAPYKC010000168.1	=	NW_026776100.1	Primary Assembly	20235	na
+scaffold_274_ctg1	unplaced-scaffold	na	na	JAPYKC010000169.1	=	NW_026776101.1	Primary Assembly	20080	na
+scaffold_275_ctg1	unplaced-scaffold	na	na	JAPYKC010000170.1	=	NW_026776102.1	Primary Assembly	19697	na
+scaffold_276_ctg1	unplaced-scaffold	na	na	JAPYKC010000171.1	=	NW_026776103.1	Primary Assembly	19410	na
+scaffold_277_ctg1	unplaced-scaffold	na	na	JAPYKC010000172.1	=	NW_026776104.1	Primary Assembly	19189	na
+scaffold_278_ctg1	unplaced-scaffold	na	na	JAPYKC010000173.1	=	NW_026776105.1	Primary Assembly	19052	na
+scaffold_279_ctg1	unplaced-scaffold	na	na	JAPYKC010000174.1	=	NW_026776106.1	Primary Assembly	18122	na
+scaffold_280_ctg1	unplaced-scaffold	na	na	JAPYKC010000175.1	=	NW_026776107.1	Primary Assembly	17708	na
+scaffold_281_ctg1	unplaced-scaffold	na	na	JAPYKC010000176.1	=	NW_026776108.1	Primary Assembly	17578	na
+scaffold_282_ctg1	unplaced-scaffold	na	na	JAPYKC010000177.1	=	NW_026776109.1	Primary Assembly	17482	na
+scaffold_283_ctg1	unplaced-scaffold	na	na	JAPYKC010000178.1	=	NW_026776110.1	Primary Assembly	17096	na
+scaffold_284_ctg1	unplaced-scaffold	na	na	JAPYKC010000179.1	=	NW_026776111.1	Primary Assembly	16912	na
+scaffold_285_ctg1	unplaced-scaffold	na	na	JAPYKC010000180.1	=	NW_026776112.1	Primary Assembly	16331	na
+scaffold_286_ctg1	unplaced-scaffold	na	na	JAPYKC010000181.1	=	NW_026776113.1	Primary Assembly	16182	na
+scaffold_287_ctg1	unplaced-scaffold	na	na	JAPYKC010000182.1	=	NW_026776114.1	Primary Assembly	16081	na
+scaffold_288_ctg1	unplaced-scaffold	na	na	JAPYKC010000183.1	=	NW_026776115.1	Primary Assembly	15589	na
+MT	assembled-molecule	MT	Mitochondrion	na	<>	NC_025610.1	non-nuclear	16822	na

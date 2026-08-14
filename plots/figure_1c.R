@@ -1,5 +1,5 @@
 annotation_iroki<-fread("/local/storage/kav67/clean_birds/annotation_iroki_strand.tsv")
-annotation_iroki<-fread("/local/storage/kav67/clean_birds/annotation_iroki.tsv")
+annotation_iroki<-fread("/local/storage/kav67/clean_birds/iroki_annotation.tsv")
 
 colnames(annotation_iroki)<-c("name","locus_length","V_number","strand","inversion_length","inversion_number","fraction_inversions","bar1_color"  ,"bar2_color" , "bar3_color",  "bar4_color" , "bar5_color"  ,"bar6_color" )
 colnames(annotation_iroki)<-c("name","locus_length","V_number","inversion_length","inversion_number","fraction_inversions","bar1_color"  ,"bar2_color" , "bar3_color",  "bar4_color" , "bar5_color" )
@@ -61,7 +61,7 @@ p_frac_inv <- ggplot(annotation_iroki, aes(x = fraction_inversions)) +
   #           linetype = "dashed", size = 0.5) +
   scale_x_continuous(
     breaks = c(25, 50, 75, 100)
-  ) +
+  ) +coord_cartesian(xlim = c(75, 101))+
   labs(
        x = "Genes in Inversion region (%)",
        y = "Count"

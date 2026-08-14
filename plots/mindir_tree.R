@@ -17,7 +17,7 @@ library(tidyr)
 # all_species_data <- all_species_data[all_species_data$VertClass %in% c("reptiles", "mammals", "birds"), ]
 # bird_only <- all_species_data[all_species_data$VertClass == "birds", ]
 
-gene_list <- fread("/local/storage/kav67/clean_birds/gene_list-igl_h2_n6.csv")
+gene_list <- fread("/local/storage/kav67/clean_birds/gene_list-igl_h3_n7.csv")
 gene_list[, c("GrpOrder", "Species", "Haplotype") := tstrsplit(Source, "/", fixed = TRUE)]
 
 main_strand_frac <- function(strands) {
@@ -169,6 +169,7 @@ p2 <- p2 + geom_cladelab(
   fontsize = 2.5,
   hjust   = 0
 )
+p2
 
 butterfly_data <- tip_meta %>%
   select(LatinName, IGH_MinDir, IGL_MinDir) %>%

@@ -6,9 +6,9 @@ library(ape)
 library(phylolm)
 
 
-summary<-fread("/local/storage/kav67/clean_birds/results_03_26/IGH_VGP_table.tsv")
-inversions<-fread("/local/storage/kav67/clean_birds/results_03_26/inversion_stats.tsv")
-inversions<-inversions[inversions$minlen==1000,]
+summary<-fread("/local/storage/kav67/clean_birds/IGH_VGP_table.tsv")
+inversions<-fread("/local/storage/kav67/clean_birds/inversion_stats.tsv")
+#inversions<-inversions[inversions$minlen==1000,]
 bird_tree_pruned<-read.tree("/local/storage/kav67/clean_birds/vgp_birds.nwk")
 
 colnames(inversions)[16]<-"Haplotype"
@@ -36,16 +36,14 @@ trait_df <- trait_df[match(tree_species, gsub(" ","_",trait_df$LatinName)), ]
 # Remove species with missing values
 keep <- !(is.na(trait_df$NumV) | is.na(trait_df$num_inversions))
 
-trait_df <- trait_df[keep, ]
-
-
+# label tips BEFORE dropping, so the labels still line up with all 122 rows
 trait_df$tip_label <- bird_tree_pruned$tip.label
-rownames(trait_df) <- bird_tree_pruned$tip.label
+trait_df <- as.data.frame(trait_df)[keep, ]
+rownames(trait_df) <- trait_df$tip_label
 
 tree_plot <- drop.tip(bird_tree_pruned, bird_tree_pruned$tip.label[!keep])
 
-trait_df_model <- trait_df
-rownames(trait_df_model) <- tree_plot$tip.label
+trait_df_model <- trait_df[tree_plot$tip.label, ]
 
 # Run phylogenetic linear model (lambda model)
 model <- phylolm(
