@@ -118,6 +118,15 @@ Both scripts take:
 |--------|-------------|
 | `summarize_inversions.py` | Parses each `{Contig}_IGH.tsv` self-alignment, identifies inversions (LASTZ alignments where `strand2 = -`), and writes `inversions_stats.tsv` (per-haplotype summary) and `inversions_details.tsv` (per-inversion details) |
 | `d_genes_on_inversions.py` | For each IGH haplotype, checks whether D genes (from `IGHD.csv`) fall within inverted regions; outputs `D_inversions.tsv` with columns `n_d_genes`, `n_on_inversion`, `frac_on_inversion` |
+| `hairpin.py` | For every diagonal inversion, compares the identity of the whole alignment with a window at its centre (the putative hairpin tip) and a random window of the same size; outputs `palindromes.tsv` |
+
+`hairpin.py` needs the aligned sequences, which `{Contig}_IGH.tsv` does not
+contain, so it re-runs LASTZ with `text1`/`text2` in the output format and
+caches the result as `{Contig}_IGH_text.tsv` per haplotype (regenerate with
+`--force`). It takes:
+- `-i INPUT_DIR`, `-s IGH_filtered_table.tsv`, `-o palindromes.tsv`, `-c N`
+- `--lastz PATH` — lastz executable (defaults to the one on `$PATH`)
+- `--seed N` — seed for the random control windows
 
 `d_genes_on_inversions.py` takes:
 - `-i INPUT_DIR`, `-s summary_features.csv`, `-o OUTPUT.tsv`

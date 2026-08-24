@@ -1,11 +1,44 @@
 #!/usr/bin/env python3
+"""
+Quantify hairpin (palindrome) signal at the centre of diagonal inversions.
+
+For every IGH haplotype in the summary table, the diagonal inversions
+(strand1 != strand2, start1 == start2, end1 == end2) are pulled out of the
+LASTZ self-alignment and the sequence identity of the whole alignment is
+compared with the identity of a small window at its centre (the putative
+hairpin tip) and of a random window of the same size.
+
+Note on input files:
+  The pipeline alignment `{contig}_IGH.tsv` written by IGH_self_alignment_bed.py
+  does NOT contain the aligned sequences (no text1/text2 columns), which this
+  analysis needs. This script therefore runs LASTZ once more per locus with
+  text1/text2 added to the output format and caches the result next to the
+  other per-haplotype files as `{contig}_IGH_text.tsv`.
+
+Usage:
+    python hairpin.py \\
+        -i /local/storage/kav67/clean_birds \\
+        -s /local/storage/kav67/clean_birds/IGH_filtered_table.tsv \\
+        -o /local/storage/kav67/clean_birds/palindromes.tsv \\
+        -c 20
+"""
 
 import os
+import glob
+import shutil
 import argparse
+import subprocess
 import pandas as pd
 from multiprocessing import Pool
 from Bio.Seq import Seq
 import random
+
+# LASTZ settings: same as IGH_self_alignment_bed.py, plus text1/text2 so the
+# aligned (gapped) sequences are available.
+LASTZ_PARAMS = ['--step=20', '--notransition']
+LASTZ_FORMAT = ('--format=general:name1,strand1,start1,end1,length1,text1,'
+                'name2,strand2,start2+,end2+,length2,text2,id%')
+
 
 # ================================================================
 # Read TSV with optional # header
@@ -18,12 +51,18 @@ def read_tsv_with_header(path):
             header = header[1:]
         columns = header.split("\t")
 
-    try:   
-        df = pd.read_csv(path, sep="\t", comment="#", names=columns, skiprows=1)
-    except:
-        print(f"Error reading {path}")
+    df = pd.read_csv(path, sep="\t", comment="#", names=columns, skiprows=1)
     df.columns = [c.replace("#", "").replace("%", "").replace("+", "")
                   for c in df.columns]
+    return df
+
+
+def read_summary(path):
+    """Read the summary table (.csv is comma separated, .tsv tab separated)."""
+    sep = ',' if path.endswith('.csv') else '\t'
+    df = pd.read_csv(path, sep=sep)
+    if 'Locus' in df.columns:
+        df = df[df['Locus'] == 'IGH'].copy()
     return df
 
 
@@ -120,6 +159,50 @@ def extract_random_window(seq1, seq2, bp=50):
 
 
 # ================================================================
+# LASTZ self-alignment including the aligned sequences (text1/text2)
+# ================================================================
+def find_locus_fasta(hap_dir, contig, numv):
+    """Locate the IGH locus FASTA for this contig."""
+    fasta_dir = os.path.join(hap_dir, 'refined_ig_loci', 'igloci_fasta')
+    if numv is not None:
+        exact = os.path.join(fasta_dir, f'IGH_{contig}_{numv}Vs.fasta')
+        if os.path.exists(exact):
+            return exact
+    # NumV in the summary table may not match the file name, fall back to glob
+    hits = sorted(glob.glob(os.path.join(fasta_dir, f'IGH_{contig}_*Vs.fasta')))
+    return hits[0] if hits else None
+
+
+def self_align_with_text(hap_dir, contig, numv, lastz_bin, force=False):
+    """
+    Return the path to `{contig}_IGH_text.tsv`, running LASTZ if needed.
+    Returns (path, message); path is None if the alignment could not be made.
+    """
+    out_path = os.path.join(hap_dir, f'{contig}_IGH_text.tsv')
+    if os.path.exists(out_path) and os.path.getsize(out_path) > 0 and not force:
+        return out_path, None
+
+    fasta = find_locus_fasta(hap_dir, contig, numv)
+    if fasta is None:
+        return None, f"locus FASTA not found for {contig} in {hap_dir}"
+
+    tmp_path = out_path + '.tmp'
+    cmd = [lastz_bin, fasta, fasta] + LASTZ_PARAMS + [LASTZ_FORMAT,
+                                                      f'--output={tmp_path}']
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except FileNotFoundError:
+        return None, f"lastz executable not found: {lastz_bin}"
+    except subprocess.CalledProcessError as e:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        return None, f"lastz failed for {fasta}: {e.stderr.strip()}"
+
+    os.replace(tmp_path, out_path)
+    return out_path, None
+
+
+# ================================================================
 # Process one row of summary table
 # ================================================================
 def process_row(row):
@@ -128,13 +211,29 @@ def process_row(row):
     species = row['Species']
     haplotype = row['Haplotype']
     contig = row['Contig']
+    numv = row.get('NumV', None)
+    lastz_bin = row['LastzBin']
+    force = row['Force']
 
-    # Path to TSV with aligned sequences
-    tsv_path = os.path.join(input_dir, order, species, haplotype, "IGH_self.tsv")
-    if not os.path.exists(tsv_path):
+    hap_dir = os.path.join(input_dir, order, species, haplotype)
+
+    # Self-alignment including the aligned sequences (text1/text2)
+    tsv_path, err = self_align_with_text(hap_dir, contig, numv, lastz_bin, force)
+    if tsv_path is None:
+        print(f"[SKIP] {order}/{species}/{haplotype}/{contig}: {err}", flush=True)
         return []
 
-    df = read_tsv_with_header(tsv_path)
+    try:
+        df = read_tsv_with_header(tsv_path)
+    except Exception as e:
+        print(f"[SKIP] {order}/{species}/{haplotype}/{contig}: cannot read {tsv_path}: {e}", flush=True)
+        return []
+
+    missing = [c for c in ("text1", "text2", "strand1", "strand2") if c not in df.columns]
+    if missing:
+        print(f"[SKIP] {order}/{species}/{haplotype}/{contig}: "
+              f"{tsv_path} is missing column(s) {missing}", flush=True)
+        return []
 
     # Filter diagonal inversions
     inv = df[(df["strand1"] != df["strand2"]) &
@@ -143,24 +242,24 @@ def process_row(row):
 
     results = []
     for _, row2 in inv.iterrows():
-        seq1 = row2["text1"].upper()
-        seq2 = row2["text2"].upper()
+        seq1 = str(row2["text1"]).upper()
+        seq2 = str(row2["text2"]).upper()
         #seq2_rc = reverse_complement(seq2)
-        id=row2["id"].replace("%", "")
+        id = str(row2["id"]).replace("%", "")
 
         whole_id = lastz_percent_identity(seq1, seq2)
 
-        mid1, mid2 = extract_middle(seq1, seq2, bp=50)
-        mid_id_50 = lastz_percent_identity(mid1, mid2)
+        mid1_50, mid2_50 = extract_middle(seq1, seq2, bp=50)
+        mid_id_50 = lastz_percent_identity(mid1_50, mid2_50)
 
-        mid1, mid2 = extract_middle(seq1, seq2, bp=20)
-        mid_id_20 = lastz_percent_identity(mid1, mid2)
+        mid1_20, mid2_20 = extract_middle(seq1, seq2, bp=20)
+        mid_id_20 = lastz_percent_identity(mid1_20, mid2_20)
 
-        mid1, mid2 = extract_middle(seq1, seq2, bp=10)
-        mid_id_10 = lastz_percent_identity(mid1, mid2)
+        mid1_10, mid2_10 = extract_middle(seq1, seq2, bp=10)
+        mid_id_10 = lastz_percent_identity(mid1_10, mid2_10)
 
-        mid1, mid2 = extract_middle(seq1, seq2, bp=15)
-        mid_id_15 = lastz_percent_identity(mid1, mid2)
+        mid1_15, mid2_15 = extract_middle(seq1, seq2, bp=15)
+        mid_id_15 = lastz_percent_identity(mid1_15, mid2_15)
 
         rand1, rand2 = extract_random_window(seq1, seq2, bp=50)
         rand_id_50 = lastz_percent_identity(rand1, rand2)
@@ -189,10 +288,11 @@ def process_row(row):
             "RandomIdentity15bp": rand_id_15,
             "RandomIdentity20bp": rand_id_20,
             "RandomIdentity50bp": rand_id_50,
-            "MiddleSeq1": mid1,
-            "MiddleSeq2": mid2,
+            "MiddleSeq1": mid1_15,
+            "MiddleSeq2": mid2_15,
         })
 
+    print(f"[OK] {order}/{species}/{haplotype}/{contig}: {len(results)} diagonal inversions", flush=True)
     return results
 
 
@@ -200,21 +300,42 @@ def process_row(row):
 # Main script
 # ================================================================
 def main():
-    parser = argparse.ArgumentParser(description="Summarize inversion stats from alignments in IGH_self.tsv")
+    parser = argparse.ArgumentParser(
+        description="Summarize hairpin identity of diagonal inversions from "
+                    "the IGH self-alignments ({contig}_IGH.tsv naming)")
     parser.add_argument('-i','--input_dir', required=True, help="Top-level input directory")
-    parser.add_argument('-s','--summary', required=True, help="Path to summary_table_IGH.tsv")
+    parser.add_argument('-s','--summary', required=True,
+                        help="Path to summary table (e.g. IGH_filtered_table.tsv)")
     parser.add_argument('-o','--output', required=True, help="Output TSV file")
     parser.add_argument('-c','--cores', type=int, default=4, help="Number of parallel workers")
+    parser.add_argument('--lastz', default=shutil.which('lastz') or 'lastz',
+                        help="Path to the lastz executable")
+    parser.add_argument('--force', action='store_true',
+                        help="Re-run lastz even if {contig}_IGH_text.tsv already exists")
+    parser.add_argument('--seed', type=int, default=None,
+                        help="Random seed for the random control windows")
 
     args = parser.parse_args()
 
-    df = pd.read_csv(args.summary, sep='\t')
+    if args.seed is not None:
+        random.seed(args.seed)
+
+    df = read_summary(args.summary)
+    if df.empty:
+        print("No IGH rows found in the summary table.")
+        return
+
     df['InputDir'] = args.input_dir
+    df['LastzBin'] = args.lastz
+    df['Force'] = args.force
+
+    print(f"Processing {len(df)} IGH haplotype/contig entries with {args.cores} workers...")
 
     # Run in parallel
     with Pool(args.cores) as pool:
         results = pool.map(process_row, [row for _, row in df.iterrows()])
 
+    n_ok = sum(1 for sub in results if sub)
     all_rows = [r for sub in results for r in sub]
     if not all_rows:
         print("No valid data found.")
@@ -222,7 +343,7 @@ def main():
 
     out_df = pd.DataFrame(all_rows)
     out_df.to_csv(args.output, sep="\t", index=False)
-    print(f"Wrote {len(out_df)} rows to {args.output}")
+    print(f"Wrote {len(out_df)} rows from {n_ok}/{len(df)} entries to {args.output}")
 
 
 if __name__ == "__main__":

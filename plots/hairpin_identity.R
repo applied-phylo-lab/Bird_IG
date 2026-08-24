@@ -1,4 +1,10 @@
-palindromes<-fread("/local/storage/kav67/Bird_data/palindromes.tsv")
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Output of hairpin.py (run on /local/storage/kav67/clean_birds)
+palindromes<-fread("/local/storage/kav67/clean_birds/palindromes.tsv")
 
 
 df_long <- palindromes %>%
