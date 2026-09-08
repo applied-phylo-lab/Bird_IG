@@ -92,6 +92,8 @@ Starting point: raw gene annotation files per species/haplotype.
 | `data_prep/create_summary_tables_clean.R` | Builds `IGH_filtered_table.tsv` and related filtered tables |
 | `data_prep/filter_genes.py` | Filters and cleans raw gene files to produce `combined_genes_IGH_clean.txt` / `combined_genes_IGL_clean.txt` per haplotype |
 | `data_prep/overview_features.R` | Filters species to those present in the VGP tree; produces data overview plots |
+| `data_prep/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
+| `data_prep/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversions_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
 
 ---
 

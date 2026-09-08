@@ -74,7 +74,7 @@ locus_strand_comp_hist<-ggplot(all_species_data, aes(x = IGH_MinDir, fill = bird
   theme_classic()+
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 10),
-        legend.text = element_text(size = 10))
+        legend.position = "none")
 
 
 locus_l_comp|locus_strand_comp

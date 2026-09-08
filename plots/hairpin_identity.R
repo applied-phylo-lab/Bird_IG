@@ -54,7 +54,7 @@ df_long <- palindromes %>%
 df_long <- df_long %>%
   mutate(Region = recode(Region, 
                          'RandomIdentity15bp' = 'Random 15bp', 
-                         'MiddleIdentity15bp' = 'Hairpin 15bp', 
+                         'MiddleIdentity15bp' = 'Hairpin Spacer 15bp', 
                          'WholeIdentity' = 'Whole Inversion'))
 
 
@@ -65,7 +65,7 @@ ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
   scale_fill_manual(
     values = c(
       "Random 15bp" = "#a6cee3",
-      "Hairpin 15bp" = "#1f78b4",
+      "Hairpin Spacer 15bp" = "#1f78b4",
       "Whole Inversion"      = "#999999"
     )
   ) +
