@@ -113,9 +113,30 @@ snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 paral
 snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 trees
 ```
 
-On Slurm, the per-rule `threads` and `resources` (`mem_mb`, `runtime`) are already
-set, so a profile is all that is needed -- this replaces the `multiprocessing.Pool`
-inside each script and lifts the one-node cap on LASTZ and IQ-TREE.
+### Profiles
+
+Two profiles are provided, so the long flag lists do not have to be retyped:
+
+```bash
+# run directly on the node (64 cores, the usual choice)
+snakemake -s workflow/Snakefile --configfile config/config.yaml \
+          --profile workflow/profiles/local trees
+
+# submit each job to Slurm
+snakemake -s workflow/Snakefile --configfile config/config.yaml \
+          --profile workflow/profiles/slurm trees
+```
+
+**Which to use.** `regular` is a *single* node (cbsupennell01, 256 CPUs / 2.3 TB),
+and interactive sessions already run on that same node -- so going through Slurm
+does **not** give more parallelism than the local profile. Use the Slurm profile
+when you want jobs to queue politely alongside other lab members' work, want each
+job's resource request enforced by cgroups, want failed jobs retried, or want the
+run to show up in `sacct`. Use the local profile for everything else.
+
+Per-rule `threads` and `resources` (`mem_mb`, `runtime`) are already set in the
+rule definitions, so both profiles work without further configuration. Slurm logs
+land in `logs/slurm/{rule}-{jobid}.{out,err}` (gitignored).
 
 ### Things to know before the first run
 
@@ -131,6 +152,20 @@ inside each script and lifts the one-node cap on LASTZ and IQ-TREE.
   adopt the existing files with `--touch` rather than letting it re-run.
 - **Never use `--forceall`.** Outputs live in `input_dir`, and a forced run would
   discard weeks of LASTZ and IQ-TREE work.
+
+### Rulegraph
+
+![rulegraph](docs/rulegraph.svg)
+
+Regenerate after adding or changing rules:
+
+```bash
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph \
+  | dot -Tsvg > docs/rulegraph.svg
+```
+
+(`--rulegraph` shows the rules; `--dag` shows every job instance and is unreadable
+at ~800 nodes.)
 
 ---
 

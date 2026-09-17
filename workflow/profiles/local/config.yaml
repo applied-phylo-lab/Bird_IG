@@ -1,0 +1,13 @@
+# Run directly on cbsupennell01 without going through Slurm.
+#
+#   snakemake -s workflow/Snakefile --configfile config/config.yaml \
+#             --profile workflow/profiles/local trees
+#
+# The node has 256 CPUs; 64 leaves plenty for other users. Raise with
+# `--cores N` on the command line, which overrides this.
+
+cores: 64
+latency-wait: 30
+rerun-incomplete: true
+printshellcmds: true
+keep-going: true

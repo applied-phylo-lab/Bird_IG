@@ -1,0 +1,52 @@
+# Snakemake 7 profile for the BioHPC Slurm cluster.
+#
+#   snakemake -s workflow/Snakefile --configfile config/config.yaml \
+#             --profile workflow/profiles/slurm trees
+#
+# NOTE on what this does and does not buy you: `regular` is a single node
+# (cbsupennell01, 256 CPUs / 2.3 TB), and interactive sessions already run on
+# that same node. So submitting through Slurm does NOT give more parallelism
+# than running `--profile workflow/profiles/local` directly. What it does give:
+# jobs queue politely alongside other lab members' work, each job gets its
+# resource request enforced by cgroups, failures are retried, and the run shows
+# up in sacct. For a quick interactive run, prefer the local profile.
+
+cluster:
+  mkdir -p logs/slurm &&
+  sbatch
+  --parsable
+  --partition={resources.partition}
+  --cpus-per-task={threads}
+  --mem={resources.mem_mb}
+  --time={resources.runtime}
+  --job-name=smk.{rule}.{jobid}
+  --output=logs/slurm/{rule}-%j.out
+  --error=logs/slurm/{rule}-%j.err
+
+# status-sacct.sh reports an unknown job id as "running" rather than "failed",
+# because sacct lags for a few seconds after submission and a spurious failure
+# would abort the run. The trade-off: a job Slurm loses entirely would stall the
+# workflow rather than erroring out. Check `squeue -u $USER` if a run sits idle.
+cluster-status: workflow/profiles/slurm/status-sacct.sh
+cluster-cancel: scancel
+
+# Defaults for rules that do not set their own. Every rule in this workflow sets
+# mem_mb and runtime explicitly; partition is supplied here for all of them.
+default-resources:
+  - partition="regular"
+  - mem_mb=4000
+  - runtime=120
+
+# Concurrent Slurm jobs. The node has 256 CPUs; at 4 threads per tree job this
+# keeps the workflow to roughly half the machine, leaving room for other users.
+jobs: 32
+local-cores: 4
+
+restart-times: 2
+max-jobs-per-second: 10
+max-status-checks-per-second: 5
+latency-wait: 60
+
+rerun-incomplete: true
+printshellcmds: true
+keep-going: true
