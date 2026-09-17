@@ -82,7 +82,7 @@ def process_row(row):
     if not os.path.exists(fasta_path):
         print(f"FASTA not found, skipping: {fasta_path}")
         return
-    if not os.path.exists(lastz_output):
+    if row['Force'] or not os.path.exists(lastz_output):
         try:
             run_lastz(lastz_bin, fasta_path, lastz_output)
         except subprocess.CalledProcessError as e:
@@ -92,7 +92,7 @@ def process_row(row):
     # ---- 2. BED files ----------------------------------------------------
     bed_path = os.path.join(hap_dir, f'{contig}_{locus}.bed')
     strand_bed_path = os.path.join(hap_dir, f'{contig}_{locus}_strand.bed')
-    if os.path.exists(bed_path) and os.path.exists(strand_bed_path):
+    if not row['Force'] and os.path.exists(bed_path) and os.path.exists(strand_bed_path):
         return
 
     if not os.path.exists(combined_genes_path):
@@ -141,17 +141,29 @@ def main():
                         help="Number of parallel processes")
     parser.add_argument('--lastz', default='lastz',
                         help="Path to the lastz executable")
+    parser.add_argument('--force', action='store_true',
+                        help="Regenerate outputs even if they already exist")
+    # Single-unit selection, so a workflow manager can drive one row at a time.
+    parser.add_argument('--order', help="Only process this Order")
+    parser.add_argument('--species', help="Only process this Species")
+    parser.add_argument('--haplotype', help="Only process this Haplotype")
+    parser.add_argument('--contig', help="Only process this Contig")
 
     args = parser.parse_args()
 
     df = read_summary(args.summary, args.locus)
+    for col, val in (('Order', args.order), ('Species', args.species),
+                     ('Haplotype', args.haplotype), ('Contig', args.contig)):
+        if val is not None:
+            df = df[df[col] == val]
     if df.empty:
-        print(f"No {args.locus} rows found in {args.summary}")
+        print(f"No {args.locus} rows found in {args.summary} matching the given filters")
         return
 
     df['InputDir'] = args.input_dir
     df['Locus'] = args.locus
     df['LastzBin'] = args.lastz
+    df['Force'] = args.force
 
     print(f"Processing {len(df)} {args.locus} rows with {args.cores} workers...")
 

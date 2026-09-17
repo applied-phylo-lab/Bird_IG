@@ -80,6 +80,60 @@ INPUT_DIR/
 
 ---
 
+## Running the workflow (Snakemake)
+
+Stages 2-5 (self-alignment, inversion summaries, paralogs, trees) are wired up as
+a Snakemake workflow. Stage 1 (building `summary_features.csv` and the metadata
+tables) and stages 6-8 (dotplots, publication tables, figures) are still run by
+hand -- see the walkthrough below.
+
+```
+workflow/Snakefile          targets and the index
+workflow/rules/align.smk    stage 2  LASTZ self-alignment + BED
+workflow/rules/inversions.smk  stage 3  inversion stats, D genes, hairpin
+workflow/rules/paralogs.smk    stage 4  inversion paralog groups
+workflow/rules/trees.smk       stage 5  fasta -> clustalo -> iqtree2
+config/config.yaml          input_dir, thresholds, loci
+```
+
+Everything runs in the `snakemake` conda env, which carries pandas plus `lastz`,
+`clustalo` and `iqtree2`:
+
+```bash
+conda activate snakemake
+snakemake -s workflow/Snakefile --configfile config/config.yaml -n
+```
+
+Partial targets, if you only want one stage:
+
+```bash
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 align
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 inversions
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 paralogs
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 trees
+```
+
+On Slurm, the per-rule `threads` and `resources` (`mem_mb`, `runtime`) are already
+set, so a profile is all that is needed -- this replaces the `multiprocessing.Pool`
+inside each script and lifts the one-node cap on LASTZ and IQ-TREE.
+
+### Things to know before the first run
+
+- **The index is an input, not a rule output.** `summary_features.csv` is read at
+  parse time to build the wildcard lists, so it must exist first. Rebuild it with
+  `data_prep/create_summary_tables_clean.R` whenever species are added, then re-run.
+- **Rows with no locus FASTA are excluded and named.** The index lists some contigs
+  that were never extracted. Most are `NumV` 1-2 (below IGDetective's threshold);
+  any with `NumV >= min_numv` are printed as `[index] EXCLUDED ...` warnings and are
+  worth chasing -- they are index/data mismatches, not expected gaps.
+- **Existing outputs are respected.** Snakemake leaves up-to-date files alone;
+  always check `-n` first. If a dry run proposes redoing work you want to keep,
+  adopt the existing files with `--touch` rather than letting it re-run.
+- **Never use `--forceall`.** Outputs live in `input_dir`, and a forced run would
+  discard weeks of LASTZ and IQ-TREE work.
+
+---
+
 ## Pipeline walkthrough
 
 ### Step 1 — Build summary tables (`data_prep/`)

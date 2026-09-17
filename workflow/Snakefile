@@ -1,0 +1,168 @@
+"""Bird_IG workflow -- stages 2-5.
+
+  Stage 2  self-align each locus with LASTZ and write gene-position BEDs
+  Stage 3  summarise inversions, D genes on inversions, hairpin/palindromes
+  Stage 4  inversion paralog groups
+  Stage 5  per-haplotype V gene trees (fasta -> clustalo -> iqtree2)
+
+Stage 1 (building summary_features.csv and the metadata tables) and stages 6-8
+(dotplots, publication tables, figures) are not wired up yet; summary_features.csv
+is consumed here as a pipeline input.
+
+Everything runs in the `snakemake` conda env, which carries pandas, lastz,
+clustalo and iqtree2. Activate it first:
+
+    conda activate snakemake
+    snakemake -s workflow/Snakefile --configfile config/config.yaml -n
+
+IMPORTANT on a first run: existing outputs in input_dir have mtimes that do not
+reflect dependency order, so Snakemake will want to redo almost everything --
+including ~800 IQ-TREE jobs. Inspect with -n, then adopt what you trust:
+
+    snakemake ... --touch
+
+See README.md ("Running the workflow") for the full first-run procedure.
+"""
+
+import os
+import pandas as pd
+
+
+configfile: "config/config.yaml"
+
+INPUT_DIR = config["input_dir"].rstrip("/")
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(workflow.snakefile)))
+LOCI = config["loci"]
+MIN_INV_LEN = config["min_inv_len"]
+
+
+# --------------------------------------------------------------------------- #
+# Index
+#
+# summary_features.csv is one row per (Order, Species, Haplotype, Locus, Contig).
+# It is read at parse time to build the wildcard lists, so it must exist before
+# the workflow runs. If species are added, rebuild it and re-run.
+# --------------------------------------------------------------------------- #
+_index_path = os.path.join(INPUT_DIR, config["summary_features"])
+if not os.path.exists(_index_path):
+    raise WorkflowError(
+        f"Index table not found: {_index_path}\n"
+        "Build it first with data_prep/create_summary_tables_clean.R."
+    )
+
+units = pd.read_csv(_index_path)
+units = units[units["Locus"].isin(LOCI)].copy()
+units["NumV"] = pd.to_numeric(units["NumV"], errors="coerce").fillna(0).astype(int)
+
+
+def _locus_fasta_path(r):
+    return (f"{INPUT_DIR}/{r.Order}/{r.Species}/{r.Haplotype}/refined_ig_loci/"
+            f"igloci_fasta/{r.Locus}_{r.Contig}_{r.NumV}Vs.fasta")
+
+
+# The index lists some contigs that have no extracted locus FASTA. Most are
+# NumV 1-2 (below IGDetective's extraction threshold) and are simply not
+# analysable; a few have plenty of V genes and are real index/data mismatches
+# worth chasing. Drop both from the DAG, but name the second kind -- silently
+# losing a haplotype with 144 V genes is how the Red-winged Blackbird's stale
+# inversion row went unnoticed for months.
+units["has_fasta"] = [os.path.exists(_locus_fasta_path(r)) for r in units.itertuples()]
+_missing = units[~units["has_fasta"]]
+_notable = _missing[_missing["NumV"] >= config["min_numv"]]
+if not _missing.empty:
+    logger.warning(
+        f"[index] {len(_missing)} of {len(units)} index rows have no locus FASTA "
+        f"and are excluded ({len(_missing) - len(_notable)} with NumV < "
+        f"{config['min_numv']}, expected).")
+for r in _notable.itertuples():
+    logger.warning(
+        f"[index]   EXCLUDED {r.Order}/{r.Species}/{r.Haplotype} {r.Locus} "
+        f"{r.Contig} (NumV={r.NumV}) -- indexed but no FASTA on disk")
+units = units[units["has_fasta"]].drop(columns="has_fasta")
+
+# Contigs entering the inversion analyses, matching IGH_filtered_table.tsv.
+inv_units = units[(units["Locus"] == "IGH") & (units["NumV"] >= config["min_numv"])]
+
+# One row per haplotype x locus, for the tree rules (which use the whole gene
+# table, not one contig). Primary haplotypes only would be applied downstream at
+# the species level -- per-haplotype trees are fine for alt haplotypes too.
+haps = units[["Order", "Species", "Haplotype", "Locus"]].drop_duplicates()
+
+
+wildcard_constraints:
+    order=r"[A-Za-z0-9]+",
+    species=r"[A-Za-z0-9_]+",
+    hap=r"[A-Za-z0-9._-]+",
+    contig=r"[A-Za-z0-9._-]+",
+    locus=r"IGH|IGL",
+    prefix=r"[A-Za-z0-9._-]+",
+
+
+def hap_dir(order, species, hap):
+    return f"{INPUT_DIR}/{order}/{species}/{hap}"
+
+
+def tree_prefix(locus, hap):
+    """Legacy naming: IGH trees are {hap}.*, IGL trees are IGL_{hap}.*"""
+    return f"IGL_{hap}" if locus == "IGL" else hap
+
+
+def prefix_to_locus_hap(prefix):
+    """Inverse of tree_prefix()."""
+    if prefix.startswith("IGL_"):
+        return "IGL", prefix[len("IGL_"):]
+    return "IGH", prefix
+
+
+# ---- expanded target lists ------------------------------------------------- #
+def unit_files(df, suffix):
+    return [f"{hap_dir(r.Order, r.Species, r.Haplotype)}/{r.Contig}_{r.Locus}{suffix}"
+            for r in df.itertuples()]
+
+SELF_ALN = unit_files(units, ".tsv")
+BED      = unit_files(units, ".bed")
+BED_STR  = unit_files(units, "_strand.bed")
+TEXT_ALN = unit_files(inv_units, "_text.tsv")
+
+TREEFILES = [f"{hap_dir(r.Order, r.Species, r.Haplotype)}/tree/"
+             f"{tree_prefix(r.Locus, r.Haplotype)}_tree.treefile"
+             for r in haps.itertuples()]
+
+
+# --------------------------------------------------------------------------- #
+# Targets
+# --------------------------------------------------------------------------- #
+rule all:
+    input:
+        SELF_ALN, BED, BED_STR,
+        f"{INPUT_DIR}/inversion_stats.tsv",
+        f"{INPUT_DIR}/inversion_details.tsv",
+        f"{INPUT_DIR}/D_inversions.tsv",
+        f"{INPUT_DIR}/palindromes.tsv",
+        f"{INPUT_DIR}/IGH_paralogs_all.tsv",
+        f"{INPUT_DIR}/IGH_paralogs_diag.tsv",
+        TREEFILES,
+
+rule align:       # stage 2 only
+    input: SELF_ALN, BED, BED_STR
+
+rule inversions:  # stage 3 only
+    input:
+        f"{INPUT_DIR}/inversion_stats.tsv",
+        f"{INPUT_DIR}/inversion_details.tsv",
+        f"{INPUT_DIR}/D_inversions.tsv",
+        f"{INPUT_DIR}/palindromes.tsv",
+
+rule paralogs:    # stage 4 only
+    input:
+        f"{INPUT_DIR}/IGH_paralogs_all.tsv",
+        f"{INPUT_DIR}/IGH_paralogs_diag.tsv",
+
+rule trees:       # stage 5 only
+    input: TREEFILES
+
+
+include: "rules/align.smk"
+include: "rules/inversions.smk"
+include: "rules/paralogs.smk"
+include: "rules/trees.smk"

@@ -1,0 +1,27 @@
+# Bird_IG pipeline configuration.
+#
+# The workflow reads and writes inside input_dir -- data is NOT versioned and
+# does not live in the repo. See README.md for the directory layout.
+
+input_dir: /local/storage/kav67/clean_birds
+
+# Index table driving every rule. One row per haplotype x locus x contig.
+# Built upstream (data_prep/create_summary_tables_clean.R from Daniel's
+# ig_contig_list.csv); treated as a pipeline INPUT, not a rule output.
+summary_features: summary_features.csv
+
+# Loci to process. Inversion/D-gene/hairpin/paralog analyses are IGH-only by
+# design (see README.md); self-alignment and trees run for both.
+loci: [IGH, IGL]
+
+# Minimum inversion length. 250 is the only threshold used in this project.
+min_inv_len: 250
+
+# Minimum V genes for a contig to enter the inversion analyses. Matches the
+# NumV > 2 filter that produced IGH_filtered_table.tsv.
+min_numv: 3
+
+# Seed for hairpin.py's random control windows, so palindromes.tsv is reproducible.
+hairpin_seed: 1
+
+lastz: lastz
