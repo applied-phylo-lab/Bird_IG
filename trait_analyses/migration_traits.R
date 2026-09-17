@@ -1,5 +1,5 @@
 # Test whether IG locus features differ between migratory and sedentary birds.
-# Migration status from AVONET (see data_prep/fetch_avonet_traits.py).
+# Migration status from AVONET (see fetch_avonet_traits.py in this folder).
 #
 # Migration is strongly clustered by clade (e.g. Anseriformes mostly migratory,
 # Struthioniformes all sedentary), so every test here is phylogenetically corrected.

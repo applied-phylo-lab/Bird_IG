@@ -21,7 +21,9 @@ Nothing but code is versioned. All data is under `INPUT_DIR`, normally
 - `gene_list.csv` — all V genes with RSS annotations
 - `inversion_stats.tsv`, `inversion_details.tsv`, `D_inversions.tsv`, `palindromes.tsv`
 - `vgp_birds.nwk` — VGP species tree used for all phylogenetic corrections
-- `species_traits_avonet.csv` — ecological traits (built by `data_prep/fetch_avonet_traits.py`)
+- `species_traits_avonet.csv` — ecological traits (built by `trait_analyses/fetch_avonet_traits.py`;
+  the analyses in that folder are shelved, but `annotation_tables/build_summary_tables.py`
+  still uses this table as a LatinName lookup)
 
 Raw assemblies: `/local/storage/dhardesty/assemblies/`.
 
@@ -36,7 +38,7 @@ Raw assemblies: `/local/storage/dhardesty/assemblies/`.
   `ggsave` SVG into `figures/`.
 - **Any cross-species comparison must be phylogenetically corrected** (`phylolm`
   with `vgp_birds.nwk`); traits are heavily clade-clustered, so raw correlations
-  across species are not usable. See `plots/phylolm_tree.R`, `plots/migration_traits.R`.
+  across species are not usable. See `plots/phylolm_tree.R`, `trait_analyses/migration_traits.R`.
 - External tools assumed on `$PATH`: `lastz`, `clustalo`, `iqtree2`, `mummer`,
   `RepeatMasker`, `minimap2`/`samtools` (sex check).
 
@@ -49,8 +51,15 @@ Activate explicitly before running anything; the base env has neither.
 
 ## Directory notes
 
+- `workflow/` + `config/` — Snakemake pipeline for stages 2-5 (self-alignment,
+  inversions, paralogs, trees), with `local` and `slurm` profiles. See README.md.
 - `plots/` — one R script per figure/analysis; the manuscript figures are
   `Figure1AB.R`, `figure_1c.R`.
+- `annotation_tables/` — scripts producing the publication-facing tables
+  (`haplotype_sources.csv`, `summary_tables/`). Has its own README.
+- `trait_analyses/` — **shelved**: migration (AVONET) and pathogen-exposure
+  (EID2, MalAvi) correlates of IGH structure. Neither produced a signal; destined
+  for `obsolete/`. Has its own README.
 - `daniel_bird_scripts/` — collaborator (Daniel Hardesty) scripts for D gene
   search, RSS extraction, and contig evaluation. **Read-only** — never edit these.
 - `sex_check/` — one-off numbered pipeline (ZW read-depth check for a given bird);

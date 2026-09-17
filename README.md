@@ -11,11 +11,15 @@ Project proposal: https://docs.google.com/document/d/1fQ5YY_o3Em4FCX1qUgj8X3SZHk
 
 ```
 Bird_IG/
-├── data_prep/          # Scripts to build the summary tables from raw gene files
-├── RSS/                # RSS extraction and positional analysis
+├── workflow/           # Snakemake workflow (stages 2-5) + Slurm/local profiles
+├── config/             # Pipeline configuration
+├── data_prep/          # Index tables and per-haplotype gene filtering
+├── annotation_tables/  # Publication-facing annotation tables (provenance, summary tables)
 ├── tree_analyses/      # Per-locus phylogenetic trees and tree-distance analyses
 ├── plots/              # R scripts for figures (run interactively in RStudio)
-├── repeatmasker/       # RepeatMasker integration scripts
+├── trait_analyses/     # SHELVED: migration and pathogen-exposure correlates
+├── RSS/                # RSS extraction and positional analysis (obsolete)
+├── repeatmasker/       # RepeatMasker integration scripts (obsolete)
 ├── kmer_analysis/      # K-mer based analyses
 ├── within_species_inversions/  # Within-species inversion comparison scripts
 └── *.py / *.R          # Top-level pipeline scripts (see workflow below)
@@ -178,11 +182,11 @@ Starting point: raw gene annotation files per species/haplotype.
 | Script | What it does |
 |--------|-------------|
 | `data_prep/create_summary_features.R` | Creates `summary_features.csv` — the master table listing every haplotype × locus with its main contig and V gene count |
-| `data_prep/create_summary_tables_clean.R` | Builds `IGH_filtered_table.tsv` and related filtered tables |
+| `data_prep/create_summary_tables_clean.R` | Builds the index tables from `ig_contig_list.csv`: `summary_features.csv` (every IGH/IGL contig -- the workflow's index), `IGH_filtered_table.tsv` (IGH with `NumV > 2`) and `filtered_table.tsv`. Takes `-i INPUT_DIR`, `--input CSV`, `--min-numv N`, `--loci IGH,IGL` |
 | `data_prep/filter_genes.py` | Filters and cleans raw gene files to produce `combined_genes_IGH_clean.txt` / `combined_genes_IGL_clean.txt` per haplotype |
 | `data_prep/overview_features.R` | Filters species to those present in the VGP tree; produces data overview plots |
-| `data_prep/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
-| `data_prep/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversion_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
+| `annotation_tables/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
+| `annotation_tables/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversion_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
 
 ---
 
