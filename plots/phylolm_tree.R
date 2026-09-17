@@ -1,4 +1,5 @@
 
+library(data.table)
 library(dplyr)
 library(phytools)
 library(viridis)
@@ -11,10 +12,18 @@ inversions<-fread("/local/storage/kav67/clean_birds/inversion_stats.tsv")
 #inversions<-inversions[inversions$minlen==1000,]
 bird_tree_pruned<-read.tree("/local/storage/kav67/clean_birds/vgp_birds.nwk")
 
-colnames(inversions)[16]<-"Haplotype"
-summary<-left_join(summary,inversions, by="Haplotype")
-
-summary<-unique(summary)
+# IGH_VGP_table.tsv keeps only the main (highest-NumV) contig per haplotype, while
+# inversion_stats.tsv has one row per contig. Joining on Haplotype alone fans out
+# (128 -> 140 rows) and then pairs a haplotype's main-contig V gene count with
+# inversion counts averaged over contigs whose genes were never counted. Join on
+# the contig as well so each haplotype contributes its main contig's V genes AND
+# that same contig's inversions.
+setnames(inversions, c("haplotype", "contig"), c("Haplotype", "Contig"))
+summary <- summary %>%
+  group_by(LatinName, Haplotype) %>%
+  slice_max(NumV, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  inner_join(inversions, by = c("Haplotype", "Contig"))
 
 # Reorder to match tree
 tree_species <- gsub('.*"', '', bird_tree_pruned$tip.label)

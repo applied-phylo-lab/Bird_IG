@@ -39,8 +39,8 @@ INPUT_DIR/
 │                                 #          Contig, Pos, Strand, Sequence, Productive,
 │                                 #          Locus, Heptamer, Nonamer, ...
 ├── vgp_birds.nwk                 # VGP bird species phylogenetic tree (Newick)
-├── inversions_stats.tsv          # Per-haplotype inversion summary statistics
-├── inversions_details.tsv        # Per-inversion details (length, diagonal flag, etc.)
+├── inversion_stats.tsv          # Inversion summary stats, one row per haplotype x contig
+├── inversion_details.tsv        # Per-inversion details (length, diagonal flag, etc.)
 ├── D_inversions.tsv              # Output of d_genes_on_inversions.py
 │
 └── {Order}/                      # e.g. Doves/, Eagles/, Waterfowl/
@@ -93,7 +93,7 @@ Starting point: raw gene annotation files per species/haplotype.
 | `data_prep/filter_genes.py` | Filters and cleans raw gene files to produce `combined_genes_IGH_clean.txt` / `combined_genes_IGL_clean.txt` per haplotype |
 | `data_prep/overview_features.R` | Filters species to those present in the VGP tree; produces data overview plots |
 | `data_prep/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
-| `data_prep/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversions_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
+| `data_prep/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversion_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
 
 ---
 
@@ -104,13 +104,16 @@ regions. Gene positions are also written as BED files for visualisation.
 
 | Script | What it does |
 |--------|-------------|
-| `IGH_self_alignment_bed.py` | Runs LASTZ self-alignment for all IGH loci in `summary_features.csv` and writes `{Contig}_IGH.tsv`, `{Contig}_IGH.bed`, `{Contig}_IGH_strand.bed` per haplotype |
-| `IGL_self_alignment_bed.py` | Same for IGL loci (reads `summary_features.csv`, filters to IGL rows automatically) |
+| `self_alignment_bed.py` | Runs LASTZ self-alignment for every locus in `summary_features.csv` and writes `{Contig}_{Locus}.tsv`, `{Contig}_{Locus}.bed`, `{Contig}_{Locus}_strand.bed` per haplotype. Replaces the former `IGH_self_alignment_bed.py` / `IGL_self_alignment_bed.py` pair |
 
-Both scripts take:
+It takes:
 - `-i INPUT_DIR` — top-level data directory
-- `-s summary_features.csv` — master table
+- `-s summary_features.csv` — master table (`.csv` and `.tsv` both accepted)
+- `--locus {IGH,IGL}` — which locus to process (default: `IGH`)
 - `-c N` — number of parallel cores
+- `--lastz PATH` — lastz executable (defaults to the one on `$PATH`)
+
+Existing outputs are left in place, so re-running only fills in what is missing.
 
 ---
 
@@ -118,7 +121,7 @@ Both scripts take:
 
 | Script | What it does |
 |--------|-------------|
-| `summarize_inversions.py` | Parses each `{Contig}_IGH.tsv` self-alignment, identifies inversions (LASTZ alignments where `strand2 = -`), and writes `inversions_stats.tsv` (per-haplotype summary) and `inversions_details.tsv` (per-inversion details) |
+| `summarize_inversions.py` | Parses each `{Contig}_{Locus}.tsv` self-alignment, identifies inversions (LASTZ alignments where `strand2 = -`), and writes `inversion_stats.tsv` (one row per haplotype × contig) and `inversion_details.tsv` (one row per inversion) |
 | `d_genes_on_inversions.py` | For each IGH haplotype, checks whether D genes (from `IGHD.csv`) fall within inverted regions; outputs `D_inversions.tsv` with columns `n_d_genes`, `n_on_inversion`, `frac_on_inversion` |
 | `hairpin.py` | For every diagonal inversion, compares the identity of the whole alignment with a window at its centre (the putative hairpin tip) and a random window of the same size; outputs `palindromes.tsv` |
 
@@ -129,6 +132,15 @@ caches the result as `{Contig}_IGH_text.tsv` per haplotype (regenerate with
 - `-i INPUT_DIR`, `-s IGH_filtered_table.tsv`, `-o palindromes.tsv`, `-c N`
 - `--lastz PATH` — lastz executable (defaults to the one on `$PATH`)
 - `--seed N` — seed for the random control windows
+
+`summarize_inversions.py` takes:
+- `-i INPUT_DIR`, `-s IGH_filtered_table.tsv`, `-o inversion_stats.tsv`, `-d inversion_details.tsv`, `-c N`
+- `--locus {IGH,IGL}` — which locus to process (default: `IGH`)
+- `--min_len N` — minimum inversion length (default: 250, the only threshold used in this project)
+
+Both outputs carry a `contig` column: a haplotype's locus is sometimes split
+across several contigs, so **one haplotype can have several rows**. See
+"Multi-contig haplotypes" below before aggregating.
 
 `d_genes_on_inversions.py` takes:
 - `-i INPUT_DIR`, `-s summary_features.csv`, `-o OUTPUT.tsv`
@@ -144,8 +156,12 @@ Identify pairs of genes that lie on opposite ends of the same inversion
 
 | Script | What it does |
 |--------|-------------|
-| `find_all_inversions_paralogs.py` | **Recommended.** Groups genes into paralog clusters based on all inversion alignments |
-| `find_inversion_paralogs.py` | Older version — only uses diagonal inversions |
+| `find_all_inversions_paralogs.py` | **Recommended.** Groups genes into paralog clusters based on all inversion alignments (default `--min_len 250`) |
+| `find_inversion_paralogs.py` | Older version — only uses diagonal inversions (default `--min_len 1000`) |
+
+Both read the per-contig `{Contig}_{Locus}.tsv` / `{Contig}_{Locus}.bed` files written by
+`self_alignment_bed.py`, and take `-i INPUT_DIR`, `-s summary`, `-o OUTPUT.tsv`, `-c N`,
+`--locus {IGH,IGL}` and `--min_len N`.
 
 ---
 
@@ -153,10 +169,35 @@ Identify pairs of genes that lie on opposite ends of the same inversion
 
 | Script | What it does |
 |--------|-------------|
-| `shared_inversions.py` | Calculates the fraction of inversions shared between species pairs (per order) |
-| `shared_inversions_songbirds.py` | Same, restricted to songbirds |
-| `shared_inversions_house_finch.py` | House finch–specific analysis |
-| `shared_inversions_within_species.py` | Compares primary vs alternate haplotypes within a species |
+| `shared_inversions.py` | Reciprocal-overlap and Jaccard metrics for inversions shared between species pairs (per order). **Currently points at a pairwise-alignment layout that no longer exists — needs rewriting against the PatchWorkPlot alignments** |
+| `shared_inversions_counts.py` | Counts inversions in pairwise alignments, binned by length (and optionally identity). Replaces the former `shared_inversions_songbirds.py` / `_house_finch.py` / `_within_species.py` trio (the latter two were byte-identical) |
+
+`shared_inversions_counts.py` takes:
+- `-i INPUT_DIR`, `-s summary`, `-o OUTPUT.tsv`
+- `--mode {all-pairs,reference,within-species}` — which haplotype pairs to compare:
+  - `all-pairs` — every pair in the filtered set (was `shared_inversions_songbirds.py`)
+  - `reference` — one `--reference-species` against every other haplotype (was `shared_inversions_house_finch.py`)
+  - `within-species` — every pair of haplotypes belonging to the same species
+- `--order`, `--species`, `--primary-only` — filters on the summary table
+- `--identity-bins` — also bin by percent identity (the songbirds analysis used this; the house finch one did not)
+- `--pairwise-dir` — where the pairwise alignments live; accepts both the legacy
+  `{hapA}_{hapB}.txt` naming and PatchWorkPlot's `pair_{i}-{hapA}_{j}-{hapB}.tsv`
+
+Equivalents of the three old scripts:
+
+```bash
+# was shared_inversions_songbirds.py
+python shared_inversions_counts.py -i $INPUT_DIR -s $INPUT_DIR/IGH_filtered_table.tsv \
+    --mode all-pairs --order Songbirds --primary-only --identity-bins \
+    --pairwise-dir $INPUT_DIR/Songbirds/patchworkplot/IGH/pairwise_alignments \
+    -o $INPUT_DIR/Songbirds/Songbirds_shared_inversions.tsv
+
+# was shared_inversions_house_finch.py
+python shared_inversions_counts.py -i $INPUT_DIR -s $INPUT_DIR/IGH_filtered_table.tsv \
+    --mode reference --reference-species House_Finch --order Songbirds \
+    --pairwise-dir $INPUT_DIR/Songbirds/patchworkplot/IGH/pairwise_alignments \
+    -o $INPUT_DIR/Songbirds/House_Finch_shared_inversions.tsv
+```
 
 ---
 
@@ -174,8 +215,10 @@ Uses the [patchworkplot](https://github.com/dirkschumacher/patchworkplot) tool.
 
 `make_config_strand.py` takes:
 - `-i INPUT_DIR`, `-s summary_features.csv`
-- `-o OUTPUT_DIR` — where to write the two config CSVs
-- `--order Doves` — taxonomic order to generate configs for
+- `-o OUTPUT_DIR` — where to write the config CSV(s)
+- `--order Doves` — taxonomic order to generate configs for, OR
+- `--species NAME [NAME ...]` — explicit list of species instead of `--order`
+- `--locus {IGH,IGL,both}` — which config(s) to write (default: `both`)
 
 ---
 

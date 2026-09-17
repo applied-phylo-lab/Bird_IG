@@ -49,7 +49,7 @@ run(NumV ~ Migration,           "NumV ~ migration (ordinal 1-3)")
 run(NumV ~ HWI,                 "NumV ~ hand-wing index")
 
 # Same question for inversion structure, if the table is available.
-inv_path <- file.path(INPUT_DIR, "inversions_stats.tsv")
+inv_path <- file.path(INPUT_DIR, "inversion_stats.tsv")
 if (file.exists(inv_path)) {
   inv <- fread(inv_path)[minlen == 250,
           .(num_inversions = mean(num_inversions, na.rm = TRUE),

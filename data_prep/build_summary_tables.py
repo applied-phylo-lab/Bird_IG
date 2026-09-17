@@ -1,7 +1,7 @@
 """
 Build the publication-facing summary tables for the manuscript.
 
-Combines summary_features.csv, gene_list.csv, inversions_stats.tsv,
+Combines summary_features.csv, gene_list.csv, inversion_stats.tsv,
 D_inversions.tsv, palindromes.tsv, and haplotype_sources.csv (see
 assign_haplotype_source.py) into a small set of clean, documented tables
 under {INPUT_DIR}/summary_tables/.
@@ -31,7 +31,7 @@ from collections import defaultdict
 
 INPUT_DIR = sys.argv[1] if len(sys.argv) > 1 else "/local/storage/kav67/clean_birds"
 OUT_DIR = os.path.join(INPUT_DIR, "summary_tables")
-INV_MINLEN = "250"  # finest threshold in inversions_stats.tsv; matches D_inversions.tsv default
+INV_MINLEN = "250"  # the only threshold summarize_inversions.py emits; matches D_inversions.tsv default
 
 # Sources excluded from the *_published.csv variants. Only Darwin's finches so
 # far (explicitly asked for) -- note the one Red-winged Blackbird assembly is
@@ -146,7 +146,7 @@ def load_inversion_stats():
     agg = defaultdict(lambda: {"NumInversions": 0, "NumInversions_diag": 0,
                                 "TotalSeqLength_bp": 0, "InvCoverage_bp": 0,
                                 "TotalGenes": 0, "GenesOnInv": 0})
-    with open(path("inversions_stats.tsv")) as f:
+    with open(path("inversion_stats.tsv")) as f:
         for row in csv.DictReader(f, delimiter="\t"):
             if row["minlen"] != INV_MINLEN:
                 continue
@@ -396,7 +396,7 @@ can span multiple contigs in `summary_features.csv`; those are summed here
 | Source, SourceDetail, Published | From `haplotype_sources.csv` -- VGP, CCGP, house finch/jay/seedeater pangenome, unpublished, or one of the other sequencing initiatives the VGP master sheet also tracks (Darwin Tree of Life, AmaZoomics, Sanger 25G, etc.), cross-referenced by accession against `/local/storage/kav67/VGP_details.csv`. SourceDetail is blank except for a few one-off assemblies outside all of the above. |
 | HaplotypeType | From `haplotype_sources.csv` -- Maternal/Paternal (trio-phased), Hap1/Hap2 (Hi-C-phased, no parent-of-origin call), Primary/Alternate (solo pseudohaplotype, no parent-of-origin call), Single assembly (no haplotype pair released), or Merged. These are not interchangeable -- only Maternal/Paternal reflects an actual parent-of-origin assignment. Resolved from the real assembly filename (cross-checked against `/local/storage/kav67/VGP_details.csv` for a few VGP haplotypes saved locally under a generic name that doesn't preserve the original suffix). |
 | NumV, NumV_productive, NumV_with_RSS, FracV_with_RSS | From `gene_list.csv`, filtered to `Passes Filtering == True`. "With RSS" = has a called heptamer and/or nonamer. |
-| NumInversions_min250bp, NumInversionsDiag_min250bp | From `inversions_stats.tsv` at the 250 bp threshold (finest available; matches the default used in `d_genes_on_inversions.py`). IGH only -- inversion detection in this pipeline is not run on IGL. |
+| NumInversions_min250bp, NumInversionsDiag_min250bp | From `inversion_stats.tsv` at the 250 bp threshold (the only one emitted; matches the default used in `d_genes_on_inversions.py`). IGH only -- inversion detection in this pipeline is not run on IGL. |
 | LocusLength_bp, InvCoverage_bp, FracGenesOnInv | Total self-alignment length, bp covered by inversions, and fraction of V genes falling in an inverted region (summed numerator/denominator across contigs, not averaged). |
 | NumD, NumD_on_inv, FracD_on_inv | From `D_inversions.tsv`. IGH only. |
 | NumCandidatePalindromes, MeanWholeIdentity, MeanMiddleIdentity20bp, MeanRandomIdentity20bp, MeanMiddleMinusWhole | From `palindromes.tsv` (`hairpin.py` output). `MeanMiddleMinusWhole` > 0 is the diagnostic for hairpin-like structure: the inversion's center is more self-similar than the whole alignment. IGH only. |

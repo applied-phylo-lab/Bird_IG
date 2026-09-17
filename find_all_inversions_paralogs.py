@@ -155,15 +155,18 @@ def find_sister_groups(bed_df, inv_diag, inv_non_diag, include_singletons=True):
 
 def process_row(row):
     input_dir = row['InputDir']
+    locus = row['Locus']
     order = row['Order']
     species = row['Species']
     haplotype = row['Haplotype']
+    contig = row['Contig']
 
-    aln_path = os.path.join(input_dir, order, species, haplotype, 'IGH_self.tsv')
-    bed_path = os.path.join(input_dir, order, species, haplotype, 'IGH.bed')
+    hap_dir = os.path.join(input_dir, order, species, haplotype)
+    aln_path = os.path.join(hap_dir, f'{contig}_{locus}.tsv')
+    bed_path = os.path.join(hap_dir, f'{contig}_{locus}.bed')
 
     if not os.path.exists(aln_path) or not os.path.exists(bed_path):
-        print(f"Skipping {order}/{species}/{haplotype}: missing files")
+        print(f"Skipping {order}/{species}/{haplotype}/{contig}: missing files")
         return []
 
     try:
@@ -176,8 +179,8 @@ def process_row(row):
 
     sample_name = f"{order}_{species}_{haplotype}"
 
-    inv_diag = get_diagonal_inversions(df, minlen=250)
-    inv_non_diag = get_non_diagonal_inversions(df, minlen=250)
+    inv_diag = get_diagonal_inversions(df, minlen=row['MinLen'])
+    inv_non_diag = get_non_diagonal_inversions(df, minlen=row['MinLen'])
 
     groups, group_members = find_sister_groups(bed_df, inv_diag, inv_non_diag)
 
@@ -187,11 +190,12 @@ def process_row(row):
             "Order": order,
             "Species": species,
             "Haplotype": haplotype,
+            "Contig": contig,
             "sample": sample_name,
             "group_size": len(g),
             "group_members": ";".join(g)
         })
-    print(f"Processed {sample_name}")
+    print(f"Processed {sample_name}/{contig}")
     return out_rows
 
 
@@ -201,11 +205,23 @@ def main():
     parser.add_argument('-s','--summary', required=True, help="Path to summary_table_IGH.tsv")
     parser.add_argument('-o','--output', required=True, help="Output TSV file")
     parser.add_argument('-c','--cores', type=int, default=4, help="Number of parallel workers")
+    parser.add_argument('--locus', choices=['IGH','IGL'], default='IGH',
+                        help="Which locus to process (default: IGH)")
+    parser.add_argument('--min_len', type=int, default=250,
+                        help="Minimum inversion length to consider (default: 250)")
 
     args = parser.parse_args()
 
-    df = pd.read_csv(args.summary, sep='\t')
+    sep = ',' if args.summary.endswith('.csv') else '\t'
+    df = pd.read_csv(args.summary, sep=sep)
+    if 'Locus' in df.columns:
+        df = df[df['Locus'] == args.locus]
+    if df.empty:
+        print(f"No {args.locus} rows found in {args.summary}")
+        return
     df['InputDir'] = args.input_dir
+    df['Locus'] = args.locus
+    df['MinLen'] = args.min_len
 
     with Pool(args.cores) as pool:
         results = pool.map(process_row, [row for _, row in df.iterrows()])

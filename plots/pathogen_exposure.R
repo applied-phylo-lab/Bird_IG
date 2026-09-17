@@ -21,9 +21,9 @@ tree <- read.tree(file.path(INPUT_DIR, "vgp_birds.nwk"))
 igh  <- fread(file.path(INPUT_DIR, "IGH_VGP_table.tsv"))
 numv <- igh[Locus == "IGH", .(NumV = mean(NumV, na.rm = TRUE)), by = Species]
 
-# inversions_stats.tsv is one row per CONTIG. Sum to haplotype level first so
+# inversion_stats.tsv is one row per CONTIG. Sum to haplotype level first so
 # counts and lengths aggregate the same way, then average over haplotypes.
-inv_hap <- fread(file.path(INPUT_DIR, "inversions_stats.tsv"))[minlen == 250,
+inv_hap <- fread(file.path(INPUT_DIR, "inversion_stats.tsv"))[minlen == 250,
              .(num_inversions = sum(num_inversions, na.rm = TRUE),
                genes_on_inv   = sum(genes_on_inv,   na.rm = TRUE),
                total_genes    = sum(total_genes,    na.rm = TRUE),

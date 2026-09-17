@@ -16,9 +16,9 @@ OUT       <- "/home/kav67/Bird_IG/figures/supp_inversions_vgenes.png"
 tree <- read.tree(file.path(INPUT_DIR, "vgp_birds.nwk"))
 vgp  <- unique(fread(file.path(INPUT_DIR, "IGH_VGP_table.tsv"))[, .(Species, LatinName)])
 
-# inversions_stats.tsv is one row per CONTIG -- sum to haplotype level so that
+# inversion_stats.tsv is one row per CONTIG -- sum to haplotype level so that
 # counts and sequence lengths are aggregated the same way.
-inv <- fread(file.path(INPUT_DIR, "inversions_stats.tsv"))[minlen == 250,
+inv <- fread(file.path(INPUT_DIR, "inversion_stats.tsv"))[minlen == 250,
         .(num_inversions = sum(num_inversions), locus_len = sum(total_seq_length)),
         by = .(species, haplotype)]
 sf <- fread(file.path(INPUT_DIR, "summary_features.csv"))[Locus == "IGH",
