@@ -144,6 +144,19 @@ land in `logs/slurm/{rule}-{jobid}.{out,err}` (gitignored).
 
 ### Things to know before the first run
 
+- **Excluded haplotypes live in `config/excluded_haplotypes.csv`.** Haplotypes kept
+  out of the cross-species analysis are listed there with a reason, and
+  `create_summary_tables_clean.R --exclude` applies them, printing each one as it
+  drops it. Keeping the list in version control means an exclusion is auditable
+  rather than buried in a filter, and an entry that stops matching is reported
+  (`! not found in the contig list`) -- which is how an upstream rename gets
+  noticed. Rebuild the index after editing it:
+
+  ```bash
+  Rscript data_prep/create_summary_tables_clean.R -i $INPUT_DIR \
+      --exclude config/excluded_haplotypes.csv
+  ```
+
 - **The index is an input, not a rule output.** `summary_features.csv` is read at
   parse time to build the wildcard lists, so it must exist first. Rebuild it with
   `data_prep/create_summary_tables_clean.R` whenever species are added, then re-run.
@@ -154,8 +167,47 @@ land in `logs/slurm/{rule}-{jobid}.{out,err}` (gitignored).
 - **Existing outputs are respected.** Snakemake leaves up-to-date files alone;
   always check `-n` first. If a dry run proposes redoing work you want to keep,
   adopt the existing files with `--touch` rather than letting it re-run.
+- **Replacing the index invalidates stage 2.** `summary_features.csv` is a declared
+  input to `self_align_bed`, so rebuilding it makes all ~820 alignments look stale
+  even when their content is unchanged. Adopt them rather than recomputing:
+
+  ```bash
+  snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 8 --touch align
+  ```
+
+  Only do this after confirming the alignments really are still valid for the new
+  index -- i.e. that nothing but haplotype naming or row membership changed.
+
 - **Never use `--forceall`.** Outputs live in `input_dir`, and a forced run would
   discard weeks of LASTZ and IQ-TREE work.
+
+### Two dataset versions
+
+`vgp_birds.nwk` and `IGH_VGP_table.tsv` exist in two versions, because the
+manuscript was written against the older one:
+
+| | tree | table | phylolm species |
+|---|---|---|---|
+| **v1** (manuscript) | `vgp_birds.nwk` -- 122 tips | `IGH_VGP_table.tsv` -- 128 rows | 116 |
+| **v2** (updated) | `vgp_birds_v2.nwk` -- 137 tips | `IGH_VGP_table_v2.tsv` -- 127 rows | 123 |
+
+v1 is **frozen** and cannot be regenerated -- its tree was pruned two months
+before its table was built, so it is missing 15 species that were in the data by
+then, and it carries a duplicate Swan Goose row from a `slice_max()` tie.
+Reference copies live in `{INPUT_DIR}/frozen_v1_manuscript/` with the full
+explanation. Nothing overwrites the v1 files, so existing scripts keep reading
+them until pointed elsewhere.
+
+v2 is a strict superset (no species lost) and is what
+`data_prep/build_vgp_tables.R` produces:
+
+```bash
+Rscript data_prep/build_vgp_tables.R -i $INPUT_DIR --suffix _v2
+```
+
+The effect on the headline fit is small -- beta 0.5112 -> 0.5149, R2 0.641 ->
+0.645 -- with seven more species and a stronger p. Figures will need to be
+produced for both.
 
 ### Rulegraph
 
@@ -184,7 +236,7 @@ Starting point: raw gene annotation files per species/haplotype.
 | `data_prep/create_summary_features.R` | Creates `summary_features.csv` — the master table listing every haplotype × locus with its main contig and V gene count |
 | `data_prep/create_summary_tables_clean.R` | Builds the index tables from `ig_contig_list.csv`: `summary_features.csv` (every IGH/IGL contig -- the workflow's index), `IGH_filtered_table.tsv` (IGH with `NumV > 2`) and `filtered_table.tsv`. Takes `-i INPUT_DIR`, `--input CSV`, `--min-numv N`, `--loci IGH,IGL` |
 | `data_prep/filter_genes.py` | Filters and cleans raw gene files to produce `combined_genes_IGH_clean.txt` / `combined_genes_IGL_clean.txt` per haplotype |
-| `data_prep/overview_features.R` | Filters species to those present in the VGP tree; produces data overview plots |
+| `data_prep/build_vgp_tables.R` | Maps each haplotype to a scientific name (VGP accession first, then normalised English name, then `--overrides`), prunes the VGP tree to the species present, and writes `IGH_VGP_table.tsv` (one row per species, highest-NumV IGH contig), `IGH_table.tsv` (one row per haplotype) and `vgp_birds.nwk`. Takes `-i INPUT_DIR`, `--vgp-tree`, `--vgp-table`, `--overrides`, `--min-numv`, `--all-haplotypes`, `--suffix`. Split out of the old `overview_features.R`; the plotting half is now `plots/overview_features_plots.R` |
 | `annotation_tables/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
 | `annotation_tables/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversion_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `assign_haplotype_source.py`) |
 

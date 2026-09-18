@@ -1,0 +1,9 @@
+Order,Species,Haplotype,Reason
+Songbirds,RedWinged_Blackbird,bAgePho1_pri,"IsoSeq work only (/home/kav67/isoseq_pipeline); not part of the cross-species analysis"
+Songbirds,RedWinged_Blackbird,bAgePho1_alt,"IsoSeq work only (/home/kav67/isoseq_pipeline); not part of the cross-species analysis"
+Songbirds,RedWinged_Blackbird,bAgePho2_pri,"Unpublished Pennell Lab assembly for IsoSeq work only. NOTE: this directory name previously held GCA_020745825.3, which is now bAgePho0_pri"
+Songbirds,RedWinged_Blackbird,bAgePho2_alt,"Unpublished Pennell Lab assembly for IsoSeq work only"
+Eagles,Philippine_eagle,bPitJef1_pri,"Non-VGP trio-binned ONT assembly (GCA_054553165.1); Pithecophaga jefferyi is not in vgp_birds.nwk so it cannot enter any phylogenetic analysis"
+Waterfowl,Tufted_Duck,bAytFul3_pri,"Second VGP assembly (GCA_976225485.1) of a species already represented by bAytFul2_pri/_alt"
+Songbirds,Woodhouse_scrub_jay,A.woodhouseii_AW_365336_pri,"Jay pangenome sample; the only Woodhouse jay with an alt haplotype, so including it would make the species aggregate asymmetric"
+Songbirds,Woodhouse_scrub_jay,A.woodhouseii_AW_365336_alt,"Jay pangenome sample; every other Woodhouse jay in the index is _pri only"

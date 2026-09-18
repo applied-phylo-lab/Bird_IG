@@ -162,8 +162,18 @@ def load_inversion_stats():
 
 
 def load_d_inversions():
+    """D gene / inversion overlap, if the table is present.
+
+    D_inversions.tsv was retired to {INPUT_DIR}/old_unused/ -- the upstream IGHD.csv
+    files became a threshold-swept candidate list and the unfiltered counts are no
+    longer meaningful (see that folder's README). Absent means the NumD columns are
+    simply left blank rather than the build failing."""
     d = {}
-    with open(path("D_inversions.tsv")) as f:
+    d_path = path("D_inversions.tsv")
+    if not os.path.exists(d_path):
+        print("note: D_inversions.tsv not present -- NumD columns left blank")
+        return d
+    with open(d_path) as f:
         for row in csv.DictReader(f, delimiter="\t"):
             key = (row["Order"], row["Species"], row["Haplotype"])
             d[key] = {"NumD": int(row["n_d_genes"]), "NumD_on_inv": int(row["n_on_inversion"])}
@@ -203,16 +213,21 @@ def _hap_context(source_field, sources, latin):
             "HaplotypeType": hap_type, "Published": published}
 
 
-def build_v_gene_table(sources, latin):
+def build_v_gene_table(sources, latin, indexed):
     """One row per called V gene from gene_list.csv, with haplotype-level
     context (species, source, haplotype type) joined in so the table is
     usable on its own. TRA/TRB/TRG/TRD rows in gene_list.csv are dropped --
     this project covers IGH/IGL only (see CLAUDE.md); everything else in
     there is leftover annotation from a shared upstream pipeline."""
     rows = []
+    skipped = 0
     with open(path("gene_list.csv")) as f:
         for row in csv.DictReader(f):
             if row["Locus"] not in ("IGH", "IGL"):
+                continue
+            parts = row["Source"].split("/")
+            if (parts[0], parts[1], "/".join(parts[2:])) not in indexed:
+                skipped += 1
                 continue
             rows.append({
                 **_hap_context(row["Source"], sources, latin),
@@ -222,16 +237,22 @@ def build_v_gene_table(sources, latin):
                 "Nonamer": row["Nonamer"], "RSS_DownstreamBp": row["Number of bp Downstream (RSS)"],
                 "Sequence": row["Sequence"],
             })
+    print(f"v_gene_table: skipped {skipped} genes on haplotypes not in summary_features.csv")
     write_table(rows, V_GENE_COLS, "v_gene_table")
 
 
-def build_d_gene_table(sources, latin):
+def build_d_gene_table(sources, latin, indexed):
     """One row per called D gene from bird_d_genes.csv (IGH only in this
     pipeline). Separate from v_gene_table.csv because V and D genes carry
     different RSS annotation (V: one downstream RSS; D: RSS on both sides)."""
     rows = []
+    skipped = 0
     with open(path("bird_d_genes.csv")) as f:
         for row in csv.DictReader(f):
+            parts = row["Source"].split("/")
+            if (parts[0], parts[1], "/".join(parts[2:])) not in indexed:
+                skipped += 1
+                continue
             rows.append({
                 **_hap_context(row["Source"], sources, latin),
                 "Locus": row["Locus"], "Contig": row["Contig"], "Pos": row["Pos"],
@@ -241,7 +262,23 @@ def build_d_gene_table(sources, latin):
                 "LocationRelativeToVCluster": row["Location Relative to V-Cluster"],
                 "Sequence": row["Sequence"],
             })
+    print(f"d_gene_table: skipped {skipped} genes on haplotypes not in summary_features.csv")
     write_table(rows, D_GENE_COLS, "d_gene_table")
+
+
+def load_indexed_haplotypes():
+    """(Order, Species, Haplotype) present in summary_features.csv.
+
+    gene_list.csv and bird_d_genes.csv come from the upstream pipeline and cover
+    every haplotype ever annotated, including ones deliberately kept out of the
+    cross-species analysis (config/excluded_haplotypes.csv). Without this filter
+    main_table.csv honours the exclusions while v_gene_table.csv does not, so the
+    two disagree about which assemblies exist."""
+    haps = set()
+    with open(path("summary_features.csv")) as f:
+        for row in csv.DictReader(f):
+            haps.add((row["Order"], row["Species"], row["Haplotype"]))
+    return haps
 
 
 def main():
@@ -364,8 +401,9 @@ def main():
     if missing_latin:
         print(f"NOTE: {len(missing_latin)} species have no LatinName:", ", ".join(missing_latin))
 
-    build_v_gene_table(sources, latin)
-    build_d_gene_table(sources, latin)
+    indexed = load_indexed_haplotypes()
+    build_v_gene_table(sources, latin, indexed)
+    build_d_gene_table(sources, latin, indexed)
     write_readme()
 
 
@@ -398,7 +436,7 @@ can span multiple contigs in `summary_features.csv`; those are summed here
 | NumV, NumV_productive, NumV_with_RSS, FracV_with_RSS | From `gene_list.csv`, filtered to `Passes Filtering == True`. "With RSS" = has a called heptamer and/or nonamer. |
 | NumInversions_min250bp, NumInversionsDiag_min250bp | From `inversion_stats.tsv` at the 250 bp threshold (the only one emitted; matches the default used in `d_genes_on_inversions.py`). IGH only -- inversion detection in this pipeline is not run on IGL. |
 | LocusLength_bp, InvCoverage_bp, FracGenesOnInv | Total self-alignment length, bp covered by inversions, and fraction of V genes falling in an inverted region (summed numerator/denominator across contigs, not averaged). |
-| NumD, NumD_on_inv, FracD_on_inv | From `D_inversions.tsv`. IGH only. |
+| NumD, NumD_on_inv, FracD_on_inv | From `D_inversions.tsv`. IGH only. **Currently blank** -- that table was retired to `old_unused/` because the upstream D gene calls became a threshold-swept candidate list; see that folder's README. |
 | NumCandidatePalindromes, MeanWholeIdentity, MeanMiddleIdentity20bp, MeanRandomIdentity20bp, MeanMiddleMinusWhole | From `palindromes.tsv` (`hairpin.py` output). `MeanMiddleMinusWhole` > 0 is the diagnostic for hairpin-like structure: the inversion's center is more self-similar than the whole alignment. IGH only. |
 
 ## species_summary.csv

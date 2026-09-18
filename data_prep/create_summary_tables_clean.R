@@ -23,6 +23,8 @@ MIN_NUMV  <- 2
 # ig_contig_list.csv also carries TRA/TRB/TRD/TRG, which are leftover annotation
 # from the shared upstream pipeline and out of scope here (see CLAUDE.md).
 LOCI      <- c("IGH", "IGL")
+# Haplotypes deliberately kept out of the cross-species analysis, with reasons.
+EXCLUDE   <- NULL
 
 # Parsed at top level on purpose: wrapping this in local() and using <<- for the
 # counter assigns to the global i, never the loop's own, and spins forever.
@@ -32,7 +34,8 @@ while (.i <= length(.args)) {
   .key <- .args[.i]
   if (.key %in% c("-h", "--help")) {
     cat("Usage: create_summary_tables_clean.R [-i INPUT_DIR]",
-        "[--input CSV] [--min-numv N] [--loci IGH,IGL]\n")
+        "[--input CSV] [--min-numv N] [--loci IGH,IGL]",
+        "[--exclude config/excluded_haplotypes.csv]\n")
     quit(status = 0)
   }
   if (.i == length(.args)) stop("Missing value for argument: ", .key)
@@ -45,6 +48,8 @@ while (.i <= length(.args)) {
     MIN_NUMV <- as.integer(.val)
   } else if (.key == "--loci") {
     LOCI <- strsplit(.val, ",", fixed = TRUE)[[1]]
+  } else if (.key == "--exclude") {
+    EXCLUDE <- .val
   } else {
     stop("Unknown argument: ", .key)
   }
@@ -68,6 +73,32 @@ dt[, c("Order", "Species", "Haplotype") := tstrsplit(Source, "/", fixed = TRUE)]
 dt[, NumV := `Number of Genes (before filtering)`]
 
 formatted <- dt[Locus %in% LOCI, .(Order, Species, Haplotype, Locus, Contig, NumV)]
+
+# Drop deliberately excluded haplotypes (see config/excluded_haplotypes.csv).
+# Reported individually so a silent drop can never go unnoticed.
+if (!is.null(EXCLUDE)) {
+  if (!file.exists(EXCLUDE)) stop("Exclusion list not found: ", EXCLUDE)
+  ex <- fread(EXCLUDE)
+  missing_cols <- setdiff(c("Order", "Species", "Haplotype"), names(ex))
+  if (length(missing_cols)) {
+    stop("Exclusion list is missing column(s): ", paste(missing_cols, collapse = ", "))
+  }
+  before <- nrow(formatted)
+  keys   <- formatted[, paste(Order, Species, Haplotype, sep = "/")]
+  ex_keys <- ex[, paste(Order, Species, Haplotype, sep = "/")]
+  unmatched <- setdiff(ex_keys, unique(keys))
+  formatted <- formatted[!keys %in% ex_keys]
+  cat(sprintf("Excluded %d rows for %d haplotypes (%s):\n",
+              before - nrow(formatted), length(intersect(ex_keys, unique(keys))), EXCLUDE))
+  for (i in seq_len(nrow(ex))) {
+    k <- ex_keys[i]
+    if (k %in% unmatched) next
+    cat(sprintf("  - %s\n      %s\n", k,
+                if ("Reason" %in% names(ex)) ex$Reason[i] else "(no reason given)"))
+  }
+  # An entry that matches nothing usually means the upstream name changed again.
+  for (k in unmatched) cat(sprintf("  ! not found in the contig list: %s\n", k))
+}
 formatted_igh <- formatted[Locus == "IGH"][NumV > MIN_NUMV]
 
 # fwrite for all three -- the previous version called readr::write_tsv without

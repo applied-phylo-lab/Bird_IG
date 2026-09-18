@@ -137,7 +137,6 @@ rule all:
         SELF_ALN, BED, BED_STR,
         f"{INPUT_DIR}/inversion_stats.tsv",
         f"{INPUT_DIR}/inversion_details.tsv",
-        f"{INPUT_DIR}/D_inversions.tsv",
         f"{INPUT_DIR}/palindromes.tsv",
         f"{INPUT_DIR}/IGH_paralogs_all.tsv",
         f"{INPUT_DIR}/IGH_paralogs_diag.tsv",
@@ -150,8 +149,16 @@ rule inversions:  # stage 3 only
     input:
         f"{INPUT_DIR}/inversion_stats.tsv",
         f"{INPUT_DIR}/inversion_details.tsv",
-        f"{INPUT_DIR}/D_inversions.tsv",
         f"{INPUT_DIR}/palindromes.tsv",
+
+# D_inversions.tsv is deliberately NOT a default target. The upstream IGHD.csv
+# files became a threshold-swept candidate list, so the unfiltered counts the rule
+# produces are no longer meaningful; the table was retired to
+# {INPUT_DIR}/old_unused/ (see the README there). The rule is kept so the analysis
+# can be revived once a calling threshold is agreed -- ask for it by name:
+#     snakemake ... d_genes
+rule d_genes:
+    input: f"{INPUT_DIR}/D_inversions.tsv"
 
 rule paralogs:    # stage 4 only
     input:

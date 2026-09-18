@@ -19,7 +19,8 @@ Nothing but code is versioned. All data is under `INPUT_DIR`, normally
 - `summary_features.csv` — one row per haplotype × locus (Order, Species, Haplotype, Locus, Contig, NumV)
 - `IGH_filtered_table.tsv`, `IGH_VGP_table.tsv` (adds `LatinName` for tree matching)
 - `gene_list.csv` — all V genes with RSS annotations
-- `inversion_stats.tsv`, `inversion_details.tsv`, `D_inversions.tsv`, `palindromes.tsv`
+- `inversion_stats.tsv`, `inversion_details.tsv`, `palindromes.tsv`
+  (`D_inversions.tsv` retired to `old_unused/` — see that folder's README)
 - `vgp_birds.nwk` — VGP species tree used for all phylogenetic corrections
 - `species_traits_avonet.csv` — ecological traits (built by `trait_analyses/fetch_avonet_traits.py`;
   the analyses in that folder are shelved, but `annotation_tables/build_summary_tables.py`
