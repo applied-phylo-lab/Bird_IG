@@ -18,7 +18,7 @@ def run_patchwork(tsv_file, input_dir, config_name, output_prefix, dry_run):
         out_prefix = os.path.join(species_dir, output_prefix)
 
         cmd = [
-            "python", "/home/kav67/PatchWorkPlot_new/PatchWorkPlot.py",
+            "python", "/home/kav67/PatchWorkPlot_birds/PatchWorkPlot.py",
             "-i", config_path,
             "-o", out_prefix,
             "--show-annot",

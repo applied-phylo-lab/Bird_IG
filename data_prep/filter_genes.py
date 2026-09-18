@@ -30,6 +30,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--min-len", type=int, default=250, help="Minimum sequence length; keep sequences longer than this")
     p.add_argument("--overrep", type=float, default=0.7, help="Overrepresentation threshold (fraction) for 1 or 2 nucleotides")
     p.add_argument("--dry-run", action="store_true", help="Run quick internal test of filter functions and exit")
+    # Single-unit selection, so a workflow manager can drive one haplotype at a time.
+    p.add_argument("--order", help="Only process this Order")
+    p.add_argument("--species", help="Only process this Species")
+    p.add_argument("--haplotype", help="Only process this Haplotype")
+    p.add_argument("--locus", choices=["IGH", "IGL"], action="append", dest="loci",
+                   help="Only process this locus (repeatable; default: both)")
     return p.parse_args()
 
 
@@ -82,7 +88,8 @@ def filter_dataframe(df: pd.DataFrame, min_len: int, overrep: float) -> pd.DataF
     return df.loc[keep].reset_index(drop=True)
 
 
-def process_row(index_row: pd.Series, input_dir: str, min_len: int, overrep: float) -> None:
+def process_row(index_row: pd.Series, input_dir: str, min_len: int, overrep: float,
+                loci: Iterable[str] = ("IGH", "IGL")) -> None:
     """Process a single row from the index TSV and write cleaned files if combined files exist."""
     order = str(index_row.get("Order") or index_row.get("order") or "")
     species = str(index_row.get("Species") or index_row.get("species") or "")
@@ -92,7 +99,7 @@ def process_row(index_row: pd.Series, input_dir: str, min_len: int, overrep: flo
         return
 
     base_dir = os.path.join(input_dir, order, species, hap)
-    for locus in ("IGH", "IGL"):
+    for locus in loci:
         fname = f"combined_genes_{locus}.txt"
         in_path = os.path.join(base_dir, fname)
         if not os.path.isfile(in_path):
@@ -135,8 +142,9 @@ def main():
             print(f"len={len(seq)} top-ok={ok} expected={expect_ok}")
         sys.exit(0)
 
+    sep = "," if args.index.endswith(".csv") else "\t"
     try:
-        idx = pd.read_csv(args.index, sep="\t", dtype=str, na_filter=False)
+        idx = pd.read_csv(args.index, sep=sep, dtype=str, na_filter=False)
     except Exception as e:
         print(f"Failed to read index file {args.index}: {e}")
         sys.exit(2)
@@ -148,8 +156,28 @@ def main():
     if not ("Haplotype" in idx.columns or "haplotype" in idx.columns or "Haplotype" in idx.columns):
         print("Index file missing 'Haplotype' column")
 
+    for col, val in (("Order", args.order), ("Species", args.species),
+                    ("Haplotype", args.haplotype)):
+        if val is not None:
+            if col not in idx.columns:
+                print(f"Index has no {col} column; cannot filter on it")
+                sys.exit(2)
+            idx = idx[idx[col] == val]
+
+    # One row per haplotype: the index is per haplotype x locus x contig, but the
+    # gene tables being filtered are per haplotype.
+    key_cols = [c for c in ("Order", "Species", "Haplotype") if c in idx.columns]
+    if key_cols:
+        idx = idx.drop_duplicates(subset=key_cols)
+
+    if idx.empty:
+        print("No index rows match the given filters")
+        return
+
+    loci = tuple(args.loci) if args.loci else ("IGH", "IGL")
     for i, row in idx.iterrows():
-        process_row(row, args.input_dir, min_len=args.min_len, overrep=args.overrep)
+        process_row(row, args.input_dir, min_len=args.min_len, overrep=args.overrep,
+                    loci=loci)
 
 
 if __name__ == "__main__":

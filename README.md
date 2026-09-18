@@ -111,10 +111,23 @@ snakemake -s workflow/Snakefile --configfile config/config.yaml -n
 Partial targets, if you only want one stage:
 
 ```bash
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 align
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 inversions
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 paralogs
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 trees
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- align
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- inversions
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- paralogs
+snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- trees
+```
+
+Note the `--`. Both `--configfile` and `--quiet` take values, so a bare target
+after them is swallowed as an argument (`--configfile config.yaml tables` tries to
+load a config file called `tables`).
+
+Three targets are deliberately **not** in `rule all`, because they are expensive
+or are release steps -- ask for them by name:
+
+```bash
+snakemake ... -- dotplots   # stage 6: 16 orders x 2 loci of PatchWorkPlot
+snakemake ... -- tables     # stage 7: haplotype_sources + summary_tables
+snakemake ... -- d_genes    # D_inversions.tsv; retired, see old_unused/
 ```
 
 ### Profiles

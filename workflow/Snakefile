@@ -4,10 +4,16 @@
   Stage 3  summarise inversions, D genes on inversions, hairpin/palindromes
   Stage 4  inversion paralog groups
   Stage 5  per-haplotype V gene trees (fasta -> clustalo -> iqtree2)
+  Stage 6  PatchWorkPlot dot plots per order x locus
+  Stage 7  publication-facing annotation tables
 
-Stage 1 (building summary_features.csv and the metadata tables) and stages 6-8
-(dotplots, publication tables, figures) are not wired up yet; summary_features.csv
-is consumed here as a pipeline input.
+Stage 1 (building summary_features.csv and the VGP tables) and stage 8 (figures)
+are not wired up; summary_features.csv is consumed here as a pipeline input.
+
+Stages 6 and 7 are NOT in `rule all` -- dot plots are expensive and only wanted
+for selected orders, and the tables are a release step. Ask for them by name:
+    snakemake ... dotplots
+    snakemake ... tables
 
 Everything runs in the `snakemake` conda env, which carries pandas, lastz,
 clustalo and iqtree2. Activate it first:
@@ -128,6 +134,16 @@ TREEFILES = [f"{hap_dir(r.Order, r.Species, r.Haplotype)}/tree/"
              f"{tree_prefix(r.Locus, r.Haplotype)}_tree.treefile"
              for r in haps.itertuples()]
 
+# Stage 6: orders to draw dot plots for; empty config means every order.
+DOTPLOT_ORDERS = config.get("dotplot_orders") or sorted(units["Order"].unique())
+
+# Stage 7: each table also gets a _published variant.
+SUMMARY_TABLES = [
+    f"{INPUT_DIR}/summary_tables/{name}{variant}.csv"
+    for name in ("main_table", "species_summary", "v_gene_table", "d_gene_table")
+    for variant in ("", "_published")
+]
+
 
 # --------------------------------------------------------------------------- #
 # Targets
@@ -168,8 +184,18 @@ rule paralogs:    # stage 4 only
 rule trees:       # stage 5 only
     input: TREEFILES
 
+rule dotplots:    # stage 6 -- not in `all`
+    input:
+        expand("{d}/{order}/patchworkplot/{locus}/patchworkplot.pdf",
+               d=INPUT_DIR, order=DOTPLOT_ORDERS, locus=LOCI),
+
+rule tables:      # stage 7 -- not in `all`
+    input: SUMMARY_TABLES
+
 
 include: "rules/align.smk"
 include: "rules/inversions.smk"
 include: "rules/paralogs.smk"
 include: "rules/trees.smk"
+include: "rules/dotplots.smk"
+include: "rules/tables.smk"

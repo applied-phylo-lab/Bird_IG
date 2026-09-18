@@ -25,3 +25,14 @@ min_numv: 3
 hairpin_seed: 1
 
 lastz: lastz
+
+# PatchWorkPlot (https://github.com/dirkschumacher/patchworkplot) is not on $PATH;
+# point this at the checkout you want to use.
+patchworkplot: /home/kav67/PatchWorkPlot_birds/PatchWorkPlot.py
+
+# Orders to generate dot plots for. Each produces a config plus a patchworkplot
+# PDF per locus. Empty means every order in the index.
+dotplot_orders: []
+
+# Arguments passed through to PatchWorkPlot.py.
+patchworkplot_args: "--show-annot --lower --lwidth 2 --min-len 15000 --cmap viridis --min-pi 75 --transparent"
