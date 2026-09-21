@@ -188,8 +188,13 @@ p <- p + geom_fruit(
   axis.params = list(axis = "x", text.size = AXIS_TEXT_SIZE, title = "IGH MinDir",
                      title.size = 3, title.height = 0.02)
 ) +
+# guide_colourbar(raster = FALSE) draws the legend bar as a column of solid
+# rectangles instead of an embedded raster. The cairo SVG device renders a
+# rasterised bar through <filter>/<feImage>/<mask>, which many viewers fall back
+# on as a checkerboard.
   scale_fill_viridis_c(name = "IGH\nMinDir", option = "D", na.value = "grey90",
-                       direction = -1, limits = c(0.5, 1))
+                       direction = -1, limits = c(0.5, 1),
+                       guide = guide_colourbar(raster = FALSE))
 
 # ── IGL_MinDir panel ──────────────────────────────────────────────────────────
 
@@ -207,7 +212,8 @@ p <- p + geom_fruit(
                      title.size = 3, title.height = 0.02)
 ) +
   scale_fill_viridis_c(name = "IGL\nMinDir", option = "D", na.value = "grey90",
-                       direction = -1, limits = c(0.5, 1))
+                       direction = -1, limits = c(0.5, 1),
+                       guide = guide_colourbar(raster = FALSE))
 
 # MinDir is max(tbl)/sum(tbl), so it cannot fall below 0.5 -- the observed range
 # is exactly 0.5000 to 1.0000. Both panels use viridis "D" reversed over that
@@ -271,8 +277,13 @@ p2 <- p2 + geom_fruit(
                      limits = c(-1, 1.1),
                      line.alpha = 0)
 ) +
-  scale_fill_viridis_c(name = "MinDir", option = "D", na.value = "grey90",direction=-1,
-                       limits = c(0.5, 1)) +
+# guide_colourbar(raster = FALSE) draws the legend bar as a column of solid
+# rectangles instead of an embedded raster. The cairo SVG device renders a
+# rasterised bar through <filter>/<feImage>/<mask>, which many viewers fall back
+# on as a checkerboard.
+  scale_fill_viridis_c(name = "MinDir", option = "D", na.value = "grey90",
+                       direction = -1, limits = c(0.5, 1),
+                       guide = guide_colourbar(raster = FALSE)) +
   scale_alpha_identity(guide = "none")
 
 # The butterfly mirrors IGH onto negative x, so ggtreeExtra labels those ticks

@@ -233,9 +233,22 @@ figure_1ab
 figure_1ab_hist
 figure_contig
 
-save_fig("Figure1AB.svg",          figure_1ab)
-save_fig("Figure1AB_hist.svg",     figure_1ab_hist)
-save_fig("Figure1_contig_len.svg",  figure_contig)
+# IGL_length + IGL_strand, and contig_length_p + mind_dir_p, were both assembled
+# as bare expressions and never saved -- hence figures/manuscript_Sept/
+# IGL_histograms.svg and IGH_IGL_contig_strand.svg had no counterpart in v1/v2.
+# Both objects are built above; these are the same composites, at the same
+# 1103 x 354 pt canvas as the hand-exported versions.
+figure_igl_hist          <- IGL_length + IGL_strand
+figure_igh_igl_contig_sd <- contig_length_p + mind_dir_p
+
+figure_igl_hist
+figure_igh_igl_contig_sd
+
+save_fig("Figure1AB.svg",             figure_1ab)
+save_fig("Figure1AB_hist.svg",        figure_1ab_hist)
+save_fig("Figure1_contig_len.svg",    figure_contig)
+save_fig("IGL_histograms.svg",        figure_igl_hist)
+save_fig("IGH_IGL_contig_strand.svg", figure_igh_igl_contig_sd)
 
 cat(sprintf("IGH contig length, birds:      %.0f bp\n",
             mean(igh_contig_all[igh_contig_all$bird == TRUE, ]$ContigLength)))
