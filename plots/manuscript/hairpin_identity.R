@@ -82,5 +82,9 @@ p_hairpin <- ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
 p_hairpin_all
 p_hairpin
 
-save_fig("hairpin_all_windows.svg", p_hairpin_all)
-save_fig("hairpin.svg",             p_hairpin)
+# Not the wide 1472x472 default: these are violin panels, and the hand-exported
+# figures/hairpin.svg is 639 x 466 pt -- close to square. Sizes kept in inches.
+save_fig("hairpin_all_windows.svg", p_hairpin_all,
+         width = 9, height = 5, units = "in", dpi = FIG_DPI)
+save_fig("hairpin.svg",             p_hairpin,
+         width = 7, height = 5, units = "in", dpi = FIG_DPI)
