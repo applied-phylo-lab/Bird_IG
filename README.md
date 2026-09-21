@@ -232,8 +232,12 @@ Regenerate after adding or changing rules:
 
 ```bash
 snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph \
-  | dot -Tsvg > docs/rulegraph.svg
+  -- all dotplots tables fig1c d_genes | dot -Tsvg > docs/rulegraph.svg
 ```
+
+The targets have to be listed explicitly: `--rulegraph` graphs only what it is
+asked for, and `dotplots`, `tables`, `fig1c` and `d_genes` are deliberately not
+reachable from `all`, so a bare `--rulegraph` silently omits stages 6 and 7.
 
 (`--rulegraph` shows the rules; `--dag` shows every job instance and is unreadable
 at ~800 nodes.)
