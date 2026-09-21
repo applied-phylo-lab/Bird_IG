@@ -150,7 +150,12 @@ p_phylo <- ggplot(trait, aes(x = num_inversions, y = NumV)) +
 message(sprintf("[figure_1c] phylolm on %d species (%s)", nrow(trait), DATASET))
 
 # ---- assembled figure -------------------------------------------------------
-figure_1c <- ((p_locus | p_strand) / (p_inv_len | p_frac_inv)) | p_phylo
+# Three panels side by side: average inversion length, genes in inversion region,
+# and the phylolm scatter. This is the last of the layout lines the original
+# script tried (`p_inv_len | p_frac_inv | p_phylo`). p_locus (locus length) and
+# p_strand (genes on the positive strand) are still built above and print to the
+# viewer, but are not part of this figure.
+figure_1c <- p_inv_len | p_frac_inv | p_phylo
 figure_1c
 
 save_fig("Figure1C.svg", figure_1c)

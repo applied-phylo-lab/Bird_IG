@@ -22,7 +22,11 @@ if (RSS_SOURCE_CORRELATION && !exists("p_combined_simple")) {
 # input_dir is kept as a local alias -- it is used throughout the script and in
 # file.path() calls that expect the trailing slash form.
 input_dir      <- paste0(INPUT_DIR, "/")
-gene_list_path <- file.path(input_dir, "gene_list.csv")
+# Same gene list as rss_correlation.R, which supplies the left panel of the shared
+# figure. The "igl_hN_nM" suffix records the IGL RSS calling thresholds, and IGL
+# RSS detection differs 2.3-fold between this file and gene_list.csv -- the two
+# panels of one figure must not come from different thresholds.
+gene_list_path <- file.path(input_dir, "gene_list-igl_h3_n7.csv")
 
 # Minimum fraction that must agree on one side to call orientation.
 # Applied to both IGH (D-gene location) and IGL (majority strand).
