@@ -189,6 +189,9 @@ rule dotplots:    # stage 6 -- not in `all`
         expand("{d}/{order}/patchworkplot/{locus}/patchworkplot.pdf",
                d=INPUT_DIR, order=DOTPLOT_ORDERS, locus=LOCI),
 
+rule fig1c:       # stage 6, just the Figure 1C panel -- not in `all`
+    input: f"{INPUT_DIR}/patchworkplot/plots_fig1c/patchworkplot.pdf"
+
 rule tables:      # stage 7 -- not in `all`
     input: SUMMARY_TABLES
 

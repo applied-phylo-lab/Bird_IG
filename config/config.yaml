@@ -34,5 +34,25 @@ patchworkplot: /home/kav67/PatchWorkPlot_birds/PatchWorkPlot.py
 # PDF per locus. Empty means every order in the index.
 dotplot_orders: []
 
+# Figure 1C dot plot: a hand-picked cross-section rather than a whole order, so it
+# gets its own config and its own target (`snakemake ... -- fig1c`). Species are
+# given as {Species}/{Haplotype}; the label is what appears beside the panel.
+fig1c_samples:
+  - species: House_Finch
+    haplotype: bHaeMex1.pri
+    label: House Finch
+  - species: Tawny_Owl
+    haplotype: bStrAlu1_pri
+    label: Tawny Owl
+  - species: European_Golden_Plover
+    haplotype: bPluApr1_pri
+    label: European Golden Plover
+  - species: White_Leghorn_Chicken
+    haplotype: bGalGal1_pri
+    label: White Leghorn Chicken
+  - species: Common_Ostrich
+    haplotype: bStrCam1_pri
+    label: Common Ostrich
+
 # Arguments passed through to PatchWorkPlot.py.
 patchworkplot_args: "--show-annot --lower --lwidth 2 --min-len 15000 --cmap viridis --min-pi 75 --transparent"
