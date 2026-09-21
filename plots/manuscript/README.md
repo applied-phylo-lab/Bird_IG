@@ -3,15 +3,24 @@
 The six scripts that produce manuscript figures. Everything else in `plots/` is
 exploratory.
 
-| Script | Figure | Key inputs |
-|--------|--------|-----------|
-| `Figure1AB.R` | Locus length and strand bias, birds vs other vertebrates | `all_species_stats_pruned_12052025.csv` (built outside this repo by `match_names_VGP.R`) |
-| `figure_1c.R` | Locus length / V count / strand / inversion distributions + phylolm scatter | `annotation_iroki_strand.tsv` (from `data_prep/build_iroki_annotation.R`), `inversion_stats.tsv`, tree |
-| `mindir_tree.R` | MinDir on the phylogeny | gene list (see below), tree, `IGH_VGP_table.tsv` |
-| `manhattan_plot.R` | Genome-wide inversion density | window summaries from `manhattan_plot_inversion_coverage/` |
-| `hairpin_identity.R` | Hairpin identity at inversion centres | `palindromes.tsv` |
-| `rss_correlation.R` | **The RSS manuscript figure**: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density, IGH above IGL | `gene_list-igl_h3_n7.csv` (see below), `IGH_VGP_table.tsv`, tree |
-| `rss_position_oriented.R` | RSS positional distributions, biologically oriented. **Saves nothing** — kept as the analysis behind the figure above, and because it is useful interactively | `gene_list.csv`, `IGH_VGP_table.tsv`, per-haplotype `IGHD.csv` |
+| Script | Figures it saves | Key inputs |
+|--------|------------------|-----------|
+| `Figure1AB.R` | `Figure1AB_resized.svg` (735x354pt), `Figure1_contig_len.svg`, `Figure1_contig_len_green.svg`, `IGL_histograms.svg`, `IGL_histograms_green.svg`, `IGH_IGL_contig_strand.svg` | `all_species_stats_pruned_12052025.csv` (built outside this repo by `data_prep/match_names_VGP.R`) |
+| `figure_1c.R` | `Figure1C.svg` -- avg inversion length \| genes in inversion region \| phylolm scatter | `annotation_iroki_strand.tsv` (from `data_prep/build_iroki_annotation.R`), `inversion_stats.tsv`, tree |
+| `mindir_tree.R` | `mindir_tree_current_weighted.svg` -- the butterfly | gene list, tree, `IGH_VGP_table.tsv` |
+| `manhattan_plot.R` | `manhattan_inversions_bHaeMex1.svg`, `..._IGL.svg`, `manhattan_covered_fraction_bHaeMex1.svg` | window summaries from `manhattan_plot_inversion_coverage/` |
+| `hairpin_identity.R` | `hairpin.svg` (7x5in), `hairpin_all_windows.svg` (9x5in) | `palindromes.tsv` |
+| `rss_position_oriented.R` | `IGH_IGL_RSS_pos_oriented.svg` -- the RSS manuscript figure | `gene_list-igl_h3_n7.csv`, `IGH_VGP_table.tsv`, per-haplotype `IGHD.csv` |
+| `rss_correlation.R` | **none** -- builds `p_combined_simple`, the left panel of the figure above, and is sourced by it | `gene_list-igl_h3_n7.csv`, `IGH_VGP_table.tsv`, tree |
+
+14 figures per dataset version. A clean run of all six scripts exits 0 for both
+v1 and v2.
+
+Some panels are deliberately built but not saved: the density version of
+Figure 1A/B (`figure_1ab`), the two-panel `mindir_tree` view, `p_locus` and
+`p_strand` from Figure 1C, and all of `rss_position_oriented.R`'s other RSS
+panels. They print to the viewer and can be exported by hand; the pipeline just
+does not write figures nobody uses.
 
 Plus the PatchWorkPlot dot plots, chiefly
 `{INPUT_DIR}/patchworkplot/plots_fig1c/` — built from `config_fig1c.csv`
@@ -78,8 +87,23 @@ that gives better control over font sizes and framing than `ggsave`. Every scrip
 still ends with `save_fig()` calls so the whole set reproduces unattended; treat
 that output as a correctness check, not as final artwork.
 
-`save_fig()` routes SVGs through `svglite` when available, because the default
-`svg` device silently drops the Greek letters in the phylolm annotations.
+### Canvas and font
+
+`save_fig()` defaults to **1472 x 472 px at 96 dpi** = 1103 x 354 pt, the size of
+the hand-exported figures. Exceptions set their own: `Figure1AB_resized.svg`
+(980 px wide), the hairpin violins (7x5 and 9x5 in) and the `mindir_tree`
+butterfly (9x12 in, a tall tree figure).
+
+SVGs go through the **cairo** device, the same one RStudio's Export -> SVG uses.
+It draws text as glyph outlines, so the font is baked into the file. `svglite`
+keeps text as text but writes a single `font-family` with no fallback
+(`"Liberation Sans"`), and any viewer without that exact font drops to its default
+serif -- which made the figures look like Times New Roman. The trade-off is that
+text in the SVG is no longer selectable.
+
+Colour bars use `guide_colourbar(raster = FALSE)`: cairo renders a rasterised bar
+through `<filter>`/`<feImage>`/`<mask>`, which many viewers show as a
+checkerboard.
 
 ## Cross-script dependency still outstanding
 
