@@ -150,8 +150,8 @@ p <- p + geom_fruit(
   axis.params = list(axis = "x", text.size = 2, title = "IGH MinDir",
                      title.size = 3, title.height = 0.02)
 ) +
-  scale_fill_viridis_c(name = "IGH\nMinDir", option = "C", na.value = "grey90",
-                       limits = c(0, 1))
+  scale_fill_viridis_c(name = "IGH\nMinDir", option = "D", na.value = "grey90",
+                       direction = -1, limits = c(0.5, 1))
 
 # ── IGL_MinDir panel ──────────────────────────────────────────────────────────
 
@@ -169,12 +169,17 @@ p <- p + geom_fruit(
                      title.size = 3, title.height = 0.02)
 ) +
   scale_fill_viridis_c(name = "IGL\nMinDir", option = "D", na.value = "grey90",
-                       limits = c(0, 1))
+                       direction = -1, limits = c(0.5, 1))
 
-# ── Save (0–1 scale) ──────────────────────────────────────────────────────────
+# MinDir is max(tbl)/sum(tbl), so it cannot fall below 0.5 -- the observed range
+# is exactly 0.5000 to 1.0000. Both panels use viridis "D" reversed over that
+# range, so 1.0 is dark purple and 0.5 is yellow. IGH previously used option "C"
+# (plasma) against c(0, 1), which both clashed with the IGL panel and spent half
+# the colour scale on values MinDir can never take.
 p
 
-# ── Version 2: scale from 0.5–1.0 ────────────────────────────────────────────
+# ── Butterfly version: IGH and IGL mirrored about zero ───────────────────────
+# This is the manuscript figure.
 
 p2 <- ggtree(tree_pruned, layout = "rectangular") #+
   #geom_tiplab(size = 1.8, fontface = "italic", offset = 0.001)
@@ -230,10 +235,12 @@ p2 <- p2 + geom_fruit(
 p2
 
 # ---- save -------------------------------------------------------------------
-# Filenames carry both switches so v1/v2 and legacy/current stay distinguishable.
+# p2 is the butterfly and is the manuscript figure, so it takes the plain name.
+# p is the two-panel view, kept as a secondary check.
+# Filenames carry the gene-list switch so legacy/current stay distinguishable.
 .tag <- sprintf("_%s", GENE_LIST)
-save_fig(sprintf("mindir_tree%s.svg", .tag),        p,  width = 9, height = 12)
-save_fig(sprintf("mindir_tree_igh_igl%s.svg", .tag), p2, width = 9, height = 12)
+save_fig(sprintf("mindir_tree%s.svg", .tag),        p2, width = 9, height = 12)
+save_fig(sprintf("mindir_tree_panels%s.svg", .tag), p,  width = 9, height = 12)
 
 cat(sprintf("[mindir] species on tree: %d | gene list: %s | dataset: %s\n",
             length(tree_pruned$tip.label), GENE_LIST, DATASET))
