@@ -47,16 +47,36 @@ FIG_WIDTH_PX  <- 1472
 FIG_HEIGHT_PX <- 472
 FIG_DPI       <- 96
 
+# SVGs go through the cairo device, which is what RStudio's "Export -> SVG" uses.
+# It draws text as glyph outlines, so the font is baked into the file and cannot
+# fall back to something else on another machine.
+#
+# svglite keeps text as text, which sounds nicer, but it writes a single
+# font-family with no fallback (`font-family: "Liberation Sans"`). Any viewer
+# without that exact font silently drops to its default serif -- which is why the
+# figures were coming out looking like Times New Roman.
+#
+# The trade-off is that text is no longer selectable or editable in the SVG. The
+# hand-exported figures in figures/ already have that property, so this matches
+# them rather than changing them.
 save_fig <- function(name, plot,
                      width = FIG_WIDTH_PX, height = FIG_HEIGHT_PX,
                      units = "px", dpi = FIG_DPI) {
   path <- fig_path(name)
-  if (grepl("\\.svg$", name) && requireNamespace("svglite", quietly = TRUE)) {
-    ggplot2::ggsave(path, plot, device = svglite::svglite,
-                    width = width, height = height, units = units, dpi = dpi)
+
+  # "in" is a reserved word in R, so it has to be quoted as a switch label.
+  to_inches <- function(x) switch(units,
+    px = x / dpi, "in" = x, cm = x / 2.54, mm = x / 25.4,
+    stop("unsupported units: ", units))
+  w_in <- to_inches(width)
+  h_in <- to_inches(height)
+
+  if (grepl("\\.svg$", name) && isTRUE(capabilities("cairo"))) {
+    grDevices::svg(path, width = w_in, height = h_in)
+    on.exit(grDevices::dev.off(), add = TRUE)
+    print(plot)
   } else {
-    ggplot2::ggsave(path, plot,
-                    width = width, height = height, units = units, dpi = dpi)
+    ggplot2::ggsave(path, plot, width = w_in, height = h_in, units = "in", dpi = dpi)
   }
   message(sprintf("[figure] wrote %s (%gx%g %s)", path, width, height, units))
   invisible(path)
