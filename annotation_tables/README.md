@@ -19,7 +19,7 @@ python annotation_tables/build_summary_tables.py   $INPUT_DIR
 
 ## Inputs from elsewhere
 
-- `species_traits_avonet.csv`, from `trait_analyses/fetch_avonet_traits.py` — used
+- `species_traits_avonet.csv`, from `archive/trait_analyses/fetch_avonet_traits.py` — used
   **only** as a LatinName lookup, not for the traits.
 - `IGH_VGP_table.tsv`, from `data_prep/overview_features.R` — LatinName lookup.
 - `gene_list.csv` and `bird_d_genes.csv`, from Daniel's upstream pipeline

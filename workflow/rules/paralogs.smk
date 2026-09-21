@@ -13,7 +13,7 @@ rule paralogs_all:
     output:
         f"{INPUT_DIR}/IGH_paralogs_all.tsv",
     params:
-        script=f"{REPO_DIR}/find_all_inversions_paralogs.py",
+        script=f"{REPO_DIR}/paralogs/find_all_inversions_paralogs.py",
         min_len=MIN_INV_LEN,
     threads: 8
     log:
@@ -35,7 +35,7 @@ rule paralogs_diagonal:
     output:
         f"{INPUT_DIR}/IGH_paralogs_diag.tsv",
     params:
-        script=f"{REPO_DIR}/find_inversion_paralogs.py",
+        script=f"{REPO_DIR}/paralogs/find_inversion_paralogs.py",
     threads: 8
     log:
         f"{INPUT_DIR}/logs/paralogs_diag.log",

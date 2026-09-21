@@ -11,18 +11,20 @@ Project proposal: https://docs.google.com/document/d/1fQ5YY_o3Em4FCX1qUgj8X3SZHk
 
 ```
 Bird_IG/
-├── workflow/           # Snakemake workflow (stages 2-5) + Slurm/local profiles
-├── config/             # Pipeline configuration
-├── data_prep/          # Index tables and per-haplotype gene filtering
-├── annotation_tables/  # Publication-facing annotation tables (provenance, summary tables)
-├── tree_analyses/      # Per-locus phylogenetic trees and tree-distance analyses
-├── plots/              # R scripts for figures (run interactively in RStudio)
-├── trait_analyses/     # SHELVED: migration and pathogen-exposure correlates
-├── RSS/                # RSS extraction and positional analysis (obsolete)
-├── repeatmasker/       # RepeatMasker integration scripts (obsolete)
-├── kmer_analysis/      # K-mer based analyses
-├── within_species_inversions/  # Within-species inversion comparison scripts
-└── *.py / *.R          # Top-level pipeline scripts (see workflow below)
+├── workflow/           # Snakemake workflow (stages 2-7) + Slurm/local profiles
+├── config/             # Pipeline configuration and the exclusion list
+├── data_prep/          # Index tables, VGP tree/tables, gene filtering
+├── annotation_tables/  # Publication-facing tables (provenance, summary tables)
+├── paralogs/           # Inversion paralog detection + its plots
+├── tree_analyses/      # Tree-distance analyses (tree building is now in workflow/)
+├── plots/              # Exploratory R figures (sourced in RStudio)
+│   └── manuscript/     # The six manuscript figure scripts
+├── RSS/                # rss_correlation.R only -- supplies a figure component
+├── within_species_inversions/  # Within-species inversion comparison
+├── manhattan_plot_inversion_coverage/  # Window summaries for the manhattan figure
+├── human_bird_comparison/  # Self-contained side analysis
+├── figures/v1, figures/v2  # Rendered figures per dataset version
+└── archive/            # Superseded and shelved work, each with a README
 ```
 
 ---
