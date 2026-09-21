@@ -3,7 +3,7 @@
 Analysis of IGH and IGL loci across bird species, focusing on V gene diversity,
 inversion structure, RSS presence, D gene organisation, and phylogenetic patterns.
 
-Project proposal: https://docs.google.com/document/d/1fQ5YY_o3Em4FCX1qUgj8X3SZHkFUl0uUHCLTdSHpsR0/edit?usp=sharing
+Preprint: https://www.biorxiv.org/content/10.64898/2026.09.05.749481v1
 
 ---
 
