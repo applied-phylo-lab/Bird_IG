@@ -30,10 +30,18 @@ curated <- summary_features %>%
   filter(!str_detect(Haplotype, "_alt$"))
 
 # ---- V gene counts per locus, as barplots beside the tree --------------------
+# Tree tips use underscores (Ammodramus_caudacutus); LatinName uses spaces
+# (Acanthisitta chloris). Matching them directly returns nothing, which left
+# locus_counts_wide empty and made facet_plot fail with
+# "replacement has 1 row, data has 0".
 locus_counts_wide <- curated %>%
   count(LatinName, Locus, name = "NumLoci") %>%
   pivot_wider(names_from = Locus, values_from = NumLoci, values_fill = 0) %>%
-  dplyr::rename(label = LatinName) %>%
+  mutate(label = gsub(" ", "_", LatinName)) %>%
+  # facet_plot matches the data's FIRST column against the tip labels, so `label`
+  # has to lead -- with it last, the join found nothing and facet_plot failed with
+  # "replacement has 1 row, data has 0".
+  dplyr::select(label, IGH, IGL) %>%
   filter(label %in% tree$tip.label)
 
 p <- ggtree(tree, layout = "rectangular")
@@ -52,8 +60,9 @@ p_loci
 # (order_nodes[-9,], then [c(3,7,8,9,11,12),]), which silently broke whenever the
 # tree changed. Filtering on monophyly instead makes the intent explicit.
 tip_orders <- as_tibble(tree) %>%
-  left_join(unique(curated[, .(LatinName, Order)]),
-            by = c("label" = "LatinName")) %>%
+  left_join(unique(curated[, .(LatinName, Order)])[
+              , .(label = gsub(" ", "_", LatinName), Order)],
+            by = "label") %>%
   filter(!is.na(Order), !is.na(label))
 
 order_nodes <- tip_orders %>%
