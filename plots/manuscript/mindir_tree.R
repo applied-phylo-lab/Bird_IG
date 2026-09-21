@@ -1,3 +1,16 @@
+# MinDir figure -- fraction of V genes on the majority strand, per species and
+# locus, mapped onto the bird phylogeny.
+#
+# GENE_LIST selects which gene table MinDir is computed from:
+#   "current"  gene_list.csv            -- 82,451 rows (2026-08-06)
+#   "legacy"   gene_list-igl_h3_n7.csv  -- 56,463 rows (2026-05-07), what the
+#              manuscript figure was made from
+# Identical headers, so the two are drop-in interchangeable. Figure filenames
+# carry the choice so both can be compared side by side.
+#
+# Figures are exported by hand for the manuscript -- the save_fig calls are for
+# unattended reproduction, not final artwork.
+
 library(data.table)
 library(dplyr)
 library(ggplot2)
@@ -8,6 +21,19 @@ library(ggnewscale)
 library(viridis)
 library(tidyr)
 
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
+# ---- switch this line ----
+GENE_LIST <- "current"        # "legacy" (manuscript) or "current"
+# --------------------------
+
+GENE_LIST_FILE <- switch(GENE_LIST,
+  legacy  = file.path(INPUT_DIR, "gene_list-igl_h3_n7.csv"),
+  current = file.path(INPUT_DIR, "gene_list.csv"),
+  stop("GENE_LIST must be 'legacy' or 'current', got: ", GENE_LIST))
+if (!file.exists(GENE_LIST_FILE)) stop("Gene list not found: ", GENE_LIST_FILE)
+message(sprintf("[mindir] gene list: %s (%s)", basename(GENE_LIST_FILE), GENE_LIST))
+
 # ── Load data ──────────────────────────────────────────────────────────────────
 
 # all_species_data <- fread("/local/storage/kav67/clean_birds/all_species_stats_pruned_12052025.csv")
@@ -17,7 +43,7 @@ library(tidyr)
 # all_species_data <- all_species_data[all_species_data$VertClass %in% c("reptiles", "mammals", "birds"), ]
 # bird_only <- all_species_data[all_species_data$VertClass == "birds", ]
 
-gene_list <- fread("/local/storage/kav67/clean_birds/gene_list-igl_h3_n7.csv")
+gene_list <- fread(GENE_LIST_FILE)
 gene_list[, c("GrpOrder", "Species", "Haplotype") := tstrsplit(Source, "/", fixed = TRUE)]
 
 main_strand_frac <- function(strands) {
@@ -37,13 +63,13 @@ bird_only <- gene_list %>%
          latin_tree = tolower(Species)) %>%
   as.data.frame()
 
-bird_tree_pruned <- read.tree("/local/storage/kav67/clean_birds/vgp_birds.nwk")
+bird_tree_pruned <- read.tree(TREE_FILE)
 tree_species <- gsub('.*"', '', bird_tree_pruned$tip.label)
 tree_species <- gsub('"', '', tree_species)
 bird_tree_pruned$species <- tolower(tree_species)
 
 # Join Order and proper LatinName from VGP table
-vgp_table <- fread("/local/storage/kav67/clean_birds/IGH_VGP_table.tsv")
+vgp_table <- fread(VGP_TABLE)
 order_map  <- vgp_table %>%
   select(LatinName, Order,Species) %>%
   distinct() %>%
@@ -202,3 +228,12 @@ p2 <- p2 + geom_fruit(
   scale_alpha_identity(guide = "none")
 
 p2
+
+# ---- save -------------------------------------------------------------------
+# Filenames carry both switches so v1/v2 and legacy/current stay distinguishable.
+.tag <- sprintf("_%s", GENE_LIST)
+save_fig(sprintf("mindir_tree%s.svg", .tag),        p,  width = 9, height = 12)
+save_fig(sprintf("mindir_tree_igh_igl%s.svg", .tag), p2, width = 9, height = 12)
+
+cat(sprintf("[mindir] species on tree: %d | gene list: %s | dataset: %s\n",
+            length(tree_pruned$tip.label), GENE_LIST, DATASET))

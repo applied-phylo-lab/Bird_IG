@@ -1,4 +1,22 @@
-all_species_data<-fread("/local/storage/kav67/clean_birds/all_species_stats_pruned_12052025.csv")
+# Figure 1A/B -- IGH and IGL locus length and strand bias, birds vs other
+# vertebrates.
+#
+# The input is built outside this repo, by match_names_VGP.R operating on
+# /local/storage/kav67/IG_annotation_VGP2026/, and is not produced by the
+# pipeline; it is read here as a fixed input.
+#
+# Figures are exported by hand for the manuscript -- the save_fig calls at the
+# bottom are for unattended reproduction, not final artwork.
+
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(patchwork)
+
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
+all_species_data <- fread(file.path(INPUT_DIR, "all_species_stats_pruned_12052025.csv"))
 all_species_data$bird<-FALSE
 all_species_data[all_species_data$VertClass=="birds",]$bird<-TRUE
 all_species_data<-all_species_data[all_species_data$IGH_AnnotationLevel<2,]
@@ -207,10 +225,24 @@ igl_contig_length_p <- ggplot(igl_contig_all, aes(x = ContigLength, fill = bird)
         axis.text  = element_text(size = 10),
         legend.text = element_text(size = 10))
 
-igh_contig_length_p | igl_contig_length_p
-mean(igh_contig_all[igh_contig_all$bird==TRUE,]$ContigLength)
-mean(igh_contig_all[igh_contig_all$bird==FALSE,]$ContigLength)
+figure_1ab      <- locus_l_comp | locus_strand_comp
+figure_1ab_hist <- locus_l_comp_hist | locus_strand_comp_hist
+figure_contig   <- igh_contig_length_p | igl_contig_length_p
 
-mean(igl_contig_all[igl_contig_all$bird==FALSE,]$ContigLength)
-mean(igl_contig_all[igl_contig_all$bird==TRUE,]$ContigLength)
+figure_1ab
+figure_1ab_hist
+figure_contig
+
+save_fig("Figure1AB.svg",         figure_1ab,      width = 11, height = 4.5)
+save_fig("Figure1AB_hist.svg",    figure_1ab_hist, width = 11, height = 4.5)
+save_fig("Figure1_contig_len.svg", figure_contig,  width = 11, height = 4.5)
+
+cat(sprintf("IGH contig length, birds:      %.0f bp\n",
+            mean(igh_contig_all[igh_contig_all$bird == TRUE, ]$ContigLength)))
+cat(sprintf("IGH contig length, non-birds:  %.0f bp\n",
+            mean(igh_contig_all[igh_contig_all$bird == FALSE, ]$ContigLength)))
+cat(sprintf("IGL contig length, birds:      %.0f bp\n",
+            mean(igl_contig_all[igl_contig_all$bird == TRUE, ]$ContigLength)))
+cat(sprintf("IGL contig length, non-birds:  %.0f bp\n",
+            mean(igl_contig_all[igl_contig_all$bird == FALSE, ]$ContigLength)))
 

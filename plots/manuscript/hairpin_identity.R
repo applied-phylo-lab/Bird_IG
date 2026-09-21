@@ -1,10 +1,18 @@
+# Hairpin figure -- sequence identity at the centre of diagonal inversions
+# compared with the whole alignment and a random window of the same size.
+#
+# Figures are exported by hand for the manuscript -- the save_fig calls are for
+# unattended reproduction, not final artwork.
+
 library(data.table)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-# Output of hairpin.py (run on /local/storage/kav67/clean_birds)
-palindromes<-fread("/local/storage/kav67/clean_birds/palindromes.tsv")
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
+# Output of hairpin.py
+palindromes <- fread(file.path(INPUT_DIR, "palindromes.tsv"))
 
 
 df_long <- palindromes %>%
@@ -22,7 +30,7 @@ df_long <- palindromes %>%
 
 
 
-ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
+p_hairpin_all <- ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
   geom_violin(trim = FALSE, alpha = 0.6) +
   geom_boxplot(width = 0.2, color = "black", alpha = 0.7) +
   theme_bw() +
@@ -58,7 +66,7 @@ df_long <- df_long %>%
                          'WholeIdentity' = 'Whole Inversion'))
 
 
-ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
+p_hairpin <- ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
   geom_violin(trim = FALSE, alpha = 0.6) +
   geom_boxplot(width = 0.2, color = "black", alpha = 0.7) +
   theme_classic(base_size = 14) +
@@ -70,3 +78,9 @@ ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
     )
   ) +
   labs(title = "Distribution of Identity in across regions in Inversions")
+
+p_hairpin_all
+p_hairpin
+
+save_fig("hairpin_all_windows.svg", p_hairpin_all, width = 9, height = 5)
+save_fig("hairpin.svg",             p_hairpin,     width = 7, height = 5)

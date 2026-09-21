@@ -5,8 +5,12 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
 # ── INPUTS ────────────────────────────────────────────────────────────────────
-input_dir      <- "/local/storage/kav67/clean_birds/"
+# input_dir is kept as a local alias -- it is used throughout the script and in
+# file.path() calls that expect the trailing slash form.
+input_dir      <- paste0(INPUT_DIR, "/")
 gene_list_path <- file.path(input_dir, "gene_list.csv")
 
 # Minimum fraction that must agree on one side to call orientation.
@@ -29,7 +33,7 @@ df <- read.csv(gene_list_path, stringsAsFactors = FALSE, check.names = FALSE) %>
     productive = tolower(trimws(as.character(Productive))) %in% c("true", "1", "yes","TRUE")
   )
 
-vgp_table <- read.delim(file.path(input_dir, "IGH_VGP_table.tsv"),
+vgp_table <- read.delim(VGP_TABLE,
                          stringsAsFactors = FALSE, check.names = FALSE)
 df <- df %>%
   left_join(vgp_table %>% select(Species, LatinName) %>% distinct(),
@@ -299,7 +303,12 @@ make_oriented_plot <- function(data, locus, x_label = TRUE, stat = "density", y_
 p_igh_oriented <- make_oriented_plot(df_igh, "IGH", x_label = FALSE)
 p_igl_oriented <- make_oriented_plot(df_igl, "IGL", x_label = TRUE)
 
-(p_combined_simple+(p_igh_oriented / p_igl_oriented))
+# p_combined_simple is built by RSS/rss_correlation.R, not here. These two
+# composite panels are convenience views, not the manuscript figure itself, so
+# they are drawn only when that script has already been sourced in this session.
+if (exists("p_combined_simple")) {
+  print(p_combined_simple + (p_igh_oriented / p_igl_oriented))
+} else message("[rss] skipping combined panel: source RSS/rss_correlation.R first")
 # ── Strand-split versions: + strand up, - strand down ────────────────────────
 # Density for genes on the + strand is plotted above the axis;
 # density for genes on the - strand is plotted below.
@@ -411,7 +420,9 @@ ylim_dens   <- c(0,14)
 p_igh_oriented_shared <- make_oriented_plot(df_igh, "IGH", x_label = FALSE, y_limits = ylim_dens)
 p_igl_oriented_shared <- make_oriented_plot(df_igl, "IGL", x_label = TRUE,  y_limits = ylim_dens)
 print(p_igh_oriented_shared / p_igl_oriented_shared)
-(p_combined_simple+(p_igh_oriented_shared / p_igl_oriented_shared))
+if (exists("p_combined_simple")) {
+  print(p_combined_simple + (p_igh_oriented_shared / p_igl_oriented_shared))
+} else message("[rss] skipping combined shared panel: source RSS/rss_correlation.R first")
 
 # Strand-split density, shared symmetric scale
 ylim_strand_dens  <- c(-20,20)
@@ -482,3 +493,18 @@ p_igh_strand <- ggplot(strand_comparison_df,
   )
 
 print(p_igh_strand)
+
+# ── save ──────────────────────────────────────────────────────────────────────
+# Figures are exported by hand for the manuscript; these are for unattended
+# reproduction, not final artwork.
+save_fig("RSS_oriented_strand.svg",
+         p_igh_oriented_strand / p_igl_oriented_strand, width = 8, height = 8)
+save_fig("RSS_oriented_count.svg",
+         p_igh_oriented_count / p_igl_oriented_count, width = 8, height = 8)
+save_fig("RSS_oriented_strand_count.svg",
+         p_igh_oriented_strand_count / p_igl_oriented_strand_count, width = 8, height = 8)
+save_fig("RSS_oriented_shared.svg",
+         p_igh_oriented_shared / p_igl_oriented_shared, width = 8, height = 8)
+save_fig("RSS_oriented_strand_shared.svg",
+         p_igh_oriented_strand_shared / p_igl_oriented_strand_shared, width = 8, height = 8)
+save_fig("RSS_igh_strand_vs_D.svg", p_igh_strand, width = 7, height = 5)

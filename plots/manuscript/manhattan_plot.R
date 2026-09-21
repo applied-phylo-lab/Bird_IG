@@ -1,11 +1,34 @@
+# Manhattan plot -- inversion density in sliding windows across a whole genome,
+# showing that the IG loci are not unusual on a genome-wide background.
+#
+# Two datasets: the exploratory plots near the top use the zebra finch, the
+# manuscript panel further down uses the house finch (bHaeMex1.pri).
+#
+# Inputs come from manhattan_plot_inversion_coverage/self_align_inversions.py then
+# sliding_window2.py; neither is part of the Snakemake workflow yet.
+#
+# Figures are exported by hand for the manuscript -- the save_fig calls are for
+# unattended reproduction, not final artwork.
+
 library(ggplot2)
 library(dplyr)
 library(readr)
 
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
 # === INPUT ===
-inversions <- read_tsv("/local/storage/kav67/clean_birds/Songbirds/House_Finch/bHaeMex1_pri/self_align_contigs/inversion_window_summary.tsv", show_col_types = FALSE)
-inversions <- read_tsv("/local/storage/kav67/clean_birds/Songbirds/House_Finch/bHaeMex1.pri/self_align_contigs/window_summary_deduplicated.tsv", show_col_types = FALSE)
-inversions <- read_tsv("/local/storage/kav67/zebrafinch/window_summary_deduplicated.tsv", show_col_types = FALSE)
+# Two earlier reads were stacked here and immediately overwritten; the first
+# pointed at inversion_window_summary.tsv, which no longer exists, so the script
+# died on line 6 before reaching anything.
+ZEBRAFINCH_WINDOWS <- "/local/storage/kav67/zebrafinch/window_summary_deduplicated.tsv"
+HOUSEFINCH_WINDOWS <- file.path(
+  INPUT_DIR, "Songbirds/House_Finch/bHaeMex1.pri/self_align_contigs",
+  "window_summary_deduplicated.tsv")
+
+if (!file.exists(ZEBRAFINCH_WINDOWS)) {
+  stop("Zebra finch windows not found: ", ZEBRAFINCH_WINDOWS)
+}
+inversions <- read_tsv(ZEBRAFINCH_WINDOWS, show_col_types = FALSE)
 
 #california_scrub_jay
 # optional: order contigs by size or name
@@ -228,8 +251,7 @@ manhattan_alt <- function(df, report, yvar, ylab, min_label_frac = 0.019) {
 }
 
 # === HOUSE FINCH (bHaeMex1.pri, GCF_027477595.1) ===
-hf <- read_tsv("/local/storage/kav67/clean_birds/Songbirds/House_Finch/bHaeMex1.pri/self_align_contigs/window_summary_deduplicated.tsv",
-               show_col_types = FALSE)
+hf <- read_tsv(HOUSEFINCH_WINDOWS, show_col_types = FALSE)
 hf_report <- read_assembly_report(
   file.path(report_dir, "GCF_027477595.1_bHaeMex1.pri_assembly_report.txt"))
 
@@ -250,16 +272,16 @@ igl_x <- local({
   (5522938 + 5545644) / 2 + off
 })   # 921,528,336 of an axis spanning 0-1,155,016,870
 
-p_counts +
+p_counts_igl <- p_counts +
   annotate("segment", x = igl_x, xend = igl_x, y = -Inf, yend = Inf,
            colour = "red", linewidth = 0.4, linetype = "dashed") +
   annotate("text", x = igl_x, y = Inf, label = "IGL", colour = "red",
            vjust = 1.4, hjust = -0.2, size = 4)
+p_counts_igl
 
-# ggsave("/home/kav67/Bird_IG/figures/manhattan_inversions_bHaeMex1.svg",
-#        p_counts, width = 11, height = 4)
-# ggsave("/home/kav67/Bird_IG/figures/manhattan_covered_fraction_bHaeMex1.svg",
-#        p_frac, width = 11, height = 4)
+save_fig("manhattan_inversions_bHaeMex1.svg",        p_counts,     width = 11, height = 4)
+save_fig("manhattan_covered_fraction_bHaeMex1.svg",  p_frac,       width = 11, height = 4)
+save_fig("manhattan_inversions_bHaeMex1_IGL.svg",    p_counts_igl, width = 11, height = 4)
 
 # === ZEBRA FINCH (bTaeGut7.mat, the data loaded at the top of the script) ===
 # zf_report <- read_assembly_report(
