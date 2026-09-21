@@ -494,17 +494,15 @@ p_igh_strand <- ggplot(strand_comparison_df,
 
 print(p_igh_strand)
 
-# ── save ──────────────────────────────────────────────────────────────────────
-# Figures are exported by hand for the manuscript; these are for unattended
-# reproduction, not final artwork.
-save_fig("RSS_oriented_strand.svg",
-         p_igh_oriented_strand / p_igl_oriented_strand, width = 8, height = 8)
-save_fig("RSS_oriented_count.svg",
-         p_igh_oriented_count / p_igl_oriented_count, width = 8, height = 8)
-save_fig("RSS_oriented_strand_count.svg",
-         p_igh_oriented_strand_count / p_igl_oriented_strand_count, width = 8, height = 8)
-save_fig("RSS_oriented_shared.svg",
-         p_igh_oriented_shared / p_igl_oriented_shared, width = 8, height = 8)
-save_fig("RSS_oriented_strand_shared.svg",
-         p_igh_oriented_strand_shared / p_igl_oriented_strand_shared, width = 8, height = 8)
-save_fig("RSS_igh_strand_vs_D.svg", p_igh_strand, width = 7, height = 5)
+# ── no figures are saved from this script ─────────────────────────────────────
+# The only RSS panel in the manuscript is the three-panel figure built by
+# rss_correlation.R (RSS_genes_and_position.svg). Everything here -- the oriented
+# positional distributions, their count and strand-split variants, and the
+# single-productive-RSS strand comparison against the D genes -- is kept because
+# it is the analysis behind that figure and is still useful to look at
+# interactively, but running the pipeline should not litter figures/ with panels
+# nobody uses.
+#
+# To export one, source this file in RStudio and use save_fig() by hand, e.g.
+#   save_fig("RSS_oriented_strand.svg",
+#            p_igh_oriented_strand / p_igl_oriented_strand, width = 8, height = 8)

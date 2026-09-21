@@ -10,7 +10,8 @@ exploratory.
 | `mindir_tree.R` | MinDir on the phylogeny | gene list (see below), tree, `IGH_VGP_table.tsv` |
 | `manhattan_plot.R` | Genome-wide inversion density | window summaries from `manhattan_plot_inversion_coverage/` |
 | `hairpin_identity.R` | Hairpin identity at inversion centres | `palindromes.tsv` |
-| `rss_position_oriented.R` | RSS positional distributions, biologically oriented | `gene_list.csv`, `IGH_VGP_table.tsv`, per-haplotype `IGHD.csv` |
+| `rss_correlation.R` | **The RSS manuscript figure**: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density, IGH above IGL | `gene_list.csv`, `IGH_VGP_table.tsv`, tree |
+| `rss_position_oriented.R` | RSS positional distributions, biologically oriented. **Saves nothing** — kept as the analysis behind the figure above, and because it is useful interactively | `gene_list.csv`, `IGH_VGP_table.tsv`, per-haplotype `IGHD.csv` |
 
 Plus the PatchWorkPlot dot plots, chiefly
 `{INPUT_DIR}/patchworkplot/plots_fig1c/` — built from `config_fig1c.csv`
