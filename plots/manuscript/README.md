@@ -31,8 +31,15 @@ Both live at the top of the file that uses them.
 - **`mindir_tree.R`'s `AGGREGATION`** — how per-contig MinDir values are combined
   when a locus spans several contigs. **Now set to `weighted`.**
 
-Output filenames carry both switches, e.g.
-`mindir_tree_current_weighted.svg`.
+**`current` + `weighted` is what the pipeline runs.** The other combinations stay
+available for comparison — switch, re-run, and the output filename records the
+choice — but they are not produced by a normal run.
+
+Output filenames carry both switches, e.g. `mindir_tree_current_weighted.svg`.
+
+Only the butterfly is saved. The two-panel IGH/IGL view (`p`) is still built and
+prints to the viewer, but writing it every run cluttered `figures/` with a panel
+that is not in the manuscript.
 
 ### Why `weighted`
 

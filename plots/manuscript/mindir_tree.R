@@ -24,6 +24,7 @@ library(tidyr)
 source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
 
 # ---- switch this line ----
+# "current" is the pipeline setting; "legacy" reproduces the older figure.
 GENE_LIST <- "current"       # "legacy" (manuscript) or "current"
 # --------------------------
 
@@ -64,6 +65,9 @@ main_strand_frac <- function(strands) {
 #   weighted   mean over contigs weighted by gene count
 #   pooled     pool every gene of a haplotype x locus, then take one fraction
 #   min_genes  drop contigs with fewer than MIN_GENES genes, then unweighted mean
+# "weighted" is the pipeline setting. The other three stay available for
+# comparison -- switch, re-run, and the output filename records the choice -- but
+# a normal pipeline run should always be weighted.
 AGGREGATION <- "weighted"  # "mean" | "weighted" | "pooled" | "min_genes"
 MIN_GENES   <- 5           # only used when AGGREGATION == "min_genes"
 
@@ -304,12 +308,15 @@ p2 <- mirror_axis_labels(p2)
 p2
 
 # ---- save -------------------------------------------------------------------
-# p2 is the butterfly and is the manuscript figure, so it takes the plain name.
-# p is the two-panel view, kept as a secondary check.
-# Filenames carry the gene-list switch so legacy/current stay distinguishable.
+# Only the butterfly (p2) is saved -- that is the manuscript figure. `p`, the
+# two-panel IGH/IGL view, is still built above and prints to the viewer, but the
+# pipeline should not write a figure nobody uses. Export it by hand if wanted:
+#   save_fig(sprintf("mindir_tree_panels%s.svg", .tag), p, width = 9, height = 12)
+#
+# The filename carries GENE_LIST and AGGREGATION so a figure made with a
+# non-default combination can never be mistaken for the pipeline's own.
 .tag <- sprintf("_%s_%s", GENE_LIST, AGGREGATION)
-save_fig(sprintf("mindir_tree%s.svg", .tag),        p2, width = 9, height = 12)
-save_fig(sprintf("mindir_tree_panels%s.svg", .tag), p,  width = 9, height = 12)
+save_fig(sprintf("mindir_tree%s.svg", .tag), p2, width = 9, height = 12)
 
 cat(sprintf("[mindir] species on tree: %d | gene list: %s | dataset: %s\n",
             length(tree_pruned$tip.label), GENE_LIST, DATASET))
