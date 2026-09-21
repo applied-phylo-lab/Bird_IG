@@ -40,15 +40,25 @@ fig_path <- function(name) file.path(FIG_DIR, name)
 
 # svglite handles UTF-8 (beta, lambda in the phylolm annotations); the default
 # svg device silently drops them with a "conversion failure in mbcsToSbcs" warning.
-save_fig <- function(name, plot, width = 10, height = 7) {
+# Standard canvas for the non-tree manuscript figures: 1472 x 472 px at 96 dpi,
+# which is the size the hand-exported versions in figures/ already use
+# (1103 x 354 pt = 1472 x 472 px). Tree figures are tall and set their own.
+FIG_WIDTH_PX  <- 1472
+FIG_HEIGHT_PX <- 472
+FIG_DPI       <- 96
+
+save_fig <- function(name, plot,
+                     width = FIG_WIDTH_PX, height = FIG_HEIGHT_PX,
+                     units = "px", dpi = FIG_DPI) {
   path <- fig_path(name)
   if (grepl("\\.svg$", name) && requireNamespace("svglite", quietly = TRUE)) {
     ggplot2::ggsave(path, plot, device = svglite::svglite,
-                    width = width, height = height)
+                    width = width, height = height, units = units, dpi = dpi)
   } else {
-    ggplot2::ggsave(path, plot, width = width, height = height)
+    ggplot2::ggsave(path, plot,
+                    width = width, height = height, units = units, dpi = dpi)
   }
-  message("[figure] wrote ", path)
+  message(sprintf("[figure] wrote %s (%gx%g %s)", path, width, height, units))
   invisible(path)
 }
 

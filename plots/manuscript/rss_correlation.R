@@ -940,20 +940,9 @@ print(p_igl_prod_rss_pos_unfolded)
 print(p_igh_prod_rss_pos_unfolded)
 
 
-# ── Manuscript figure ─────────────────────────────────────────────────────────
-# Assembled here, as soon as its three panels exist, rather than at the end of the
-# file: everything below is exploratory and one section needs `bird_only` from
-# plots/manuscript/mindir_tree.R, so a straight run used to die before ever
-# reaching the save.
-#
-# Left: genes with RSS against total genes, per locus, with the phylolm fit.
-# Right: positional density of single- vs multiple-productive-RSS V genes,
-#        IGH above IGL.
-figure_rss <- p_combined_simple +
-  (p_igh_prod_rss_pos_unfolded / p_igl_prod_rss_pos_unfolded)
-figure_rss
-
-save_fig("RSS_genes_and_position.svg", figure_rss, width = 13, height = 6)
+# NOTE: this script saves no figure. It builds p_combined_simple, which is the
+# left-hand panel of the RSS manuscript figure; that figure is assembled and saved
+# by plots/manuscript/rss_position_oriented.R, which sources this file.
 
 
 # Unfolded + percentage y-axis
@@ -1186,7 +1175,8 @@ print(p_terminal_gaps)
 # this only assembles when that script has been sourced first. The RSS figure
 # itself is saved further up and does not depend on it.
 if (exists("contig_length_p") && exists("mind_dir_p")) {
-  final_figure <- (contig_length_p + mind_dir_p) / figure_rss
+  final_figure <- (contig_length_p + mind_dir_p) /
+    (p_combined_simple + (p_igh_prod_rss_pos_unfolded / p_igl_prod_rss_pos_unfolded))
   print(final_figure)
   print(contig_length_p + mind_dir_p)
 } else {

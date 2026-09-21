@@ -233,9 +233,9 @@ figure_1ab
 figure_1ab_hist
 figure_contig
 
-save_fig("Figure1AB.svg",         figure_1ab,      width = 11, height = 4.5)
-save_fig("Figure1AB_hist.svg",    figure_1ab_hist, width = 11, height = 4.5)
-save_fig("Figure1_contig_len.svg", figure_contig,  width = 11, height = 4.5)
+save_fig("Figure1AB.svg",          figure_1ab)
+save_fig("Figure1AB_hist.svg",     figure_1ab_hist)
+save_fig("Figure1_contig_len.svg",  figure_contig)
 
 cat(sprintf("IGH contig length, birds:      %.0f bp\n",
             mean(igh_contig_all[igh_contig_all$bird == TRUE, ]$ContigLength)))

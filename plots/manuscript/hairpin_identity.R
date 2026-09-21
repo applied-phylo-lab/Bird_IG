@@ -82,5 +82,5 @@ p_hairpin <- ggplot(df_long, aes(x = Region, y = Identity, fill = Region)) +
 p_hairpin_all
 p_hairpin
 
-save_fig("hairpin_all_windows.svg", p_hairpin_all, width = 9, height = 5)
-save_fig("hairpin.svg",             p_hairpin,     width = 7, height = 5)
+save_fig("hairpin_all_windows.svg", p_hairpin_all)
+save_fig("hairpin.svg",             p_hairpin)

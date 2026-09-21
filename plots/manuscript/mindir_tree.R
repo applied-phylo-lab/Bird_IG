@@ -316,7 +316,9 @@ p2
 # The filename carries GENE_LIST and AGGREGATION so a figure made with a
 # non-default combination can never be mistaken for the pipeline's own.
 .tag <- sprintf("_%s_%s", GENE_LIST, AGGREGATION)
-save_fig(sprintf("mindir_tree%s.svg", .tag), p2, width = 9, height = 12)
+# Tree figure: tall, so it keeps its own canvas rather than the 1472x472 default.
+save_fig(sprintf("mindir_tree%s.svg", .tag), p2,
+         width = 9, height = 12, units = "in", dpi = FIG_DPI)
 
 cat(sprintf("[mindir] species on tree: %d | gene list: %s | dataset: %s\n",
             length(tree_pruned$tip.label), GENE_LIST, DATASET))

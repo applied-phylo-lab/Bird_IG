@@ -7,6 +7,17 @@ suppressPackageStartupMessages({
 
 source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
 
+# p_combined_simple -- "Genes with RSS" vs total genes, per locus, with the phylolm
+# fit -- is the left panel of the manuscript figure and is built by
+# rss_correlation.R. Sourced here so this script produces the figure on its own.
+# Set RSS_SOURCE_CORRELATION <- FALSE to skip it when that script has already been
+# run in the session (it takes a few minutes).
+if (!exists("RSS_SOURCE_CORRELATION")) RSS_SOURCE_CORRELATION <- TRUE
+if (RSS_SOURCE_CORRELATION && !exists("p_combined_simple")) {
+  message("[rss] sourcing rss_correlation.R for p_combined_simple ...")
+  source(file.path("/home/kav67/Bird_IG", "plots", "manuscript", "rss_correlation.R"))
+}
+
 # ── INPUTS ────────────────────────────────────────────────────────────────────
 # input_dir is kept as a local alias -- it is used throughout the script and in
 # file.path() calls that expect the trailing slash form.
@@ -494,7 +505,24 @@ p_igh_strand <- ggplot(strand_comparison_df,
 
 print(p_igh_strand)
 
-# ── no figures are saved from this script ─────────────────────────────────────
+# ── manuscript figure ─────────────────────────────────────────────────────────
+# Exactly the composite from the original script:
+#     p_combined_simple + (p_igh_oriented / p_igl_oriented)
+# Left: genes with RSS vs total genes per locus, with the phylolm fit.
+# Right: oriented relative position of RSS-bearing V genes, IGH above IGL --
+#        "oriented" meaning 100% points toward the J genes, which is why this axis
+#        differs from the plain relative position used elsewhere.
+if (exists("p_combined_simple")) {
+  figure_rss_oriented <- p_combined_simple + (p_igh_oriented / p_igl_oriented)
+  figure_rss_oriented
+  save_fig("IGH_IGL_RSS_pos_oriented.svg", figure_rss_oriented)
+} else {
+  message("[rss] cannot build the manuscript figure: p_combined_simple missing ",
+          "(source plots/manuscript/rss_correlation.R first)")
+}
+
+
+# ── no other figures are saved from this script ───────────────────────────────
 # The only RSS panel in the manuscript is the three-panel figure built by
 # rss_correlation.R (RSS_genes_and_position.svg). Everything here -- the oriented
 # positional distributions, their count and strand-split variants, and the

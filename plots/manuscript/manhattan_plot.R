@@ -279,9 +279,9 @@ p_counts_igl <- p_counts +
            vjust = 1.4, hjust = -0.2, size = 4)
 p_counts_igl
 
-save_fig("manhattan_inversions_bHaeMex1.svg",        p_counts,     width = 11, height = 4)
-save_fig("manhattan_covered_fraction_bHaeMex1.svg",  p_frac,       width = 11, height = 4)
-save_fig("manhattan_inversions_bHaeMex1_IGL.svg",    p_counts_igl, width = 11, height = 4)
+save_fig("manhattan_inversions_bHaeMex1.svg",       p_counts)
+save_fig("manhattan_covered_fraction_bHaeMex1.svg", p_frac)
+save_fig("manhattan_inversions_bHaeMex1_IGL.svg",   p_counts_igl)
 
 # === ZEBRA FINCH (bTaeGut7.mat, the data loaded at the top of the script) ===
 # zf_report <- read_assembly_report(

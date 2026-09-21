@@ -153,7 +153,7 @@ message(sprintf("[figure_1c] phylolm on %d species (%s)", nrow(trait), DATASET))
 figure_1c <- ((p_locus | p_strand) / (p_inv_len | p_frac_inv)) | p_phylo
 figure_1c
 
-save_fig("Figure1C.svg", figure_1c, width = 14, height = 7)
+save_fig("Figure1C.svg", figure_1c)
 
 cat(sprintf("mean fraction of genes in inversions: %.3f\n",
             mean(annotation_iroki$fraction_inversions, na.rm = TRUE)))
