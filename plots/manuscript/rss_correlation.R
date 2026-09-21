@@ -30,15 +30,35 @@ source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
 input_dir <- paste0(INPUT_DIR, "/")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-# Was gene_list-igl_h2_n6.csv, a variant that no longer exists -- the script could
-# not run at all. gene_list.csv is the current annotation and is what
-# rss_position_oriented.R uses, so the two RSS figures now share an input.
-gene_list_path <- file.path(input_dir, "gene_list.csv")
+# The script originally read gene_list-igl_h2_n6.csv, which no longer exists. The
+# "igl_hN_nM" suffix records the IGL RSS calling thresholds (heptamer <= N,
+# nonamer <= M mismatches), and that choice dominates this figure:
+#
+#   gene_list-igl_h3_n7.csv   IGH 2303/41861 (5.50%)   IGL 4713/14602 (32.3%)
+#   gene_list.csv             IGH 2341/42431 (5.52%)   IGL 2078/14870 (14.0%)
+#
+# IGH is unaffected; IGL RSS detection differs 2.3-fold. gene_list.csv also carries
+# 25,150 TRA/TRB/TRG/TRD rows, which have no place in an IG figure.
+#
+# h3_n7 is the surviving member of the same family as the original h2_n6, so it is
+# the default. gene_list.csv is selectable for comparison.
+GENE_LIST <- "igl_h3_n7"     # "igl_h3_n7" (relaxed IGL RSS calling) or "default"
+
+gene_list_path <- file.path(input_dir, switch(GENE_LIST,
+  igl_h3_n7 = "gene_list-igl_h3_n7.csv",
+  default   = "gene_list.csv",
+  stop("GENE_LIST must be 'igl_h3_n7' or 'default', got: ", GENE_LIST)))
 if (!file.exists(gene_list_path)) stop("gene list not found: ", gene_list_path)
+message(sprintf("[rss] gene list: %s", basename(gene_list_path)))
 
 df <- read.csv(gene_list_path, stringsAsFactors = FALSE, check.names = FALSE)
 
 df <- df %>%
+  # This is an immunoglobulin figure. gene_list.csv also carries TRA/TRB/TRG/TRD
+  # from the shared upstream pipeline, and nothing downstream filters them out --
+  # counts, the per-locus fits and the combined plot all key off
+  # unique(counts$Locus), so they silently became six loci instead of two.
+  filter(Locus %in% c("IGH", "IGL")) %>%
   separate(Source, into = c("Order", "Species", "Haplotype"),
            sep = "/", remove = FALSE) %>%
   mutate(has_rss = !is.na(Heptamer) & trimws(Heptamer) != "")

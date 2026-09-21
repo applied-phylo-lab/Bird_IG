@@ -10,7 +10,7 @@ exploratory.
 | `mindir_tree.R` | MinDir on the phylogeny | gene list (see below), tree, `IGH_VGP_table.tsv` |
 | `manhattan_plot.R` | Genome-wide inversion density | window summaries from `manhattan_plot_inversion_coverage/` |
 | `hairpin_identity.R` | Hairpin identity at inversion centres | `palindromes.tsv` |
-| `rss_correlation.R` | **The RSS manuscript figure**: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density, IGH above IGL | `gene_list.csv`, `IGH_VGP_table.tsv`, tree |
+| `rss_correlation.R` | **The RSS manuscript figure**: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density, IGH above IGL | `gene_list-igl_h3_n7.csv` (see below), `IGH_VGP_table.tsv`, tree |
 | `rss_position_oriented.R` | RSS positional distributions, biologically oriented. **Saves nothing** — kept as the analysis behind the figure above, and because it is useful interactively | `gene_list.csv`, `IGH_VGP_table.tsv`, per-haplotype `IGHD.csv` |
 
 Plus the PatchWorkPlot dot plots, chiefly
@@ -87,3 +87,27 @@ that output as a correctness check, not as final artwork.
 which is built by `plots/manuscript/rss_correlation.R`. Those two panels are skipped with a
 message unless that script has been sourced first; the manuscript figure itself
 does not need it. **This is why `RSS/` cannot simply be archived.**
+
+## Which gene list the RSS figure uses
+
+`rss_correlation.R` originally read `gene_list-igl_h2_n6.csv`, which no longer
+exists. The `igl_hN_nM` suffix records the **IGL RSS calling thresholds**
+(heptamer <= N, nonamer <= M mismatches), and that choice dominates the figure:
+
+| gene list | IGH with RSS | IGL with RSS |
+|---|---|---|
+| `gene_list-igl_h3_n7.csv` | 2303 / 41861 (5.50%) | **4713 / 14602 (32.3%)** |
+| `gene_list.csv` | 2341 / 42431 (5.52%) | **2078 / 14870 (14.0%)** |
+
+IGH is unaffected; IGL RSS detection differs 2.3-fold. `h3_n7` is the surviving
+member of the same family as the original `h2_n6`, so it is the default;
+`GENE_LIST <- "default"` switches to `gene_list.csv` for comparison.
+
+`gene_list.csv` additionally carries 25,150 TRA/TRB/TRG/TRD rows. Nothing
+downstream in this script filtered them -- `counts`, the per-locus fits and the
+combined plot all key off `unique(counts$Locus)` -- so they silently became six
+loci instead of two. The script now filters to IGH/IGL on load.
+
+Note `rss_position_oriented.R` still reads `gene_list.csv`. It filters to IGH/IGL
+explicitly at every use, so it never had the TCR problem, but its IGL RSS calls
+come from the stricter thresholds and so will not match this figure.
