@@ -313,6 +313,10 @@ figure_igl_hist
 figure_igh_igl_contig_sd
 
 save_fig("Figure1AB.svg",             figure_1ab)
+# Narrower cut of the same figure. figures/manuscript_Sept/Figure1AB_resized.svg
+# is 735 x 354 pt, i.e. 980 x 472 px at 96 dpi -- same height as the standard
+# canvas, two thirds the width.
+save_fig("Figure1AB_resized.svg",     figure_1ab, width = 980)
 save_fig("Figure1AB_hist.svg",        figure_1ab_hist)
 save_fig("Figure1_contig_len.svg",    figure_contig)
 save_fig("IGL_histograms.svg",         figure_igl_hist)
