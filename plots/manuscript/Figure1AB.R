@@ -16,6 +16,25 @@ library(patchwork)
 
 source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
 
+# Locus colours, matching rss_position_oriented.R and mind_dir_p below.
+IGH_BLUE  <- "#87b4dc"
+IGL_GREEN <- "#638E6E"
+OTHER_GREY <- "grey"
+
+# Legend key for the bird/non-bird fill. "Birds" is drawn as a square split on the
+# diagonal -- green for IGL, blue for IGH -- so one key says that both coloured
+# panels are birds; everything else keeps a plain grey square.
+draw_key_bird <- function(data, params, size) {
+  fill <- as.character(data$fill)[1]
+  if (is.na(fill) || tolower(fill) %in% c("grey", "gray", "#bebebe")) {
+    return(grid::rectGrob(gp = grid::gpar(fill = fill, col = NA)))
+  }
+  grid::grobTree(
+    grid::polygonGrob(c(0, 0, 1), c(0, 1, 1), gp = grid::gpar(fill = IGL_GREEN, col = NA)),
+    grid::polygonGrob(c(0, 1, 1), c(0, 0, 1), gp = grid::gpar(fill = IGH_BLUE,  col = NA))
+  )
+}
+
 all_species_data <- fread(file.path(INPUT_DIR, "all_species_stats_pruned_12052025.csv"))
 all_species_data$bird<-FALSE
 all_species_data[all_species_data$VertClass=="birds",]$bird<-TRUE
@@ -241,14 +260,65 @@ figure_contig
 figure_igl_hist          <- IGL_length + IGL_strand
 figure_igh_igl_contig_sd <- contig_length_p + mind_dir_p
 
+# ---- IGL in its own colour ---------------------------------------------------
+# Rebuilt rather than patched. Adding a scale to a finished plot only triggers
+# "Scale for fill is already present", and key_glyph cannot be set on an existing
+# layer -- adding a second geom_histogram to change it silently double-plots.
+
+bird_fill <- function(colour, key = NULL) {
+  list(
+    scale_fill_manual(values = c("TRUE" = colour, "FALSE" = OTHER_GREY),
+                      labels = c("TRUE" = "Birds", "FALSE" = "Mammals and Reptiles"),
+                      name = NULL),
+    theme_classic(),
+    theme(axis.title = element_text(size = 14),
+          axis.text  = element_text(size = 10),
+          legend.text = element_text(size = 10))
+  )
+}
+
+IGL_length_green <- ggplot(all_species_data, aes(x = IGL_TotalLength / 1e6, fill = bird)) +
+  geom_histogram(bins = 40, alpha = 0.8, position = "identity") +
+  bird_fill(IGL_GREEN) + scale_x_log10() +
+  labs(x = "Locus length (Mbp, log scale)", y = "Count") +
+  theme(legend.position = "none")
+
+IGL_strand_green <- ggplot(all_species_data, aes(x = IGL_MinDir, fill = bird)) +
+  geom_histogram(position = "identity", alpha = 0.8, bins = 40) +
+  bird_fill(IGL_GREEN) +
+  labs(x = "Fraction of genes located on the same strand", y = "Count")
+
+figure_igl_hist_green <- IGL_length_green + IGL_strand_green
+
+# Contig length: IGH in blue, IGL in green. Only the IGL panel carries the legend,
+# and its "Birds" key is the split green/blue square, saying that both coloured
+# panels are birds while everything else is grey.
+igh_contig_blue <- ggplot(igh_contig_all, aes(x = ContigLength, fill = bird)) +
+  geom_histogram(bins = 40, alpha = 0.8, position = "identity") +
+  scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  bird_fill(IGH_BLUE) +
+  labs(x = "IGH Contig Length (bp, log scale)", y = "Count") +
+  theme(legend.position = "none")
+
+igl_contig_green <- ggplot(igl_contig_all, aes(x = ContigLength, fill = bird)) +
+  geom_histogram(bins = 40, alpha = 0.8, position = "identity",
+                 key_glyph = draw_key_bird) +
+  scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  bird_fill(IGL_GREEN) +
+  labs(x = "IGL Contig Length (bp, log scale)", y = "Count")
+
+figure_contig_green <- igh_contig_blue | igl_contig_green
+
 figure_igl_hist
 figure_igh_igl_contig_sd
 
 save_fig("Figure1AB.svg",             figure_1ab)
 save_fig("Figure1AB_hist.svg",        figure_1ab_hist)
 save_fig("Figure1_contig_len.svg",    figure_contig)
-save_fig("IGL_histograms.svg",        figure_igl_hist)
-save_fig("IGH_IGL_contig_strand.svg", figure_igh_igl_contig_sd)
+save_fig("IGL_histograms.svg",         figure_igl_hist)
+save_fig("IGH_IGL_contig_strand.svg",  figure_igh_igl_contig_sd)
+save_fig("IGL_histograms_green.svg",   figure_igl_hist_green)
+save_fig("Figure1_contig_len_green.svg", figure_contig_green)
 
 cat(sprintf("IGH contig length, birds:      %.0f bp\n",
             mean(igh_contig_all[igh_contig_all$bird == TRUE, ]$ContigLength)))
