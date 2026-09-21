@@ -44,7 +44,7 @@ rule dotplot_config:
     output:
         "{input_dir}/{order}/patchworkplot/config_strand_{locus}.csv",
     params:
-        script=f"{REPO_DIR}/make_config_strand.py",
+        script=f"{REPO_DIR}/dotplots/make_config_strand.py",
         outdir=lambda wc, output: os.path.dirname(output[0]),
     log:
         "{input_dir}/{order}/patchworkplot/logs/config_{locus}.log",

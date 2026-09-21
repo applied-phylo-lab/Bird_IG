@@ -20,7 +20,7 @@ rule summarize_inversions:
         stats=f"{INPUT_DIR}/inversion_stats.tsv",
         details=f"{INPUT_DIR}/inversion_details.tsv",
     params:
-        script=f"{REPO_DIR}/summarize_inversions.py",
+        script=f"{REPO_DIR}/inversions/summarize_inversions.py",
         min_len=MIN_INV_LEN,
     threads: 8
     log:
@@ -54,7 +54,7 @@ rule d_genes_on_inversions:
     output:
         f"{INPUT_DIR}/D_inversions.tsv",
     params:
-        script=f"{REPO_DIR}/d_genes_on_inversions.py",
+        script=f"{REPO_DIR}/inversions/d_genes_on_inversions.py",
         min_len=MIN_INV_LEN,
     threads: 8
     log:
@@ -80,7 +80,7 @@ rule hairpin:
     output:
         f"{INPUT_DIR}/palindromes.tsv",
     params:
-        script=f"{REPO_DIR}/hairpin.py",
+        script=f"{REPO_DIR}/inversions/hairpin.py",
         lastz=config["lastz"],
         seed=config["hairpin_seed"],
     threads: 8

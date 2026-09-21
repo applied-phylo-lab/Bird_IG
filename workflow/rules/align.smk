@@ -43,7 +43,7 @@ rule self_align_bed:
         bed="{input_dir}/{order}/{species}/{hap}/{contig}_{locus}.bed",
         strand_bed="{input_dir}/{order}/{species}/{hap}/{contig}_{locus}_strand.bed",
     params:
-        script=f"{REPO_DIR}/self_alignment_bed.py",
+        script=f"{REPO_DIR}/alignment/self_alignment_bed.py",
         lastz=config["lastz"],
     log:
         "{input_dir}/{order}/{species}/{hap}/logs/{contig}_{locus}_self_align.log",
