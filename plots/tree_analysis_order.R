@@ -1,3 +1,9 @@
+library(data.table)
+library(ggplot2)
+library(ape)
+library(ggtree)
+library(ggtreeExtra)
+
 order<-"Waterfowl"
 gene_tree<-read.tree(paste0("/local/storage/kav67/Bird_data/",order,"/genes_aligned.treefile"))
 annotation<-fread(paste0("/local/storage/kav67/Bird_data/",order,"/genes_annotation.tsv"))

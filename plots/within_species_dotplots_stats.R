@@ -8,7 +8,7 @@ library(patchwork)
 # -----------------------------
 tsv <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversion_presence.tsv"
 tsv<-"/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversions_new_ref.tsv"
-#outdir <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversion_plots"
+outdir <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/inversion_plots"
 dir.create(outdir, showWarnings = FALSE)
 
 # -----------------------------

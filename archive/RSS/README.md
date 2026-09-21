@@ -11,7 +11,9 @@ that nothing in the current pipeline or in any manuscript figure reads.
 | `run_RSS_IgD_all.py` | Batch driver running the RSS search across every haplotype for IGH D genes. |
 | `plot_meme_output.R` | Plotted a MEME motif result. |
 
-`RSS/rss_correlation.R` is **not** here: it is still needed. It builds
-`p_combined_simple`, which `plots/manuscript/rss_position_oriented.R` uses for two
-composite panels. That script writes no files of its own — it is analysis and
-plotting only.
+`rss_correlation.R` is **not** here: it turned out to hold a manuscript figure
+(genes with RSS vs total genes, beside the single- vs multiple-productive-RSS
+positional densities), so it moved to `plots/manuscript/rss_correlation.R`. It
+also supplies `p_combined_simple` to `rss_position_oriented.R`.
+
+With it gone, the old `RSS/` folder is empty and has been removed.

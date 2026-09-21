@@ -1,6 +1,19 @@
 #!/usr/bin/env Rscript
-# Correlation between total genes and genes with RSS, one plot per locus.
-# Uses phylolm (lambda model) to account for phylogenetic signal.
+# Manuscript figure: genes with RSS vs total genes (phylolm per locus) beside the
+# positional density of single- vs multiple-productive-RSS V genes, for IGH and IGL.
+#
+#   figure_rss <- p_combined_simple + (p_igh_prod_rss_pos_unfolded /
+#                                      p_igl_prod_rss_pos_unfolded)
+#
+# The script also carries a lot of exploratory RSS analysis that is not in the
+# manuscript; the figure above is assembled and saved at the very bottom.
+#
+# It additionally supplies p_combined_simple to
+# plots/manuscript/rss_position_oriented.R, which draws two composite panels with
+# it when this script has been sourced first.
+#
+# Figures are exported by hand for the manuscript -- save_fig is for unattended
+# reproduction, not final artwork.
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -9,13 +22,19 @@ suppressPackageStartupMessages({
   library(ape)
   library(phylolm)
   library(ggrepel)
+  library(patchwork)
 })
 
-input_dir <- "/local/storage/kav67/clean_birds/"
+source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
+
+input_dir <- paste0(INPUT_DIR, "/")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-gene_list_path <- file.path(input_dir, "gene_list-igl_h2_n6.csv")
-if (!file.exists(gene_list_path)) stop("gene_list.csv not found: ", gene_list_path)
+# Was gene_list-igl_h2_n6.csv, a variant that no longer exists -- the script could
+# not run at all. gene_list.csv is the current annotation and is what
+# rss_position_oriented.R uses, so the two RSS figures now share an input.
+gene_list_path <- file.path(input_dir, "gene_list.csv")
+if (!file.exists(gene_list_path)) stop("gene list not found: ", gene_list_path)
 
 df <- read.csv(gene_list_path, stringsAsFactors = FALSE, check.names = FALSE)
 
@@ -25,7 +44,7 @@ df <- df %>%
   mutate(has_rss = !is.na(Heptamer) & trimws(Heptamer) != "")
 
 # Add LatinName by joining with IGH_VGP_table.tsv (Species + Haplotype → LatinName)
-vgp_table <- read.delim(file.path(input_dir, "IGH_VGP_table.tsv"),
+vgp_table <- read.delim(VGP_TABLE,
                          stringsAsFactors = FALSE, check.names = FALSE)
 df <- df %>%
   left_join(vgp_table %>% select(Species, LatinName) %>% distinct(),
@@ -33,7 +52,7 @@ df <- df %>%
 
 # ── Load and process tree ─────────────────────────────────────────────────────
 
-bird_tree <- read.tree(file.path(input_dir, "vgp_birds.nwk"))
+bird_tree <- read.tree(TREE_FILE)
 
 # Extract plain species names from tip labels (same logic as phylolm_tree.R)
 tree_species <- gsub('.*"', '', bird_tree$tip.label)
@@ -1118,3 +1137,14 @@ final_figure<-(contig_length_p+mind_dir_p)/(p_combined_simple+(p_igh_prod_rss_po
 final_figure
 (contig_length_p+mind_dir_p)
 (p_combined_simple+(p_igh_prod_rss_pos_unfolded/p_igl_prod_rss_pos_unfolded))
+
+
+# ── Manuscript figure ─────────────────────────────────────────────────────────
+# Left: genes with RSS against total genes, per locus, with the phylolm fit.
+# Right: positional density of single- vs multiple-productive-RSS V genes,
+#        IGH above IGL.
+figure_rss <- p_combined_simple +
+  (p_igh_prod_rss_pos_unfolded / p_igl_prod_rss_pos_unfolded)
+figure_rss
+
+save_fig("RSS_genes_and_position.svg", figure_rss, width = 13, height = 6)

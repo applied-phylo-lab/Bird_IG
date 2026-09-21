@@ -1,3 +1,8 @@
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(forcats)
+
 rss <- read_tsv("/local/storage/kav67/clean_birds/RSS_stats.tsv", show_col_types = FALSE)
 
 rss <- rss %>%

@@ -407,7 +407,7 @@ Recombination signal sequence (RSS) analysis.
 
 | Script | What it does |
 |--------|-------------|
-| `RSS/rss_correlation.R` | Main RSS analysis: correlates RSS gene counts with total gene counts (phylolm), plots RSS positional distributions and strand biases (RStudio) |
+| `plots/manuscript/rss_correlation.R` | Manuscript figure: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density for IGH and IGL. Also supplies `p_combined_simple` to `rss_position_oriented.R` |
 | `RSS/rss_position_oriented.R` | Re-plots RSS positional distributions with biologically informed orientation: IGH is oriented so that 100% = toward D genes (using `IGHD.csv`); IGL is oriented so that 100% = toward J genes (using majority strand of V genes). Also plots single-productive-RSS V gene strand relative to D gene strand (RStudio) |
 
 ---

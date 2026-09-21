@@ -1,5 +1,12 @@
+library(dplyr)
+library(readr)
+
 tsv <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/housefinch_inversions_by_State.tsv"
 #tsv <- "/local/storage/kav67/within_species/Songbirds/inversion_analysis/housefinch_inversions_by_SubGroup.tsv"
+
+# plot_inversion_dotplot() is defined in within_species_inversions/dotplots.R;
+# this script relied on that file having been sourced first in the session.
+source("/home/kav67/Bird_IG/within_species_inversions/dotplots.R")
 
 df <- read_tsv(tsv, show_col_types = FALSE)
 colnames(df)[1]<-"Species"
@@ -10,7 +17,9 @@ support_df <- df %>%
     n_haplotypes = n(),
     n_support = sum(Present),
     support_frac = n_support / n_haplotypes,
-    inv_len = RefEnd - RefStart,
+    # RefStart/RefEnd are grouping keys, so inside summarise() they are the
+    # group's whole vector, not a scalar; newer dplyr rejects a non-size-1 result.
+    inv_len = first(RefEnd) - first(RefStart),
     .groups = "drop"
   )
 support_df<-unique(support_df)

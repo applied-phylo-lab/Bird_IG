@@ -303,12 +303,12 @@ make_oriented_plot <- function(data, locus, x_label = TRUE, stat = "density", y_
 p_igh_oriented <- make_oriented_plot(df_igh, "IGH", x_label = FALSE)
 p_igl_oriented <- make_oriented_plot(df_igl, "IGL", x_label = TRUE)
 
-# p_combined_simple is built by RSS/rss_correlation.R, not here. These two
+# p_combined_simple is built by plots/manuscript/rss_correlation.R, not here. These two
 # composite panels are convenience views, not the manuscript figure itself, so
 # they are drawn only when that script has already been sourced in this session.
 if (exists("p_combined_simple")) {
   print(p_combined_simple + (p_igh_oriented / p_igl_oriented))
-} else message("[rss] skipping combined panel: source RSS/rss_correlation.R first")
+} else message("[rss] skipping combined panel: source plots/manuscript/rss_correlation.R first")
 # ── Strand-split versions: + strand up, - strand down ────────────────────────
 # Density for genes on the + strand is plotted above the axis;
 # density for genes on the - strand is plotted below.
@@ -422,7 +422,7 @@ p_igl_oriented_shared <- make_oriented_plot(df_igl, "IGL", x_label = TRUE,  y_li
 print(p_igh_oriented_shared / p_igl_oriented_shared)
 if (exists("p_combined_simple")) {
   print(p_combined_simple + (p_igh_oriented_shared / p_igl_oriented_shared))
-} else message("[rss] skipping combined shared panel: source RSS/rss_correlation.R first")
+} else message("[rss] skipping combined shared panel: source plots/manuscript/rss_correlation.R first")
 
 # Strand-split density, shared symmetric scale
 ylim_strand_dens  <- c(-20,20)

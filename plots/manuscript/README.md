@@ -76,6 +76,6 @@ that output as a correctness check, not as final artwork.
 ## Cross-script dependency still outstanding
 
 `rss_position_oriented.R` draws two composite panels using `p_combined_simple`,
-which is built by `RSS/rss_correlation.R`. Those two panels are skipped with a
+which is built by `plots/manuscript/rss_correlation.R`. Those two panels are skipped with a
 message unless that script has been sourced first; the manuscript figure itself
 does not need it. **This is why `RSS/` cannot simply be archived.**

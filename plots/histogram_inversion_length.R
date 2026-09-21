@@ -1,3 +1,6 @@
+library(data.table)
+library(purrr)
+
 library(ggplot2)
 library(dplyr)
 library(gridExtra)  # for arranging plots
