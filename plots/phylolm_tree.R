@@ -82,7 +82,13 @@ NumV_values <- setNames(trait_df$NumV, tree_plot$tip.label)
 inv_values  <- setNames(trait_df$num_inversions, tree_plot$tip.label)
 
 # Clean species names for labels
-species_labels <- gsub("_", " ", trait_df$Species)
+# trait_df is built by summarise() and keeps only LatinName, NumV and
+# num_inversions -- the `Species = first(Species)` line that would have carried a
+# Species column is commented out just above. Using trait_df$Species here gave
+# character(0) and text() then failed on the length mismatch; this was masked
+# until phytools was installed, because the script died at library(phytools)
+# first.
+species_labels <- gsub("_", " ", trait_df$LatinName)
 
 # Layout
 layout(matrix(1:3,1,3), widths=c(0.4,0.2,0.4))

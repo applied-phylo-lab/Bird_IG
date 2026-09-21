@@ -46,7 +46,7 @@ Raw assemblies: `/local/storage/dhardesty/assemblies/`.
 ## Conda environments
 
 - `snakemake` — Python scripts
-- `bird_ig` — R scripts (has `phylolm`, `ape`, `ggtree`)
+- `bird_ig` — R scripts (has `phylolm`, `ape`, `ggtree`, `phytools`, `svglite`)
 
 Activate explicitly before running anything; the base env has neither.
 
