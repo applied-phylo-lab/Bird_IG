@@ -24,7 +24,7 @@ library(tidyr)
 source(file.path("/home/kav67/Bird_IG", "plots", "_dataset.R"))
 
 # ---- switch this line ----
-GENE_LIST <- "current"        # "legacy" (manuscript) or "current"
+GENE_LIST <- "current"       # "legacy" (manuscript) or "current"
 # --------------------------
 
 GENE_LIST_FILE <- switch(GENE_LIST,
@@ -64,8 +64,11 @@ main_strand_frac <- function(strands) {
 #   weighted   mean over contigs weighted by gene count
 #   pooled     pool every gene of a haplotype x locus, then take one fraction
 #   min_genes  drop contigs with fewer than MIN_GENES genes, then unweighted mean
-AGGREGATION <- "min_genes"      # "mean" | "weighted" | "pooled" | "min_genes"
+AGGREGATION <- "weighted"  # "mean" | "weighted" | "pooled" | "min_genes"
 MIN_GENES   <- 5           # only used when AGGREGATION == "min_genes"
+
+# Size of the numeric tick labels under the bar panels.
+AXIS_TEXT_SIZE <- 3.2
 
 per_contig <- gene_list %>%
   group_by(GrpOrder, Species, Haplotype, Locus, Contig) %>%
@@ -178,7 +181,7 @@ p <- p + geom_fruit(
   orientation = "y",
   offset  = 0.15,
   pwidth  = 0.25,
-  axis.params = list(axis = "x", text.size = 2, title = "IGH MinDir",
+  axis.params = list(axis = "x", text.size = AXIS_TEXT_SIZE, title = "IGH MinDir",
                      title.size = 3, title.height = 0.02)
 ) +
   scale_fill_viridis_c(name = "IGH\nMinDir", option = "D", na.value = "grey90",
@@ -196,7 +199,7 @@ p <- p + geom_fruit(
   orientation = "y",
   offset  = 0.05,
   pwidth  = 0.25,
-  axis.params = list(axis = "x", text.size = 2, title = "IGL MinDir",
+  axis.params = list(axis = "x", text.size = AXIS_TEXT_SIZE, title = "IGL MinDir",
                      title.size = 3, title.height = 0.02)
 ) +
   scale_fill_viridis_c(name = "IGL\nMinDir", option = "D", na.value = "grey90",
@@ -258,7 +261,7 @@ p2 <- p2 + geom_fruit(
   # are fixed up afterwards by mirror_axis_labels(); axis.params$text only takes
   # effect when there is a single break (see ggtreeExtra:::build_axis), so it
   # cannot relabel a mirrored axis.
-  axis.params = list(axis = "x", text.size = 2,
+  axis.params = list(axis = "x", text.size = AXIS_TEXT_SIZE,
                      title = "                        \u2190 IGH | IGL \u2192",
                      title.size = 3, title.height = 0.02,
                      limits = c(-1, 1.1),

@@ -758,10 +758,10 @@
 <line x1='408.01' y1='853.52' x2='408.01' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
 <line x1='427.40' y1='853.52' x2='427.40' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
 <line x1='446.79' y1='853.52' x2='446.79' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<text x='388.62' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='408.01' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.2</text>
-<text x='427.40' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.4</text>
-<text x='446.79' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.6</text>
+<text x='388.62' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='408.01' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.2</text>
+<text x='427.40' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.4</text>
+<text x='446.79' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.6</text>
 <text x='417.71' y='12.70' text-anchor='middle' style='font-size: 8.54px; font-family: "Liberation Sans";' textLength='42.19px' lengthAdjust='spacingAndGlyphs'>IGH MinDir</text>
 <rect x='481.69' y='194.40' width='77.56' height='6.42' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #440154;' />
 <rect x='481.69' y='337.15' width='77.56' height='6.42' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #440154;' />
@@ -886,12 +886,12 @@
 <line x1='528.23' y1='853.52' x2='528.23' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
 <line x1='543.74' y1='853.52' x2='543.74' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
 <line x1='559.25' y1='853.52' x2='559.25' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<text x='481.69' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='497.21' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.2</text>
-<text x='512.72' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.4</text>
-<text x='528.23' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.6</text>
-<text x='543.74' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.8</text>
-<text x='559.25' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='481.69' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='497.21' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.2</text>
+<text x='512.72' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.4</text>
+<text x='528.23' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.6</text>
+<text x='543.74' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.8</text>
+<text x='559.25' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>1</text>
 <text x='520.47' y='12.70' text-anchor='middle' style='font-size: 8.54px; font-family: "Liberation Sans";' textLength='40.47px' lengthAdjust='spacingAndGlyphs'>IGL MinDir</text>
 </g>
 <g clip-path='url(#cpMC4wMHw2NDguMDB8MC4wMHw4NjQuMDA=)'>

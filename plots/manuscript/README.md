@@ -26,7 +26,42 @@ Both live at the top of the file that uses them.
   depend on the tree; the other three ignore it apart from the output directory.
 - **`mindir_tree.R`'s `GENE_LIST`** — `"legacy"` (`gene_list-igl_h3_n7.csv`,
   56,463 rows, what the manuscript used) or `"current"` (`gene_list.csv`, 82,451
-  rows). Output filenames carry the choice.
+  rows). **Now set to `current`.**
+- **`mindir_tree.R`'s `AGGREGATION`** — how per-contig MinDir values are combined
+  when a locus spans several contigs. **Now set to `weighted`.**
+
+Output filenames carry both switches, e.g.
+`mindir_tree_current_weighted.svg`.
+
+### Why `weighted`
+
+MinDir is a per-contig strand fraction, and a contig carrying one gene scores 1.0
+by construction — 40 of 904 contigs (4.4%) in `gene_list.csv` are exactly that.
+An unweighted mean lets them count as much as a 200-gene locus. That is what moved
+the Red-billed Tropicbird's IGH from 0.50 to 0.83 between the two gene lists: two
+scrap contigs of 2 and 1 genes outvoting its real 18-gene locus 2:1.
+
+Legacy vs current gene list, by rule:
+
+| rule | mean(legacy) | mean(current) | n changed | mean abs diff | max abs diff |
+|---|---|---|---|---|---|
+| `mean` | 0.7472 | 0.7467 | 20 | 0.0655 | 0.3333 |
+| **`weighted`** | 0.7467 | 0.7466 | 20 | **0.0116** | **0.0714** |
+| `pooled` | 0.7451 | 0.7441 | 24 | 0.0195 | 0.0779 |
+| `min_genes` (>=5) | 0.7427 | 0.7421 | 8 | 0.0355 | 0.1006 |
+
+`weighted` keeps every gene while cutting the worst legacy/current discrepancy
+from 0.333 to 0.071, so the choice of gene list is close to cosmetic. `pooled` is
+arguably more principled but shifts more species; `min_genes` discards 470 of
+2670 contigs on an arbitrary threshold.
+
+### Butterfly axis
+
+The butterfly mirrors IGH onto negative x. `axis.params$text` cannot relabel it —
+`ggtreeExtra:::build_axis` only honours that field when the axis has a single
+break — so `mirror_axis_labels()` rewrites the tick layer afterwards, using the
+magnitude as the label and the signed value as the position. Tick size is
+`AXIS_TEXT_SIZE` at the top of the script.
 
 ## Saving figures
 

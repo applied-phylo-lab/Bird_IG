@@ -759,11 +759,11 @@
 <line x1='406.41' y1='853.52' x2='406.41' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
 <line x1='457.36' y1='853.52' x2='457.36' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
 <line x1='508.31' y1='853.52' x2='508.31' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
-<text x='355.46' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='406.41' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.5</text>
-<text x='457.36' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='508.31' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.5</text>
-<text x='559.25' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='355.46' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='406.41' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.5</text>
+<text x='457.36' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='508.31' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='12.66px' lengthAdjust='spacingAndGlyphs'>0.5</text>
+<text x='559.25' y='857.37' text-anchor='middle' style='font-size: 9.10px; font-family: "Liberation Sans";' textLength='5.06px' lengthAdjust='spacingAndGlyphs'>1</text>
 <text x='431.88' y='12.70' text-anchor='middle' style='font-size: 8.54px; font-family: "Liberation Sans";' textLength='114.41px' lengthAdjust='spacingAndGlyphs'>                        ← IGH | IGL →</text>
 </g>
 <g clip-path='url(#cpMC4wMHw2NDguMDB8MC4wMHw4NjQuMDA=)'>
