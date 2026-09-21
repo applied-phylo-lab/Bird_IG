@@ -312,12 +312,12 @@ figure_contig_green <- igh_contig_blue | igl_contig_green
 figure_igl_hist
 figure_igh_igl_contig_sd
 
-save_fig("Figure1AB.svg",             figure_1ab)
-# Narrower cut of the same figure. figures/manuscript_Sept/Figure1AB_resized.svg
-# is 735 x 354 pt, i.e. 980 x 472 px at 96 dpi -- same height as the standard
-# canvas, two thirds the width.
-save_fig("Figure1AB_resized.svg",     figure_1ab, width = 980)
-save_fig("Figure1AB_hist.svg",        figure_1ab_hist)
+# Only the histogram version is saved, at the narrower canvas.
+# figure_1ab is the density version (locus_l_comp and locus_strand_comp both use
+# geom_density); it is still built above and prints to the viewer, but nothing in
+# the pipeline writes it. figures/manuscript_Sept/Figure1AB_resized.svg is
+# 735 x 354 pt, i.e. 980 x 472 px at 96 dpi.
+save_fig("Figure1AB_resized.svg",     figure_1ab_hist, width = 980)
 save_fig("Figure1_contig_len.svg",    figure_contig)
 save_fig("IGL_histograms.svg",         figure_igl_hist)
 save_fig("IGH_IGL_contig_strand.svg",  figure_igh_igl_contig_sd)
