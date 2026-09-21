@@ -51,11 +51,53 @@ main_strand_frac <- function(strands) {
   max(tbl) / sum(tbl)
 }
 
-bird_only <- gene_list %>%
+# ── How MinDir is aggregated across contigs ──────────────────────────────────
+# A haplotype's locus can be split over several contigs. MinDir is a per-contig
+# strand fraction, so how those are combined matters more than it looks: a contig
+# carrying ONE gene scores 1.0 by construction, and 40 of 904 contigs (4.4%) in
+# gene_list.csv are exactly that. Under "mean" they count as much as a 200-gene
+# locus. That is what pushed the Red-billed Tropicbird IGH from 0.50 to 0.83 --
+# two scrap contigs of 2 and 1 genes outvoting its real 18-gene locus 2:1.
+#
+#   mean       unweighted mean over contigs (original behaviour, and what the
+#              manuscript figure used)
+#   weighted   mean over contigs weighted by gene count
+#   pooled     pool every gene of a haplotype x locus, then take one fraction
+#   min_genes  drop contigs with fewer than MIN_GENES genes, then unweighted mean
+AGGREGATION <- "min_genes"      # "mean" | "weighted" | "pooled" | "min_genes"
+MIN_GENES   <- 5           # only used when AGGREGATION == "min_genes"
+
+per_contig <- gene_list %>%
   group_by(GrpOrder, Species, Haplotype, Locus, Contig) %>%
-  summarise(MinDir = main_strand_frac(Strand), .groups = "drop") %>%
-  group_by(GrpOrder, Species, Haplotype, Locus) %>%
-  summarise(MinDir = mean(MinDir), .groups = "drop") %>%
+  summarise(MinDir = main_strand_frac(Strand), nGenes = n(), .groups = "drop")
+
+per_haplotype <- switch(AGGREGATION,
+  mean = per_contig %>%
+    group_by(GrpOrder, Species, Haplotype, Locus) %>%
+    summarise(MinDir = mean(MinDir), .groups = "drop"),
+
+  weighted = per_contig %>%
+    group_by(GrpOrder, Species, Haplotype, Locus) %>%
+    summarise(MinDir = weighted.mean(MinDir, nGenes), .groups = "drop"),
+
+  pooled = gene_list %>%
+    group_by(GrpOrder, Species, Haplotype, Locus) %>%
+    summarise(MinDir = main_strand_frac(Strand), .groups = "drop"),
+
+  min_genes = per_contig %>%
+    filter(nGenes >= MIN_GENES) %>%
+    group_by(GrpOrder, Species, Haplotype, Locus) %>%
+    summarise(MinDir = mean(MinDir), .groups = "drop"),
+
+  stop("AGGREGATION must be one of mean/weighted/pooled/min_genes, got: ",
+       AGGREGATION))
+
+message(sprintf("[mindir] aggregation: %s%s | contigs %d -> haplotype x locus %d",
+                AGGREGATION,
+                if (AGGREGATION == "min_genes") sprintf(" (>=%d genes)", MIN_GENES) else "",
+                nrow(per_contig), nrow(per_haplotype)))
+
+bird_only <- per_haplotype %>%
   group_by(Species, Locus) %>%
   summarise(MinDir = mean(MinDir), .groups = "drop") %>%
   pivot_wider(names_from = Locus, values_from = MinDir, names_glue = "{Locus}_MinDir") %>%
@@ -262,7 +304,7 @@ p2
 # p2 is the butterfly and is the manuscript figure, so it takes the plain name.
 # p is the two-panel view, kept as a secondary check.
 # Filenames carry the gene-list switch so legacy/current stay distinguishable.
-.tag <- sprintf("_%s", GENE_LIST)
+.tag <- sprintf("_%s_%s", GENE_LIST, AGGREGATION)
 save_fig(sprintf("mindir_tree%s.svg", .tag),        p2, width = 9, height = 12)
 save_fig(sprintf("mindir_tree_panels%s.svg", .tag), p,  width = 9, height = 12)
 
