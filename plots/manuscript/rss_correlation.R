@@ -919,6 +919,23 @@ p_igh_prod_rss_pos_unfolded <- make_prod_rss_pos_unfolded("IGH",FALSE)
 print(p_igl_prod_rss_pos_unfolded)
 print(p_igh_prod_rss_pos_unfolded)
 
+
+# ── Manuscript figure ─────────────────────────────────────────────────────────
+# Assembled here, as soon as its three panels exist, rather than at the end of the
+# file: everything below is exploratory and one section needs `bird_only` from
+# plots/manuscript/mindir_tree.R, so a straight run used to die before ever
+# reaching the save.
+#
+# Left: genes with RSS against total genes, per locus, with the phylolm fit.
+# Right: positional density of single- vs multiple-productive-RSS V genes,
+#        IGH above IGL.
+figure_rss <- p_combined_simple +
+  (p_igh_prod_rss_pos_unfolded / p_igl_prod_rss_pos_unfolded)
+figure_rss
+
+save_fig("RSS_genes_and_position.svg", figure_rss, width = 13, height = 6)
+
+
 # Unfolded + percentage y-axis
 make_prod_rss_pos_unfolded_pct <- function(locus) {
   bins         <- seq(0, 1, by = 0.05)
@@ -981,7 +998,16 @@ library(data.table)
 #mindir_raw <- fread(file.path(input_dir, "all_species_stats_pruned_12052025.csv"))
 #mindir_raw <- mindir_raw[mindir_raw$IGH_AnnotationLevel < 2, ]
 #mindir_raw <- mindir_raw[mindir_raw$VertClass == "birds", ]
-mindir_raw <-bird_only
+# bird_only is built by plots/manuscript/mindir_tree.R, not here, so everything
+# from here to the terminal-gap section is wrapped: a straight run of this file
+# skips it rather than erroring, while sourcing mindir_tree.R first still gives
+# the full analysis. The manuscript figure is already saved above and does not
+# depend on any of it.
+if (!exists("bird_only")) {
+  message("[rss] skipping the MinDir section: source plots/manuscript/mindir_tree.R first")
+} else {
+
+mindir_raw <- bird_only
 mindir_raw$latin_tree <- tolower(gsub(" ", "_", mindir_raw$LatinName))
 
 vgp_order_map <- vgp_table %>%
@@ -1079,6 +1105,8 @@ p_mindir_color_prod_rss <- ggplot(mindir_counts,
 print(p_mindir_color_rss)
 print(p_mindir_color_prod_rss)
 
+}  # end of the MinDir section (needs bird_only)
+
 # ── Terminal gap analysis: isolated genes at locus ends ───────────────────────
 # For each haplotype (≥4 genes), compute gaps between consecutive genes sorted
 # by position. Normalize each gap by the haplotype's median gap. Compare the
@@ -1133,18 +1161,17 @@ p_terminal_gaps <- ggplot(gap_df, aes(x = gap_type, y = norm_gap, fill = Locus))
 print(p_terminal_gaps)
 
 
-final_figure<-(contig_length_p+mind_dir_p)/(p_combined_simple+(p_igh_prod_rss_pos_unfolded/p_igl_prod_rss_pos_unfolded))
-final_figure
-(contig_length_p+mind_dir_p)
+# A four-panel composite stacking the Figure 1A/B panels above the RSS figure.
+# contig_length_p and mind_dir_p are built by plots/manuscript/Figure1AB.R, so
+# this only assembles when that script has been sourced first. The RSS figure
+# itself is saved further up and does not depend on it.
+if (exists("contig_length_p") && exists("mind_dir_p")) {
+  final_figure <- (contig_length_p + mind_dir_p) / figure_rss
+  print(final_figure)
+  print(contig_length_p + mind_dir_p)
+} else {
+  message("[rss] skipping the combined Figure1AB + RSS composite: ",
+          "source plots/manuscript/Figure1AB.R first")
+}
 (p_combined_simple+(p_igh_prod_rss_pos_unfolded/p_igl_prod_rss_pos_unfolded))
 
-
-# ── Manuscript figure ─────────────────────────────────────────────────────────
-# Left: genes with RSS against total genes, per locus, with the phylolm fit.
-# Right: positional density of single- vs multiple-productive-RSS V genes,
-#        IGH above IGL.
-figure_rss <- p_combined_simple +
-  (p_igh_prod_rss_pos_unfolded / p_igl_prod_rss_pos_unfolded)
-figure_rss
-
-save_fig("RSS_genes_and_position.svg", figure_rss, width = 13, height = 6)
