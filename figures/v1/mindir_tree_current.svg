@@ -497,18 +497,6 @@
 <line x1='139.02' y1='840.41' x2='139.02' y2='833.72' style='stroke-width: 1.07;' />
 <line x1='142.18' y1='833.72' x2='142.18' y2='827.47' style='stroke-width: 1.07;' />
 <line x1='149.46' y1='827.47' x2='149.46' y2='822.12' style='stroke-width: 1.07;' />
-<rect x='212.09' y='500.95' width='19.48' height='14.27' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #F8766D; fill-opacity: 0.25;' />
-<rect x='171.51' y='465.26' width='92.22' height='35.69' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #DE8C00; fill-opacity: 0.25;' />
-<rect x='193.07' y='629.42' width='64.42' height='35.69' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #B79F00; fill-opacity: 0.25;' />
-<rect x='176.56' y='322.51' width='36.31' height='49.96' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #7CAE00; fill-opacity: 0.25;' />
-<rect x='194.52' y='251.14' width='39.58' height='35.69' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #00BA38; fill-opacity: 0.25;' />
-<rect x='184.33' y='522.36' width='27.77' height='14.27' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #00C08B; fill-opacity: 0.25;' />
-<rect x='187.05' y='793.57' width='72.60' height='21.41' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #00BFC4; fill-opacity: 0.25;' />
-<rect x='180.48' y='379.61' width='43.68' height='14.27' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #00B4F0; fill-opacity: 0.25;' />
-<rect x='186.94' y='201.18' width='80.91' height='49.96' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #619CFF; fill-opacity: 0.25;' />
-<rect x='168.67' y='393.89' width='62.49' height='71.37' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #C77CFF; fill-opacity: 0.25;' />
-<rect x='194.05' y='22.75' width='71.35' height='164.16' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #F564E3; fill-opacity: 0.25;' />
-<rect x='164.60' y='693.65' width='53.30' height='99.92' style='stroke-width: 1.07; stroke: none; stroke-linecap: square; stroke-linejoin: miter; fill: #FF64B0; fill-opacity: 0.25;' />
 <text x='325.21' y='107.27' style='font-size: 7.11px; font-family: "Liberation Sans";' textLength='32.02px' lengthAdjust='spacingAndGlyphs'>Songbirds</text>
 <text x='325.21' y='228.61' style='font-size: 7.11px; font-family: "Liberation Sans";' textLength='22.92px' lengthAdjust='spacingAndGlyphs'>Parrots</text>
 <text x='325.21' y='271.43' style='font-size: 7.11px; font-family: "Liberation Sans";' textLength='24.91px' lengthAdjust='spacingAndGlyphs'>Falcons</text>
@@ -766,15 +754,16 @@
 <rect x='458.48' y='451.34' width='100.78' height='6.42' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #440154;' />
 <rect x='401.79' y='94.48' width='56.69' height='6.42' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #B0DA45;' />
 <rect x='458.48' y='94.48' width='100.78' height='6.42' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #440154;' />
-<line x1='357.70' y1='853.52' x2='508.87' y2='853.52' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<line x1='357.70' y1='853.52' x2='357.70' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<line x1='408.09' y1='853.52' x2='408.09' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<line x1='458.48' y1='853.52' x2='458.48' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<line x1='508.87' y1='853.52' x2='508.87' y2='853.95' style='stroke-width: 0.43; stroke: #BEBEBE; stroke-linecap: butt;' />
-<text x='357.70' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='5.05px' lengthAdjust='spacingAndGlyphs'>-1</text>
-<text x='408.09' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>-0.5</text>
+<line x1='357.70' y1='853.52' x2='508.87' y2='853.52' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
+<line x1='357.70' y1='853.52' x2='357.70' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
+<line x1='408.09' y1='853.52' x2='408.09' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
+<line x1='458.48' y1='853.52' x2='458.48' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
+<line x1='508.87' y1='853.52' x2='508.87' y2='853.95' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt;' />
+<text x='357.70' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='408.09' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.5</text>
 <text x='458.48' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>0</text>
 <text x='508.87' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='7.89px' lengthAdjust='spacingAndGlyphs'>0.5</text>
+<text x='559.25' y='856.20' text-anchor='middle' style='font-size: 5.69px; font-family: "Liberation Sans";' textLength='3.16px' lengthAdjust='spacingAndGlyphs'>1</text>
 <text x='433.28' y='12.70' text-anchor='middle' style='font-size: 8.54px; font-family: "Liberation Sans";' textLength='114.41px' lengthAdjust='spacingAndGlyphs'>                        ← IGH | IGL →</text>
 </g>
 <g clip-path='url(#cpMC4wMHw2NDguMDB8MC4wMHw4NjQuMDA=)'>

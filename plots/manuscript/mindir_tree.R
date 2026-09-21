@@ -107,24 +107,13 @@ order_nodes <- tip_meta %>%
   })) %>%
   filter(!is.na(node))
 
-order_colors <- setNames(
-  scales::hue_pal()(nrow(order_nodes)),
-  order_nodes$Order
-)
-
 # ── Base tree ─────────────────────────────────────────────────────────────────
 
 p <- ggtree(tree_pruned, layout = "rectangular") +
   geom_tiplab(size = 1.8, fontface = "italic", offset = 0.001)
 
-# Order highlighting
-for (i in seq_len(nrow(order_nodes))) {
-  p <- p + geom_hilight(
-    node  = order_nodes$node[i],
-    fill  = order_colors[order_nodes$Order[i]],
-    alpha = 0.25
-  )
-}
+# No order highlighting: geom_cladelab below already writes the order beside the
+# clade, so the colour band was redundant.
 
 p <- p + geom_cladelab(
   data    = order_nodes,
@@ -184,13 +173,8 @@ p
 p2 <- ggtree(tree_pruned, layout = "rectangular") #+
   #geom_tiplab(size = 1.8, fontface = "italic", offset = 0.001)
 
-for (i in seq_len(nrow(order_nodes))) {
-  p2 <- p2 + geom_hilight(
-    node  = order_nodes$node[i],
-    fill  = order_colors[order_nodes$Order[i]],
-    alpha = 0.25
-  )
-}
+# No geom_hilight here: the order is already written beside the clade by
+# geom_cladelab below, so the colour band only added noise.
 
 p2 <- p2 + geom_cladelab(
   data    = order_nodes,
@@ -225,13 +209,53 @@ p2 <- p2 + geom_fruit(
   orientation = "y",
   offset  = 0.7,
   pwidth  = 0.5,
-  axis.params = list(axis = "x", text.size = 2, title = "                        ← IGH | IGL →",
-                     title.size = 3, title.height = 0.02, limits = c(-1, 1.1))
+  # The x values are signed to mirror the two loci, but the tick labels should
+  # read as magnitudes -- MinDir has no negative values. `text` overrides the
+  # labels; line.alpha = 0 hides the axis rule under the bars.
+  # line.alpha = 0 hides the axis rule that ran under the bars. The tick labels
+  # are fixed up afterwards by mirror_axis_labels(); axis.params$text only takes
+  # effect when there is a single break (see ggtreeExtra:::build_axis), so it
+  # cannot relabel a mirrored axis.
+  axis.params = list(axis = "x", text.size = 2,
+                     title = "                        \u2190 IGH | IGL \u2192",
+                     title.size = 3, title.height = 0.02,
+                     limits = c(-1, 1.1),
+                     line.alpha = 0)
 ) +
   scale_fill_viridis_c(name = "MinDir", option = "D", na.value = "grey90",direction=-1,
                        limits = c(0.5, 1)) +
   scale_alpha_identity(guide = "none")
 
+# The butterfly mirrors IGH onto negative x, so ggtreeExtra labels those ticks
+# -1, -0.8 ... MinDir has no negative values, and the sign only encodes which
+# locus a bar belongs to, which the axis title already says. This rewrites the
+# tick layer to the breaks we want, labelled by magnitude.
+#
+# The axis layer carries the label in one column and the plotting position in
+# another (aes(x = new_<xid>, label = <xid>)), so the two can be set
+# independently: label with the magnitude, position with the signed value.
+mirror_axis_labels <- function(plot, breaks = c(-1, -0.5, 0, 0.5, 1),
+                               digits = 2) {
+  for (i in seq_along(plot$layers)) {
+    d <- plot$layers[[i]]$data
+    if (!is.data.frame(d) || ncol(d) != 2) next
+    nm <- names(d)
+    pos_col <- grep("^new_", nm, value = TRUE)
+    if (length(pos_col) != 1) next
+    lab_col <- setdiff(nm, pos_col)
+    nz <- d[[lab_col]] != 0
+    if (!any(nz)) next
+    slope <- mean(d[[pos_col]][nz] / d[[lab_col]][nz])
+    new_d <- data.frame(abs(round(breaks, digits)), breaks * slope)
+    names(new_d) <- c(lab_col, pos_col)
+    plot$layers[[i]]$data <- new_d
+    return(plot)
+  }
+  warning("mirror_axis_labels(): no axis layer found; labels left unchanged")
+  plot
+}
+
+p2 <- mirror_axis_labels(p2)
 p2
 
 # ---- save -------------------------------------------------------------------
