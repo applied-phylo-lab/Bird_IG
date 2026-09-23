@@ -6,9 +6,9 @@ copy number and diversity, RSS presence and orientation, D gene organisation,
 and how these traits map onto the bird phylogeny. Output is a manuscript, so
 most endpoints are figures + statistics, not software.
 
-`README.md` is the authoritative pipeline documentation (step-by-step, per-script,
-with arguments and the full data directory layout). **Read it before answering
-questions about how a script fits into the workflow** — don't duplicate it here.
+`README.md` gives the high-level pipeline overview; `workflow/rules/*.smk` and each
+script's `--help` are authoritative for arguments and exact inputs/outputs. **Read
+the README before answering questions about how a script fits into the workflow.**
 
 ## Data lives outside the repo
 
@@ -33,7 +33,7 @@ Raw assemblies: `/local/storage/dhardesty/assemblies/`.
 - **Python** = pipeline/compute (LASTZ self-alignments, inversion detection, tree
   building, RSS extraction). `argparse` with the shared flags `-i INPUT_DIR`,
   `-s summary_features.csv`, `-c cores`; parallelism via `multiprocessing`.
-- **R** (`plots/`, `RSS/*.R`, `tree_analyses/*.R`) = statistics and figures, sourced
+- **R** (`plots/`, `tree_analyses/*.R`) = statistics and figures, sourced
   interactively in RStudio. `INPUT_DIR` is hardcoded near the top — edit it there.
   New scripts should follow the existing style: `data.table`/`dplyr` + `ggplot2`,
   `ggsave` SVG into `figures/`.
@@ -63,12 +63,11 @@ Activate explicitly before running anything; the base env has neither.
 - `archive/` — superseded and shelved work, each subfolder with a README:
   `trait_analyses/` (migration + pathogen, no signal), `RSS/` (obsolete half),
   `repeatmasker/`, `kmer_analysis/`, `min_max_unit/`, `jay_tests/`,
-  `dotplots_R/`, `iroki_superseded/`. Nothing in the pipeline reads them.
+  `dotplots_R/`, `iroki_superseded/`, `human_bird_comparison/`. Nothing in the pipeline reads them.
 - `daniel_bird_scripts/` — collaborator (Daniel Hardesty) scripts for D gene
   search, RSS extraction, and contig evaluation. **Read-only** — never edit these.
 - `sex_check/` — one-off numbered pipeline (ZW read-depth check for a given bird);
   has its own README.
-- `human_bird_comparison/` — self-contained side analysis.
 - `.ipynb_checkpoints/` — junk, ignore.
 
 ## Working preferences
@@ -78,4 +77,4 @@ Activate explicitly before running anything; the base env has neither.
 - **Never create a near-duplicate script.** If a variant of an existing analysis is
   needed, add a flag/argument to the existing script instead. The several
   `shared_inversions*.py` variants are the mistake to avoid repeating.
-- When adding a script, add a row to the matching table in `README.md`.
+- When adding a script, add a row to the table in its folder's `README.md`.

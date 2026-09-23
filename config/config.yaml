@@ -1,7 +1,7 @@
 # Bird_IG pipeline configuration.
 #
 # The workflow reads and writes inside input_dir -- data is NOT versioned and
-# does not live in the repo. See README.md for the directory layout.
+# does not live in the repo. See docs/data_layout.md for the directory layout.
 
 input_dir: /local/storage/kav67/clean_birds
 
@@ -11,7 +11,7 @@ input_dir: /local/storage/kav67/clean_birds
 summary_features: summary_features.csv
 
 # Loci to process. Inversion/D-gene/hairpin/paralog analyses are IGH-only by
-# design (see README.md); self-alignment and trees run for both.
+# design; self-alignment and trees run for both.
 loci: [IGH, IGL]
 
 # Minimum inversion length. 250 is the only threshold used in this project.

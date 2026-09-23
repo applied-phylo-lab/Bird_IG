@@ -1,464 +1,146 @@
 # Bird Immunoglobulin Locus Analysis
 
-Analysis of IGH and IGL loci across bird species, focusing on V gene diversity,
-inversion structure, RSS presence, D gene organisation, and phylogenetic patterns.
+Comparative genomics of the **IGH** and **IGL** loci across VGP bird assemblies:
+how inversions and palindromes shape V gene copy number, where RSS sit and which
+way they point, and how all of it maps onto the bird phylogeny.
 
 Preprint: https://www.biorxiv.org/content/10.64898/2026.09.05.749481v1
 
----
-
-## Repository structure
-
-```
-Bird_IG/
-├── workflow/           # Snakemake workflow (stages 2-7) + Slurm/local profiles
-├── config/             # Pipeline configuration and the exclusion list
-├── data_prep/          # Index tables, VGP tree/tables, gene filtering
-├── annotation_tables/  # Publication-facing tables (provenance, summary tables)
-├── paralogs/           # Inversion paralog detection + its plots
-├── tree_analyses/      # Tree-distance analyses (tree building is now in workflow/)
-├── plots/              # Exploratory R figures (sourced in RStudio)
-│   └── manuscript/     # The six manuscript figure scripts
-├── RSS/                # rss_correlation.R only -- supplies a figure component
-├── within_species_inversions/  # Within-species inversion comparison
-├── manhattan_plot_inversion_coverage/  # Window summaries for the manhattan figure
-├── human_bird_comparison/  # Self-contained side analysis
-├── figures/v1, figures/v2  # Rendered figures per dataset version
-└── archive/            # Superseded and shelved work, each with a README
-```
+All data lives under `INPUT_DIR`, organised as `{Order}/{Species}/{Haplotype}/`
+— see [docs/data_layout.md](docs/data_layout.md) for the full tree.
 
 ---
 
-## Data directory structure
-
-All processed data lives under a single top-level directory (referred to as
-`INPUT_DIR` throughout the scripts, typically `/local/storage/kav67/clean_birds/`).
-
-```
-INPUT_DIR/
-├── summary_features.csv          # Master table: one row per haplotype × locus
-│                                 # Columns: Order, Species, Haplotype, Locus, Contig, NumV
-├── IGH_filtered_table.tsv        # IGH-only filtered subset of summary_features
-├── IGH_VGP_table.tsv             # IGH table with added LatinName column (for tree matching)
-├── gene_list.csv                 # All V genes across all species with RSS annotations
-│                                 # Columns: Source (Order/Species/Haplotype), GeneType,
-│                                 #          Contig, Pos, Strand, Sequence, Productive,
-│                                 #          Locus, Heptamer, Nonamer, ...
-├── vgp_birds.nwk                 # VGP bird species phylogenetic tree (Newick)
-├── inversion_stats.tsv          # Inversion summary stats, one row per haplotype x contig
-├── inversion_details.tsv        # Per-inversion details (length, diagonal flag, etc.)
-├── D_inversions.tsv              # Output of d_genes_on_inversions.py
-│
-└── {Order}/                      # e.g. Doves/, Eagles/, Waterfowl/
-    └── {Species}/                # e.g. Pink_Pigeon/
-        └── {Haplotype}/          # e.g. bNesMay2_pri/  (pri = primary, alt = alternate)
-            │
-            ├── combined_genes_IGH_clean.txt   # Filtered IGH V genes (TSV)
-            ├── combined_genes_IGL_clean.txt   # Filtered IGL V genes (TSV)
-            │                                  # Columns: GeneType, Contig, Pos, Strand,
-            │                                  #          Sequence, Productive, Locus
-            ├── IGHD.csv                       # D genes for this haplotype
-            │                                  # Columns: Source, GeneType, Contig, Pos,
-            │                                  #          Strand, Sequence, Productive,
-            │                                  #          Locus, ..., Location Relative to V-Cluster
-            │
-            ├── {Contig}_IGH.tsv              # LASTZ self-alignment output for IGH locus
-            ├── {Contig}_IGH.bed              # Gene positions as BED (all genes, black)
-            ├── {Contig}_IGH_strand.bed       # Gene positions as BED (- strand = grey)
-            ├── {Contig}_IGL.tsv              # Same for IGL locus
-            ├── {Contig}_IGL.bed
-            ├── {Contig}_IGL_strand.bed
-            │
-            ├── refined_ig_loci/
-            │   ├── summary.csv               # Locus boundaries: StartPos, EndPos per contig
-            │   └── igloci_fasta/
-            │       ├── IGH_{Contig}_{NumV}Vs.fasta   # Extracted IGH locus sequence
-            │       └── IGL_{Contig}_{NumV}Vs.fasta   # Extracted IGL locus sequence
-            │
-            └── tree/
-                ├── {Haplotype}.fasta                  # IGH V gene sequences (FASTA)
-                ├── {Haplotype}_aligned.fasta          # IGH multiple sequence alignment
-                ├── {Haplotype}_tree.treefile          # IGH IQ-TREE phylogeny
-                ├── IGL_{Haplotype}.fasta              # IGL V gene sequences
-                ├── IGL_{Haplotype}_aligned.fasta      # IGL multiple sequence alignment
-                └── IGL_{Haplotype}_tree.treefile      # IGL IQ-TREE phylogeny
-```
-
----
-
-## Running the workflow (Snakemake)
-
-Stages 2-5 (self-alignment, inversion summaries, paralogs, trees) are wired up as
-a Snakemake workflow. Stage 1 (building `summary_features.csv` and the metadata
-tables) and stages 6-8 (dotplots, publication tables, figures) are still run by
-hand -- see the walkthrough below.
-
-```
-workflow/Snakefile          targets and the index
-workflow/rules/align.smk    stage 2  LASTZ self-alignment + BED
-workflow/rules/inversions.smk  stage 3  inversion stats, D genes, hairpin
-workflow/rules/paralogs.smk    stage 4  inversion paralog groups
-workflow/rules/trees.smk       stage 5  fasta -> clustalo -> iqtree2
-config/config.yaml          input_dir, thresholds, loci
-```
-
-Everything runs in the `snakemake` conda env, which carries pandas plus `lastz`,
-`clustalo` and `iqtree2`:
+## Quick start
 
 ```bash
 conda activate snakemake
-snakemake -s workflow/Snakefile --configfile config/config.yaml -n
+snakemake -s workflow/Snakefile --configfile config/config.yaml -n      # dry run
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/local
 ```
 
-Partial targets, if you only want one stage:
+Individual stages, if you don't want the whole thing:
 
 ```bash
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- align
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- inversions
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- paralogs
-snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 20 -- trees
+snakemake ... -- align      # self-alignments + BED
+snakemake ... -- inversions # inversion stats, hairpins
+snakemake ... -- paralogs
+snakemake ... -- trees
+snakemake ... -- dotplots   # expensive; not in the default run
+snakemake ... -- tables     # publication tables; not in the default run
+snakemake ... -- fig1c      # just the Figure 1C dot plot
 ```
 
-Note the `--`. Both `--configfile` and `--quiet` take values, so a bare target
-after them is swallowed as an argument (`--configfile config.yaml tables` tries to
-load a config file called `tables`).
+**Note the `--`.** `--configfile` takes a value, so a bare target after it gets
+swallowed as an argument.
 
-Three targets are deliberately **not** in `rule all`, because they are expensive
-or are release steps -- ask for them by name:
 
-```bash
-snakemake ... -- dotplots   # stage 6: 16 orders x 2 loci of PatchWorkPlot
-snakemake ... -- tables     # stage 7: haplotype_sources + summary_tables
-snakemake ... -- d_genes    # D_inversions.tsv; retired, see old_unused/
-```
+---
 
-### Profiles
-
-Two profiles are provided, so the long flag lists do not have to be retyped:
-
-```bash
-# run directly on the node (64 cores, the usual choice)
-snakemake -s workflow/Snakefile --configfile config/config.yaml \
-          --profile workflow/profiles/local trees
-
-# submit each job to Slurm
-snakemake -s workflow/Snakefile --configfile config/config.yaml \
-          --profile workflow/profiles/slurm trees
-```
-
-**Which to use.** `regular` is a *single* node (cbsupennell01, 256 CPUs / 2.3 TB),
-and interactive sessions already run on that same node -- so going through Slurm
-does **not** give more parallelism than the local profile. Use the Slurm profile
-when you want jobs to queue politely alongside other lab members' work, want each
-job's resource request enforced by cgroups, want failed jobs retried, or want the
-run to show up in `sacct`. Use the local profile for everything else.
-
-Per-rule `threads` and `resources` (`mem_mb`, `runtime`) are already set in the
-rule definitions, so both profiles work without further configuration. Slurm logs
-land in `logs/slurm/{rule}-{jobid}.{out,err}` (gitignored).
-
-### Things to know before the first run
-
-- **Excluded haplotypes live in `config/excluded_haplotypes.csv`.** Haplotypes kept
-  out of the cross-species analysis are listed there with a reason, and
-  `create_summary_tables_clean.R --exclude` applies them, printing each one as it
-  drops it. Keeping the list in version control means an exclusion is auditable
-  rather than buried in a filter, and an entry that stops matching is reported
-  (`! not found in the contig list`) -- which is how an upstream rename gets
-  noticed. Rebuild the index after editing it:
-
-  ```bash
-  Rscript data_prep/create_summary_tables_clean.R -i $INPUT_DIR \
-      --exclude config/excluded_haplotypes.csv
-  ```
-
-- **The index is an input, not a rule output.** `summary_features.csv` is read at
-  parse time to build the wildcard lists, so it must exist first. Rebuild it with
-  `data_prep/create_summary_tables_clean.R` whenever species are added, then re-run.
-- **Rows with no locus FASTA are excluded and named.** The index lists some contigs
-  that were never extracted. Most are `NumV` 1-2 (below IGDetective's threshold);
-  any with `NumV >= min_numv` are printed as `[index] EXCLUDED ...` warnings and are
-  worth chasing -- they are index/data mismatches, not expected gaps.
-- **Existing outputs are respected.** Snakemake leaves up-to-date files alone;
-  always check `-n` first. If a dry run proposes redoing work you want to keep,
-  adopt the existing files with `--touch` rather than letting it re-run.
-- **Replacing the index invalidates stage 2.** `summary_features.csv` is a declared
-  input to `self_align_bed`, so rebuilding it makes all ~820 alignments look stale
-  even when their content is unchanged. Adopt them rather than recomputing:
-
-  ```bash
-  snakemake -s workflow/Snakefile --configfile config/config.yaml --cores 8 --touch align
-  ```
-
-  Only do this after confirming the alignments really are still valid for the new
-  index -- i.e. that nothing but haplotype naming or row membership changed.
-
-- **Never use `--forceall`.** Outputs live in `input_dir`, and a forced run would
-  discard weeks of LASTZ and IQ-TREE work.
-
-### Two dataset versions
-
-`vgp_birds.nwk` and `IGH_VGP_table.tsv` exist in two versions, because the
-manuscript was written against the older one:
-
-| | tree | table | phylolm species |
-|---|---|---|---|
-| **v1** (manuscript) | `vgp_birds.nwk` -- 122 tips | `IGH_VGP_table.tsv` -- 128 rows | 116 |
-| **v2** (updated) | `vgp_birds_v2.nwk` -- 137 tips | `IGH_VGP_table_v2.tsv` -- 127 rows | 123 |
-
-v1 is **frozen** and cannot be regenerated -- its tree was pruned two months
-before its table was built, so it is missing 15 species that were in the data by
-then, and it carries a duplicate Swan Goose row from a `slice_max()` tie.
-Reference copies live in `{INPUT_DIR}/frozen_v1_manuscript/` with the full
-explanation. Nothing overwrites the v1 files, so existing scripts keep reading
-them until pointed elsewhere.
-
-v2 is a strict superset (no species lost) and is what
-`data_prep/build_vgp_tables.R` produces:
-
-```bash
-Rscript data_prep/build_vgp_tables.R -i $INPUT_DIR --suffix _v2
-```
-
-The effect on the headline fit is small -- beta 0.5112 -> 0.5149, R2 0.641 ->
-0.645 -- with seven more species and a stronger p. Figures will need to be
-produced for both.
-
-### Rulegraph
+## The pipeline
 
 ![rulegraph](docs/workflow_rulegraph.svg)
 
-Regenerate after adding or changing rules:
+Everything is driven by `summary_features.csv`, one row per haplotype × locus ×
+contig. It is a pipeline **input**, not a rule output — read at parse time to
+build the wildcard lists, so it has to exist before Snakemake starts.
+
+**Stage 1 — index and gene tables** (`data_prep/`, run by hand)
+`create_summary_tables_clean.R` builds the index from the contig list,
+applying `config/excluded_haplotypes.csv`. `filter_genes.py` cleans the raw gene
+calls per haplotype. `build_vgp_tables.R` maps haplotypes to scientific names and
+prunes the VGP tree to what's present.
+
+**Stage 2 — self-alignment** (`self_align_bed`, `self_align_text`)
+Each locus FASTA is aligned against itself with LASTZ. Inverted alignments
+(`strand2 = -`) are the raw signal for everything downstream. Gene positions are
+written alongside as BED, once plain and once coloured by strand.
+
+**Stage 3 — inversions** (`summarize_inversions`, `hairpin`)
+Parses the alignments into `inversion_stats.tsv` (per haplotype × contig) and
+`inversion_details.tsv` (per inversion), at a minimum length of 250 bp. `hairpin`
+re-runs LASTZ with sequence in the output to compare identity at the centre of
+each diagonal inversion — the putative hairpin tip — against a random control
+window, giving `palindromes.tsv`.
+
+A haplotype's locus is sometimes split across contigs, so **one haplotype can
+have several rows**. Aggregate accordingly.
+
+`d_genes` is kept but off by default: the upstream `IGHD.csv` files became a
+threshold-swept candidate list, so the counts aren't meaningful until a calling
+threshold is agreed. The old output is in `{INPUT_DIR}/old_unused/`.
+
+**Stage 4 — paralogs** (`paralogs/`)
+Groups genes lying on opposite ends of the same inversion — evidence for
+inversion-mediated duplication.
+
+**Stage 5 — gene trees** (`tree_fasta` → `tree_align` → `tree_iqtree`)
+A V gene phylogeny per haplotype: extract sequences, align with Clustal Omega,
+build tree with IQ-TREE.
+
+**Stages 6–7 — dot plots and tables** (not in the default run)
+PatchWorkPlot dot plots per order, and the publication-facing tables under
+`summary_tables/`.
+
+Regenerate the graph after changing rules — the targets must be listed, since
+`--rulegraph` only graphs what it's asked for:
 
 ```bash
 snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph \
   -- all dotplots tables fig1c d_genes | dot -Tsvg > docs/workflow_rulegraph.svg
 ```
 
-The targets have to be listed explicitly: `--rulegraph` graphs only what it is
-asked for, and `dotplots`, `tables`, `fig1c` and `d_genes` are deliberately not
-reachable from `all`, so a bare `--rulegraph` silently omits stages 6 and 7.
+---
 
-If the image in this README looks out of date after a regeneration while clicking
-through to the file shows the new one, that is GitHub's image proxy caching the
-old copy against the same URL, not a stale commit. Renaming the file forces a
-re-fetch.
+## Figures
 
-(`--rulegraph` shows the rules; `--dag` shows every job instance and is unreadable
-at ~800 nodes.)
+The six manuscript scripts are in `plots/manuscript/` — see the README there for
+what each one saves and the switches it reads. Everything else in `plots/` is
+exploratory and meant to be sourced in RStudio.
+
+Figures exist in two versions, with the second version having added birds after using a better database:
+
+| | tree | table | species in phylolm |
+|---|---|---|---|
+| **v1** (manuscript) | `vgp_birds.nwk` — 122 tips | `IGH_VGP_table.tsv` — 128 rows | 116 |
+| **v2** (updated) | `vgp_birds_v2.nwk` — 137 tips | `IGH_VGP_table_v2.tsv` — 127 rows | 123 |
+
+v1: Reference copies and the full explanation are in
+`{INPUT_DIR}/frozen_v1_manuscript/`. 
+v2 is a strict superset and is what `data_prep/build_vgp_tables.R` produces. The effect on the headline fit is small
+(β 0.511 → 0.515, R² 0.641 → 0.645).
+
+Switch with `DATASET <- "v1"` / `"v2"` at the top of `plots/_dataset.R`; output
+lands in `figures/v1/` or `figures/v2/`.
 
 ---
 
-## Pipeline walkthrough
+## Repository layout
 
-### Step 1 — Build summary tables (`data_prep/`)
-
-Starting point: raw gene annotation files per species/haplotype.
-
-| Script | What it does |
-|--------|-------------|
-| `archive/create_summary_features.R` | Creates `summary_features.csv` — the master table listing every haplotype × locus with its main contig and V gene count |
-| `data_prep/create_summary_tables_clean.R` | Builds the index tables from `ig_contig_list.csv`: `summary_features.csv` (every IGH/IGL contig -- the workflow's index), `IGH_filtered_table.tsv` (IGH with `NumV > 2`) and `filtered_table.tsv`. Takes `-i INPUT_DIR`, `--input CSV`, `--min-numv N`, `--loci IGH,IGL` |
-| `data_prep/filter_genes.py` | Filters and cleans raw gene files to produce `combined_genes_IGH_clean.txt` / `combined_genes_IGL_clean.txt` per haplotype |
-| `data_prep/build_vgp_tables.R` | Maps each haplotype to a scientific name (VGP accession first, then normalised English name, then `--overrides`), prunes the VGP tree to the species present, and writes `IGH_VGP_table.tsv` (one row per species, highest-NumV IGH contig), `IGH_table.tsv` (one row per haplotype) and `vgp_birds.nwk`. Takes `-i INPUT_DIR`, `--vgp-tree`, `--vgp-table`, `--overrides`, `--min-numv`, `--all-haplotypes`, `--suffix`. Split out of the old `overview_features.R`; the plotting half is now `plots/overview_features_plots.R` |
-| `annotation_tables/assign_haplotype_source.py` | Classifies each haplotype's data source (VGP / CCGP / house finch, jay, or seedeater pangenome / unpublished) by querying the NCBI Datasets API for the assembly's BioProject lineage; writes `haplotype_sources.csv` |
-| `annotation_tables/build_summary_tables.py` | Combines `summary_features.csv`, `gene_list.csv`, `inversion_stats.tsv`, `D_inversions.tsv`, `palindromes.tsv`, and `haplotype_sources.csv` into the publication-facing tables under `summary_tables/` (run after `annotation_tables/assign_haplotype_source.py`) |
-
----
-
-### Step 2 — Self-align loci and create BED annotation files
-
-Each locus FASTA is aligned against itself with LASTZ to find inverted/repeated
-regions. Gene positions are also written as BED files for visualisation.
-
-| Script | What it does |
-|--------|-------------|
-| `alignment/self_alignment_bed.py` | Runs LASTZ self-alignment for every locus in `summary_features.csv` and writes `{Contig}_{Locus}.tsv`, `{Contig}_{Locus}.bed`, `{Contig}_{Locus}_strand.bed` per haplotype. Replaces the former `IGH_self_alignment_bed.py` / `IGL_self_alignment_bed.py` pair |
-
-It takes:
-- `-i INPUT_DIR` — top-level data directory
-- `-s summary_features.csv` — master table (`.csv` and `.tsv` both accepted)
-- `--locus {IGH,IGL}` — which locus to process (default: `IGH`)
-- `-c N` — number of parallel cores
-- `--lastz PATH` — lastz executable (defaults to the one on `$PATH`)
-
-Existing outputs are left in place, so re-running only fills in what is missing.
-
----
-
-### Step 3 — Summarise inversions
-
-| Script | What it does |
-|--------|-------------|
-| `inversions/summarize_inversions.py` | Parses each `{Contig}_{Locus}.tsv` self-alignment, identifies inversions (LASTZ alignments where `strand2 = -`), and writes `inversion_stats.tsv` (one row per haplotype × contig) and `inversion_details.tsv` (one row per inversion) |
-| `inversions/d_genes_on_inversions.py` | For each IGH haplotype, checks whether D genes (from `IGHD.csv`) fall within inverted regions; outputs `D_inversions.tsv` with columns `n_d_genes`, `n_on_inversion`, `frac_on_inversion` |
-| `inversions/hairpin.py` | For every diagonal inversion, compares the identity of the whole alignment with a window at its centre (the putative hairpin tip) and a random window of the same size; outputs `palindromes.tsv` |
-
-`inversions/hairpin.py` needs the aligned sequences, which `{Contig}_IGH.tsv` does not
-contain, so it re-runs LASTZ with `text1`/`text2` in the output format and
-caches the result as `{Contig}_IGH_text.tsv` per haplotype (regenerate with
-`--force`). It takes:
-- `-i INPUT_DIR`, `-s IGH_filtered_table.tsv`, `-o palindromes.tsv`, `-c N`
-- `--lastz PATH` — lastz executable (defaults to the one on `$PATH`)
-- `--seed N` — seed for the random control windows
-
-`inversions/summarize_inversions.py` takes:
-- `-i INPUT_DIR`, `-s IGH_filtered_table.tsv`, `-o inversion_stats.tsv`, `-d inversion_details.tsv`, `-c N`
-- `--locus {IGH,IGL}` — which locus to process (default: `IGH`)
-- `--min_len N` — minimum inversion length (default: 250, the only threshold used in this project)
-
-Both outputs carry a `contig` column: a haplotype's locus is sometimes split
-across several contigs, so **one haplotype can have several rows**. See
-"Multi-contig haplotypes" below before aggregating.
-
-`inversions/d_genes_on_inversions.py` takes:
-- `-i INPUT_DIR`, `-s summary_features.csv`, `-o OUTPUT.tsv`
-- `-c N` — parallel cores
-- `--min_inv_len N` — minimum inversion length to consider (default: 250 bp)
-
----
-
-### Step 4 — Find inversion paralogs
-
-Identify pairs of genes that lie on opposite ends of the same inversion
-(evidence for inversion-mediated duplication).
-
-| Script | What it does |
-|--------|-------------|
-| `paralogs/find_all_inversions_paralogs.py` | **Recommended.** Groups genes into paralog clusters based on all inversion alignments (default `--min_len 250`) |
-| `paralogs/find_inversion_paralogs.py` | Older version — only uses diagonal inversions (default `--min_len 1000`) |
-
-Both read the per-contig `{Contig}_{Locus}.tsv` / `{Contig}_{Locus}.bed` files written by
-`alignment/self_alignment_bed.py`, and take `-i INPUT_DIR`, `-s summary`, `-o OUTPUT.tsv`, `-c N`,
-`--locus {IGH,IGL}` and `--min_len N`.
-
----
-
-### Step 5 — Shared inversions across species
-
-| Script | What it does |
-|--------|-------------|
-| `archive/shared_inversions.py` | Reciprocal-overlap and Jaccard metrics for inversions shared between species pairs (per order). **Currently points at a pairwise-alignment layout that no longer exists — needs rewriting against the PatchWorkPlot alignments** |
-| `inversions/shared_inversions_counts.py` | Counts inversions in pairwise alignments, binned by length (and optionally identity). Replaces the former `shared_inversions_songbirds.py` / `_house_finch.py` / `_within_species.py` trio (the latter two were byte-identical) |
-
-`inversions/shared_inversions_counts.py` takes:
-- `-i INPUT_DIR`, `-s summary`, `-o OUTPUT.tsv`
-- `--mode {all-pairs,reference,within-species}` — which haplotype pairs to compare:
-  - `all-pairs` — every pair in the filtered set (was `shared_inversions_songbirds.py`)
-  - `reference` — one `--reference-species` against every other haplotype (was `shared_inversions_house_finch.py`)
-  - `within-species` — every pair of haplotypes belonging to the same species
-- `--order`, `--species`, `--primary-only` — filters on the summary table
-- `--identity-bins` — also bin by percent identity (the songbirds analysis used this; the house finch one did not)
-- `--pairwise-dir` — where the pairwise alignments live; accepts both the legacy
-  `{hapA}_{hapB}.txt` naming and PatchWorkPlot's `pair_{i}-{hapA}_{j}-{hapB}.tsv`
-
-Equivalents of the three old scripts:
-
-```bash
-# was shared_inversions_songbirds.py
-python shared_inversions_counts.py -i $INPUT_DIR -s $INPUT_DIR/IGH_filtered_table.tsv \
-    --mode all-pairs --order Songbirds --primary-only --identity-bins \
-    --pairwise-dir $INPUT_DIR/Songbirds/patchworkplot/IGH/pairwise_alignments \
-    -o $INPUT_DIR/Songbirds/Songbirds_shared_inversions.tsv
-
-# was shared_inversions_house_finch.py
-python shared_inversions_counts.py -i $INPUT_DIR -s $INPUT_DIR/IGH_filtered_table.tsv \
-    --mode reference --reference-species House_Finch --order Songbirds \
-    --pairwise-dir $INPUT_DIR/Songbirds/patchworkplot/IGH/pairwise_alignments \
-    -o $INPUT_DIR/Songbirds/House_Finch_shared_inversions.tsv
+```
+workflow/  config/     Snakemake pipeline (stages 2-7) + local/slurm profiles
+data_prep/             Index tables, VGP tree/tables, gene filtering
+alignment/  inversions/  paralogs/  dotplots/   Pipeline scripts, by stage
+annotation_tables/     Publication-facing tables
+plots/                 Exploratory R figures
+plots/manuscript/      The six manuscript figure scripts
+tree_analyses/         Tree-distance analyses
+within_species_inversions/          Within-species comparison
+manhattan_plot_inversion_coverage/  Window summaries for the manhattan figure
+sex_check/             Self-contained ZW read-depth check
+daniel_bird_scripts/   Collaborator scripts (read-only)
+figures/v1/  figures/v2/            Rendered figures per dataset version
+archive/               Superseded and shelved work, each folder with a README
 ```
 
 ---
 
-### Step 6 — Visualisation (patchworkplot dot plots)
-
-Dot plots of the self-alignment for each species, overlaid with gene annotations.
-Uses the [patchworkplot](https://github.com/dirkschumacher/patchworkplot) tool.
-
-| Script | What it does |
-|--------|-------------|
-| `dotplots/make_config_strand.py` | For a given `--order`, generates `config_strand_IGH.csv` and `config_strand_IGL.csv` listing FASTA and BED paths for every haplotype, ready for patchworkplot |
-| `within_species_inversions/patchworkplot_create_config.py` | Creates patchworkplot config files for within-species comparisons |
-| `within_species_inversions/patchworkplot_run_all.py` | Batch-runs patchworkplot for all species |
-| `within_species_alignment_mummer.py` | MUMmer-based pairwise alignments between primary and alternate haplotypes with dot/synteny plots |
-
-`dotplots/make_config_strand.py` takes:
-- `-i INPUT_DIR`, `-s summary_features.csv`
-- `-o OUTPUT_DIR` — where to write the config CSV(s)
-- `--order Doves` — taxonomic order to generate configs for, OR
-- `--species NAME [NAME ...]` — explicit list of species instead of `--order`
-- `--locus {IGH,IGL,both}` — which config(s) to write (default: `both`)
-
----
-
-### Step 7 — Phylogenetic trees per locus (`tree_analyses/`)
-
-Build a V gene phylogenetic tree for each haplotype independently.
-
-| Script | What it does |
-|--------|-------------|
-| *(tree building)* | Three rules in `workflow/rules/trees.smk` -- `tree_fasta` -> `tree_align` -> `tree_iqtree`. This replaced `tree_building_pipeline.py`, which ran the same three steps inside a `multiprocessing.Pool` with its own skip logic; that script is now in `archive/`. |
-
----
-
-### Step 8 — RSS analysis (`RSS/`)
-
-Recombination signal sequence (RSS) analysis.
-
-| Script | What it does |
-|--------|-------------|
-| `plots/manuscript/rss_correlation.R` | Manuscript figure: genes with RSS vs total genes (phylolm per locus) beside single- vs multiple-productive-RSS positional density for IGH and IGL. Also supplies `p_combined_simple` to `rss_position_oriented.R` |
-| `RSS/rss_position_oriented.R` | Re-plots RSS positional distributions with biologically informed orientation: IGH is oriented so that 100% = toward D genes (using `IGHD.csv`); IGL is oriented so that 100% = toward J genes (using majority strand of V genes). Also plots single-productive-RSS V gene strand relative to D gene strand (RStudio) |
-
----
-
-## Plots folder (`plots/`)
-
-All scripts here are designed to be sourced interactively in RStudio.
-They read from `INPUT_DIR` (hardcoded near the top of each file) and print
-plots directly to the viewer.
-
-| Script | What it shows |
-|--------|--------------|
-| `inversion_stats_overview.R` | Inversion statistics (length, coverage, gene fraction) by taxonomic order |
-| `inversion_tree_figure.R` | Inversion metrics mapped onto the VGP bird phylogeny using `ggtree` |
-| `phylolm_tree.R` | Phylogenetic regression (phylolm) of V gene count vs inversion count |
-| `mindir_tree.R` | MinDir (minority-direction gene count) mapped onto the phylogeny |
-| `d_inversion_analysis.R` | Analyses `D_inversions.tsv`: fraction of D genes on inversions by order, species bar chart, and phylogeny-mapped tile plot |
-| `inversion_distance.R` | Distance between inversions and V genes |
-| `inversion_overlap.R` | Overlap between inversion regions across species |
-| `histogram_inversion_length.R` | Distribution of inversion lengths |
-| `plot_diag_inversions.R` | Plots diagonal (self-similar) inversions specifically |
-| `inversion_age.R` | Estimates inversion age from sequence divergence |
-| `paralog_fraction_plot.R` | Fraction of genes that are inversion paralogs |
-| `gene_tree_paralogs.R` | Gene tree coloured by paralog group membership |
-| `RSS_inversion_density.R` | Density of RSS genes in inverted vs non-inverted regions |
-| `rss_correlation.R` → now in `RSS/` | (See RSS section above) |
-| `tree_analysis_order.R` | Tree-distance statistics summarised by taxonomic order |
-| `repeatmasker_plots.R` | Repeat element composition of IGH/IGL loci |
-| `dotplot_1000.R` | Dot plots for selected species at 1000 bp minimum inversion length |
-| `housefinch_state_subgroup_dotplots.R` | House finch haplotype subgroup dot plots |
-| `Figure1AB.R`, `figure_1c.R` | Main manuscript figures |
-
----
-
-## Key shared inputs
-
-Most scripts accept the same core arguments:
-
-| Argument | Description |
-|----------|-------------|
-| `-i / --input_dir` | Top-level data directory (`INPUT_DIR`) |
-| `-s / --summary` | Path to `summary_features.csv` |
-| `-c / --cores` | Number of parallel worker processes |
-
-R scripts hardcode these paths near the top of the file — edit the `INPUT_DIR`
-and related variables there before sourcing.
-
----
 
 ## Dependencies
 
-**Python:** `pandas`, `numpy`, `biopython`, `multiprocessing` (stdlib)  
-**External tools:** `lastz`, `clustalo` (Clustal Omega), `iqtree2`, `mummer`  
-**R:** `tidyverse`, `ape`, `ggtree`, `ggtreeExtra`, `patchwork`, `phylolm`, `ggrepel`, `viridis`, `data.table`
+**Conda envs:** `snakemake` (Python scripts + `lastz`, `clustalo`, `iqtree2`),
+`bird_ig` (R). Activate explicitly; base has neither.
+
+**Python:** pandas, numpy, biopython
+**R:** tidyverse, data.table, ape, ggtree, ggtreeExtra, patchwork, phylolm, phytools, ggrepel, viridis
+**External:** lastz, clustalo, iqtree2, mummer
