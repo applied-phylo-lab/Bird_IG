@@ -139,8 +139,8 @@ archive/               Superseded and shelved work, each folder with a README
 ## Dependencies
 
 **Conda envs:** `snakemake` (Python scripts + `lastz`, `clustalo`, `iqtree2`),
-`bird_ig` (R). Activate explicitly; base has neither.
+`bird_ig` (R).
 
 **Python:** pandas, numpy, biopython
 **R:** tidyverse, data.table, ape, ggtree, ggtreeExtra, patchwork, phylolm, phytools, ggrepel, viridis
-**External:** lastz, clustalo, iqtree2, mummer
+**External:** lastz, clustalo, iqtree2
