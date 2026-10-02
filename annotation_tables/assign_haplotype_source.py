@@ -68,6 +68,30 @@ EXCEPTIONS = {
     "GCA_054553165.1": ("Other (non-VGP)", "Philippine Eagle trio-binned ONT assembly (Cal Academy of Sciences)"),
 }
 
+# Accessions for haplotypes whose local .fna filename carries no GC[AF]_ token,
+# so ACC_RE finds nothing and the Accession column comes out blank. All six VGP
+# doves were saved under generic names (bStrTur1_pri.fna etc.).
+#
+# Each value was resolved from a contig that is actually present in our data,
+# via NCBI nuccore -> assembly elink, rather than by trusting the pri/alt ->
+# main/second column order in VGP_details.csv. That check earned its keep:
+# VGP_details lists GCA_036971685.2 as band-tailed pigeon hap1, but that
+# accession is hap2 -- hap1 is GCA_037038585.2. GenBank (GCA) form is used
+# throughout to match the rest of the table.
+MANUAL_ACCESSION = {
+    ("Doves", "European_Turtle_Dove", "bStrTur1_pri"): "GCA_901699155.2",  # LR594567.2
+    ("Doves", "European_Turtle_Dove", "bStrTur1_alt"): "GCA_901699165.2",  # CABFKB020001418.1
+    ("Doves", "Eurasian_CollaredDove", "bStrDea1_pri"): "GCA_964273445.1", # OZ187171.1
+    ("Doves", "Pink_Pigeon", "bNesMay2_pri"): "GCA_963082525.1",           # OY720074.1
+    ("Doves", "Pink_Pigeon", "bNesMay2_alt"): "GCA_963082445.1",           # CAUJAQ010000419.1
+    ("Doves", "Nicobar_Pigeon", "bCalNic1_pri"): "GCA_036013445.1",        # CM069721.1
+    ("Doves", "Nicobar_Pigeon", "bCalNic1_alt"): "GCA_036010745.1",        # CM069641.1
+    ("Doves", "BandTailed_Pigeon", "bPatFas1_pri"): "GCA_037038585.2",     # CM073021.2
+    ("Doves", "BandTailed_Pigeon", "bPatFas1_alt"): "GCA_036971685.2",     # CM073070.2
+    ("Doves", "Rock_Dove", "bColLiv1_pri"): "GCA_036013475.2",             # CM070365.1 (.pat)
+    ("Doves", "Rock_Dove", "bColLiv1_alt"): "GCA_036010775.2",             # CM070939.1 (.mat)
+}
+
 # Species with no LatinName resolvable elsewhere (VGP doves saved locally
 # under a generic filename with no accession) -- needed only to look them up
 # in VGP_details.csv by scientific name.
@@ -266,8 +290,9 @@ def main():
         parts = r["Haplotype"].split("/")
         order, species, hap = parts[0], parts[1], "/".join(parts[2:])
         m = ACC_RE.search(r["Genome"])
+        acc = m.group(1) if m else MANUAL_ACCESSION.get((order, species, hap), "")
         recs.append({"Order": order, "Species": species, "Haplotype": hap,
-                     "Accession": m.group(1) if m else "", "Genome": r["Genome"]})
+                     "Accession": acc, "Genome": r["Genome"]})
 
     accs = sorted({r["Accession"] for r in recs if r["Accession"]})
     cache = load_cache()

@@ -113,32 +113,48 @@ def load_latin_names():
 
 
 def load_sources():
+    """(Order,Species,Haplotype) -> (Accession, Source, SourceDetail, HaplotypeType, Published).
+
+    Accession is carried through to the tables so a reader outside the lab can
+    resolve a haplotype to an actual INSDC assembly -- the internal shorthand
+    (bAquChr2_pri) means nothing to anyone else. Blank for the handful of
+    assemblies with no accession on record."""
     src = {}
     with open(path("haplotype_sources.csv")) as f:
         for row in csv.DictReader(f):
             key = (row["Order"], row["Species"], row["Haplotype"])
-            src[key] = (row["Source"], row["SourceDetail"], row["HaplotypeType"], row["Published"])
+            src[key] = (row.get("Accession", ""), row["Source"], row["SourceDetail"],
+                        row["HaplotypeType"], row["Published"])
     return src
 
 
 def load_gene_counts():
-    """(Order/Species/Haplotype, Locus) -> dict of gene-level counts, from gene_list.csv."""
+    """(Order/Species/Haplotype, Locus) -> gene-level counts, from gene_list.csv.
+
+    Returns (counts, seen). `counts` holds only combos with at least one gene
+    passing filtering; `seen` holds every combo present in the file whatever its
+    filtering status. The caller needs both to tell "we have gene data and the
+    filtered count is zero" apart from "we have no gene data at all" -- those
+    deserve 0 and blank respectively, and conflating them is what made NumV
+    disagree with v_gene_table."""
     counts = defaultdict(lambda: {"NumV": 0, "NumV_productive": 0, "NumV_with_RSS": 0})
+    seen = set()
     with open(path("gene_list.csv")) as f:
         for row in csv.DictReader(f):
             if row["Locus"] not in ("IGH", "IGL"):
                 continue
-            if row["Passes Filtering"] != "True":
-                continue
             parts = row["Source"].split("/")
             key = (parts[0], parts[1], "/".join(parts[2:]), row["Locus"])
+            seen.add(key)
+            if row["Passes Filtering"] != "True":
+                continue
             c = counts[key]
             c["NumV"] += 1
             if row["Productive"] == "True":
                 c["NumV_productive"] += 1
             if row["Heptamer"].strip() or row["Nonamer"].strip():
                 c["NumV_with_RSS"] += 1
-    return counts
+    return counts, seen
 
 
 def load_inversion_stats():
@@ -194,10 +210,10 @@ def load_palindromes():
     return agg
 
 
-V_GENE_COLS = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Source", "HaplotypeType",
+V_GENE_COLS = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Accession", "Source", "HaplotypeType",
                "Published", "Contig", "Pos", "Strand", "Productive", "PassesFiltering",
                "Heptamer", "Nonamer", "RSS_DownstreamBp", "Sequence"]
-D_GENE_COLS = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Source", "HaplotypeType",
+D_GENE_COLS = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Accession", "Source", "HaplotypeType",
                "Published", "Contig", "Pos", "Strand", "Productive", "UpstreamHeptamer",
                "UpstreamNonamer", "DownstreamHeptamer", "DownstreamNonamer",
                "LocationRelativeToVCluster", "Sequence"]
@@ -207,9 +223,9 @@ def _hap_context(source_field, sources, latin):
     parts = source_field.split("/")
     order, species, hap = parts[0], parts[1], "/".join(parts[2:])
     skey = (order, species, hap)
-    source, _detail, hap_type, published = sources.get(skey, ("", "", "", ""))
+    accession, source, _detail, hap_type, published = sources.get(skey, ("", "", "", "", ""))
     return {"Order": order, "Species": species, "Haplotype": hap,
-            "LatinName": latin.get(species, ""), "Source": source,
+            "LatinName": latin.get(species, ""), "Accession": accession, "Source": source,
             "HaplotypeType": hap_type, "Published": published}
 
 
@@ -286,7 +302,7 @@ def main():
 
     latin = load_latin_names()
     sources = load_sources()
-    gene_counts = load_gene_counts()
+    gene_counts, genes_seen = load_gene_counts()
     inv_stats = load_inversion_stats()
     d_inv = load_d_inversions()
     palin = load_palindromes()
@@ -303,13 +319,28 @@ def main():
     main_rows = []
     for (order, species, hap, locus), sf in sorted(hap_locus.items()):
         gkey = (order, species, hap, locus)
-        gc = gene_counts.get(gkey, {"NumV": sf["NumV_sf"], "NumV_productive": "", "NumV_with_RSS": ""})
+        if gkey in gene_counts:
+            gc = gene_counts[gkey]
+        elif gkey in genes_seen:
+            # Genes were called here but none passed filtering. NumV is documented
+            # as the PassesFiltering == True count, so that count is 0. This used to
+            # fall back to summary_features' unfiltered NumV, which reported 1 for
+            # two haplotypes whose only gene fails filtering and left main_table
+            # two genes ahead of v_gene_table.
+            gc = {"NumV": 0, "NumV_productive": 0, "NumV_with_RSS": 0}
+        else:
+            # No gene-level data at all for this haplotype x locus. Does not occur
+            # in the current data (every index row appears in gene_list.csv); left
+            # blank rather than 0 so a genuine gap cannot be read as a real zero.
+            print(f"note: {order}/{species}/{hap} {locus} absent from gene_list.csv "
+                  f"-- gene counts left blank (index NumV={sf['NumV_sf']})")
+            gc = {"NumV": "", "NumV_productive": "", "NumV_with_RSS": ""}
         skey = (order, species, hap)
-        source, source_detail, hap_type, published = sources.get(skey, ("", "", "", ""))
+        accession, source, source_detail, hap_type, published = sources.get(skey, ("", "", "", "", ""))
 
         row = {
             "Order": order, "Species": species, "Haplotype": hap, "Locus": locus,
-            "LatinName": latin.get(species, ""),
+            "LatinName": latin.get(species, ""), "Accession": accession,
             "Source": source, "SourceDetail": source_detail, "HaplotypeType": hap_type,
             "Published": published,
             "NumContigs": len(sf["Contigs"]), "Contigs": ";".join(sf["Contigs"]),
@@ -349,7 +380,7 @@ def main():
 
         main_rows.append(row)
 
-    all_cols = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Source", "SourceDetail",
+    all_cols = ["Order", "Species", "Haplotype", "Locus", "LatinName", "Accession", "Source", "SourceDetail",
                 "HaplotypeType", "Published", "NumContigs", "Contigs", "NumV", "NumV_productive", "NumV_with_RSS",
                 "FracV_with_RSS", f"NumInversions_min{INV_MINLEN}bp",
                 f"NumInversionsDiag_min{INV_MINLEN}bp", "LocusLength_bp", "InvCoverage_bp",
@@ -415,12 +446,14 @@ Generated by `annotation_tables/build_summary_tables.py` (run after
 parent directory. Do not hand-edit -- regenerate instead.
 
 Every table below comes in two files: the plain name (all haplotypes) and a
-`_published` version that drops the unpublished Darwin's finches. The one
-Red-winged Blackbird assembly that is also unpublished (Source =
-"Unpublished / Pennell Lab assembly") is *not* dropped by `_published` --
-only Darwin's finches are excluded, since that's the only exclusion asked
-for so far. Check `Published`/`Source` directly if you need to filter that
-one out too.
+`_published` version, which drops any haplotype whose `Source` is an
+unpublished one. In the current data that leaves no unpublished assemblies in
+the `_published` files at all -- `Published` is TRUE for every row and
+`AnyUnpublished` FALSE for every species. The unpublished Red-winged
+Blackbird assemblies that used to survive this filter are now kept out of the
+analysis entirely by `config/excluded_haplotypes.csv`, so they reach neither
+variant. `Published`/`Source` are still carried in every table if you want to
+check rather than take this on trust.
 
 ## main_table.csv
 
@@ -431,9 +464,10 @@ can span multiple contigs in `summary_features.csv`; those are summed here
 | Column | Meaning |
 |---|---|
 | LatinName | From IGH_VGP_table.tsv / species_traits_avonet.csv / NCBI organism name / manual lookup, in that priority. Blank if unresolved (see build script output). |
+| Accession | INSDC assembly accession from `haplotype_sources.csv`, so a haplotype can be resolved outside this project. Blank for a few assemblies with none on record; the `Contigs` column still gives INSDC sequence accessions in that case. |
 | Source, SourceDetail, Published | From `haplotype_sources.csv` -- VGP, CCGP, house finch/jay/seedeater pangenome, unpublished, or one of the other sequencing initiatives the VGP master sheet also tracks (Darwin Tree of Life, AmaZoomics, Sanger 25G, etc.), cross-referenced by accession against `/local/storage/kav67/VGP_details.csv`. SourceDetail is blank except for a few one-off assemblies outside all of the above. |
 | HaplotypeType | From `haplotype_sources.csv` -- Maternal/Paternal (trio-phased), Hap1/Hap2 (Hi-C-phased, no parent-of-origin call), Primary/Alternate (solo pseudohaplotype, no parent-of-origin call), Single assembly (no haplotype pair released), or Merged. These are not interchangeable -- only Maternal/Paternal reflects an actual parent-of-origin assignment. Resolved from the real assembly filename (cross-checked against `/local/storage/kav67/VGP_details.csv` for a few VGP haplotypes saved locally under a generic name that doesn't preserve the original suffix). |
-| NumV, NumV_productive, NumV_with_RSS, FracV_with_RSS | From `gene_list.csv`, filtered to `Passes Filtering == True`. "With RSS" = has a called heptamer and/or nonamer. |
+| NumV, NumV_productive, NumV_with_RSS, FracV_with_RSS | From `gene_list.csv`, filtered to `Passes Filtering == True`. "With RSS" = has a called heptamer and/or nonamer. `NumV = 0` means genes were called here but none passed filtering, so these rows have no counterpart in `v_gene_table.csv`'s passing subset; `FracV_with_RSS` is then blank rather than 0, being undefined. |
 | NumInversions_min250bp, NumInversionsDiag_min250bp | From `inversion_stats.tsv` at the 250 bp threshold (the only one emitted; matches the default used in `d_genes_on_inversions.py`). IGH only -- inversion detection in this pipeline is not run on IGL. |
 | LocusLength_bp, InvCoverage_bp, FracGenesOnInv | Total self-alignment length, bp covered by inversions, and fraction of V genes falling in an inverted region (summed numerator/denominator across contigs, not averaged). |
 | NumD, NumD_on_inv, FracD_on_inv | From `D_inversions.tsv`. IGH only. **Currently blank** -- that table was retired to `old_unused/` because the upstream D gene calls became a threshold-swept candidate list; see that folder's README. |
@@ -446,8 +480,9 @@ several species have many individuals from pangenome projects, so a single
 "the" value would hide real within-species variation).
 
 `AnyUnpublished = TRUE` flags species with at least one unpublished haplotype
-(currently: several Darwin's finches, plus one Red-winged Blackbird assembly)
--- check before including in any figure/table meant for public release.
+(currently the Darwin's finches only, and they are dropped from
+`species_summary_published.csv`) -- check before including in any
+figure/table meant for public release.
 
 ## v_gene_table.csv
 
